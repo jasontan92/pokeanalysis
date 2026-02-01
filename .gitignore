@@ -1,0 +1,21 @@
+# Secrets - NEVER commit these
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+
+# Data files
+data/monitor.log
+data/html_raw_data/
+# Note: seen_listings.json is tracked for state persistence
+
+# OS
+.DS_Store
+Thumbs.db
