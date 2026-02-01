@@ -62,11 +62,14 @@ class FanaticsScraper:
                         try:
                             page.goto(url, timeout=60000)
 
-                            # Close cookie popup once
+                            # Close cookie popup once, then reload to ensure page renders fully
                             if not cookie_closed:
                                 try:
                                     page.click('text=Accept all', timeout=3000)
                                     cookie_closed = True
+                                    page.wait_for_timeout(1000)
+                                    # Reload the page after dismissing cookie popup
+                                    page.goto(url, timeout=60000)
                                 except:
                                     pass
 
