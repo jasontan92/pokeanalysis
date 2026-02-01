@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install:*)",
+      "Bash(python:*)",
+      "WebFetch(domain:www.ebay.com)",
+      "WebFetch(domain:jp.mercari.com)",
+      "WebFetch(domain:auctions.yahoo.co.jp)",
+      "WebFetch(domain:magi.camp)",
+      "WebFetch(domain:tcgrepublic.com)",
+      "WebFetch(domain:buyee.jp)",
+      "Bash(gcloud:*)"
+    ]
+  }
+}
