@@ -276,8 +276,97 @@ class FanaticsScraper:
         }
 
     def get_sales_history(self, search_term: str, max_pages: int = 1) -> list[dict]:
-        """Fetch sales history - not implemented yet."""
-        return []
+        """Fetch sold listings from Fanatics Collect sales history."""
+        if not PLAYWRIGHT_AVAILABLE:
+            print("Playwright not available. Skipping Fanatics sales history.")
+            return []
+
+        listings = []
+        seen_titles = set()
+
+        try:
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=True)
+                context = browser.new_context(
+                    user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                )
+                page = context.new_page()
+
+                print(f"Fetching Fanatics sold: {search_term}")
+
+                # Navigate to sales history page
+                page.goto('https://sales-history.fanaticscollect.com/', timeout=60000)
+
+                # Close cookie popup
+                try:
+                    page.click('text=Accept all', timeout=3000)
+                except:
+                    pass
+
+                page.wait_for_timeout(2000)
+
+                # Use search box to search
+                search_input = page.query_selector('input[type="search"], input[placeholder*="Search"], input[name="q"]')
+                if search_input:
+                    search_input.fill(search_term)
+                    search_input.press('Enter')
+                    page.wait_for_timeout(4000)
+
+                    # Scroll to load more results
+                    for _ in range(3):
+                        page.evaluate('window.scrollTo(0, document.body.scrollHeight)')
+                        page.wait_for_timeout(1500)
+
+                    # Extract sold listings
+                    full_text = page.inner_text('body')
+                    lines = full_text.split('\n')
+
+                    i = 0
+                    while i < len(lines):
+                        line = lines[i].strip()
+
+                        # Check if this is a Pokemon card title
+                        if '1996 Pokemon' in line or ('Pokemon' in line and ('PSA' in line or 'CGC' in line or 'BGS' in line)):
+                            title = line
+
+                            # Look for price in next few lines
+                            price = None
+                            for j in range(i + 1, min(i + 5, len(lines))):
+                                if lines[j].strip().startswith('$'):
+                                    price_text = lines[j].strip().replace('$', '').replace(',', '').split()[0]
+                                    try:
+                                        price = float(price_text)
+                                        break
+                                    except:
+                                        pass
+
+                            # Deduplicate by title
+                            title_key = title[:60]
+                            if title_key not in seen_titles:
+                                seen_titles.add(title_key)
+
+                                listing_id = f"fc-sold-{hashlib.md5(title.encode()).hexdigest()[:12]}"
+
+                                listings.append({
+                                    'listing_id': listing_id,
+                                    'title': title,
+                                    'price': price,
+                                    'listing_type': 'sold',
+                                    'time_left': None,
+                                    'link': 'https://sales-history.fanaticscollect.com/',
+                                    'platform': 'fanatics',
+                                    'scraped_at': datetime.now().isoformat()
+                                })
+
+                        i += 1
+
+                browser.close()
+
+        except Exception as e:
+            print(f"Fanatics sales history error: {e}")
+
+        print(f"Found {len(listings)} Fanatics sold listings")
+        return listings
 
 
 if __name__ == '__main__':
