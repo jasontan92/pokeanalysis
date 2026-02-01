@@ -5,6 +5,7 @@ Handles JavaScript-rendered content.
 
 import re
 import json
+import hashlib
 from datetime import datetime
 from typing import Optional
 from urllib.parse import quote_plus
@@ -150,7 +151,7 @@ class FanaticsScraper:
                     seen_titles.add(title_key)
 
                     # Generate ID from title hash
-                    listing_id = f"fc-{abs(hash(title)) % 10000000}"
+                    listing_id = f"fc-{hashlib.md5(title.encode()).hexdigest()[:12]}"
 
                     listings.append({
                         'listing_id': listing_id,
