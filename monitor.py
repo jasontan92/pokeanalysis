@@ -154,7 +154,7 @@ class ListingMonitor:
             # 3. Scrape Fanatics Collect active listings
             logger.info("Checking Fanatics Collect marketplace...")
             fanatics_active = self.fanatics_scraper.search_listings(
-                self.search_term, max_pages=1
+                self.search_term, max_pages=5
             )
             new_fanatics_active = self._process_listings(
                 fanatics_active, 'fanatics_active', 'Fanatics', 'NEW'

@@ -25,7 +25,7 @@ class FanaticsScraper:
         if not PLAYWRIGHT_AVAILABLE:
             print("Playwright not installed. Fanatics scraping disabled.")
 
-    def search_listings(self, search_term: str, max_pages: int = 1) -> list[dict]:
+    def search_listings(self, search_term: str, max_pages: int = 5) -> list[dict]:
         """Search for listings on Fanatics Collect marketplace (both auction and buy now)."""
         if not PLAYWRIGHT_AVAILABLE:
             print("Playwright not available. Skipping Fanatics.")
@@ -47,35 +47,53 @@ class FanaticsScraper:
                     user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
                 )
                 page = context.new_page()
+                cookie_closed = False
 
                 for type_param, type_name in listing_types:
-                    url = f"{self.BASE_URL}/marketplace?q={search_query}&type={type_param}"
-                    print(f"Fetching Fanatics {type_name}: {search_term}")
+                    type_listings = []
+                    seen_ids = set()  # Track IDs across pages to avoid duplicates
 
-                    try:
-                        page.goto(url, timeout=60000)
+                    for page_num in range(1, max_pages + 1):
+                        url = f"{self.BASE_URL}/marketplace?q={search_query}&type={type_param}&page={page_num}"
 
-                        # Close cookie popup (only on first page)
+                        if page_num == 1:
+                            print(f"Fetching Fanatics {type_name}: {search_term}")
+
                         try:
-                            page.click('text=Accept all', timeout=3000)
-                        except:
-                            pass
+                            page.goto(url, timeout=60000)
 
-                        page.wait_for_timeout(5000)
+                            # Close cookie popup once
+                            if not cookie_closed:
+                                try:
+                                    page.click('text=Accept all', timeout=3000)
+                                    cookie_closed = True
+                                except:
+                                    pass
 
-                    except PlaywrightTimeout:
-                        print(f"Timeout loading Fanatics {type_name} page")
-                        continue
+                            page.wait_for_timeout(2000)
 
-                    # Extract listings from page content
-                    listings = self._extract_listings_from_text(page, search_term)
+                        except PlaywrightTimeout:
+                            print(f"Timeout loading Fanatics {type_name} page {page_num}")
+                            break
 
-                    # Override listing type based on search type
-                    for listing in listings:
-                        listing['listing_type'] = type_name
+                        # Extract listings from this page
+                        listings = self._extract_listings_from_page(page, search_term)
 
-                    all_listings.extend(listings)
-                    print(f"Found {len(listings)} Fanatics {type_name} listings")
+                        # Filter out duplicates we've seen on previous pages
+                        new_listings = []
+                        for listing in listings:
+                            if listing['listing_id'] not in seen_ids:
+                                seen_ids.add(listing['listing_id'])
+                                listing['listing_type'] = type_name
+                                new_listings.append(listing)
+
+                        if not new_listings:
+                            break  # No more new results
+
+                        type_listings.extend(new_listings)
+
+                    all_listings.extend(type_listings)
+                    print(f"Found {len(type_listings)} Fanatics {type_name} listings")
 
                 browser.close()
 
@@ -84,8 +102,70 @@ class FanaticsScraper:
 
         return all_listings
 
+    def _extract_listings_from_page(self, page, search_term: str) -> list[dict]:
+        """Extract listings by parsing full page text with regex."""
+        listings = []
+        seen_titles = set()
+
+        # Get full page text
+        full_text = page.inner_text('body')
+
+        # Find all Pokemon card titles (lines starting with year or containing "Pokemon")
+        # Format: Title on one line, price ($X,XXX) on next or same line
+        lines = full_text.split('\n')
+
+        i = 0
+        while i < len(lines):
+            line = lines[i].strip()
+
+            # Check if this is a Pokemon card title
+            if '1996 Pokemon' in line or ('Pokemon' in line and ('PSA' in line or 'CGC' in line or 'BGS' in line)):
+                title = line
+
+                # Look for price in next few lines
+                price = None
+                for j in range(i + 1, min(i + 5, len(lines))):
+                    price_match = re.search(r'\$?([\d,]+)(?:\.\d{2})?', lines[j])
+                    if price_match and lines[j].strip().replace(',', '').replace('$', '').replace('.', '').isdigit():
+                        try:
+                            price = float(price_match.group(1).replace(',', ''))
+                            break
+                        except:
+                            pass
+                    # Also check for standalone price
+                    if lines[j].strip().startswith('$'):
+                        price_text = lines[j].strip().replace('$', '').replace(',', '').split()[0]
+                        try:
+                            price = float(price_text)
+                            break
+                        except:
+                            pass
+
+                # Deduplicate by title
+                title_key = title[:60]
+                if title_key not in seen_titles:
+                    seen_titles.add(title_key)
+
+                    # Generate ID from title hash
+                    listing_id = f"fc-{abs(hash(title)) % 10000000}"
+
+                    listings.append({
+                        'listing_id': listing_id,
+                        'title': title,
+                        'price': price,
+                        'listing_type': 'buy_now',  # Will be overridden by caller
+                        'time_left': None,
+                        'link': f"{self.BASE_URL}/marketplace?q={quote_plus(search_term)}",
+                        'platform': 'fanatics',
+                        'scraped_at': datetime.now().isoformat()
+                    })
+
+            i += 1
+
+        return listings
+
     def _extract_listings_from_text(self, page, search_term: str) -> list[dict]:
-        """Extract listings by parsing page text content."""
+        """Extract listings by parsing page text content (legacy method)."""
         listings = []
         seen_titles = set()
 
@@ -199,7 +279,7 @@ class FanaticsScraper:
 if __name__ == '__main__':
     scraper = FanaticsScraper()
     print("Testing Fanatics Collect search...")
-    listings = scraper.search_listings("1996 no rarity", max_pages=1)
+    listings = scraper.search_listings("1996 no rarity", max_pages=5)
     print(f"\nTotal listings found: {len(listings)}")
     for listing in listings[:3]:
         print(json.dumps(listing, indent=2))
