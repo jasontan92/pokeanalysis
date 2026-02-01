@@ -1,4 +1,5 @@
 name: Pokemon Listing Monitor
+# Monitors eBay and Fanatics for new 1996 no rarity listings
 
 on:
   schedule:
