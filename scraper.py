@@ -1,6 +1,7 @@
 """
 eBay Listings Scraper for "No Rarity 1996" Pokemon Cards.
 Supports both sold listings and active (live) listings.
+Uses Playwright as primary method (more reliable), with requests as fallback.
 """
 
 import re
@@ -16,12 +17,20 @@ import requests
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
 
+# Try to import Playwright for more reliable scraping
+try:
+    from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
+    PLAYWRIGHT_AVAILABLE = True
+except ImportError:
+    PLAYWRIGHT_AVAILABLE = False
+
 
 class EbayScraper:
     def __init__(self):
         self.session = requests.Session()
         self.ua = UserAgent()
         self._update_headers()
+        self.use_playwright = PLAYWRIGHT_AVAILABLE
 
     def _update_headers(self):
         """Update session headers with a random user agent."""
@@ -64,6 +73,30 @@ class EbayScraper:
                     time.sleep(30)
 
         return None
+
+    def fetch_page_playwright(self, url):
+        """Fetch a page using Playwright (more reliable against blocking)."""
+        if not PLAYWRIGHT_AVAILABLE:
+            return None
+
+        try:
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=True)
+                context = browser.new_context(
+                    user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                )
+                page = context.new_page()
+
+                page.goto(url, timeout=60000)
+                page.wait_for_timeout(3000)  # Wait for content to load
+
+                html = page.content()
+                browser.close()
+                return html
+
+        except Exception as e:
+            print(f"Playwright error: {e}")
+            return None
 
     def parse_listings(self, html_content):
         """Parse eBay listings from HTML content."""
@@ -266,7 +299,12 @@ class EbayScraper:
             url = f"{base_url}&_pgn={page}"
             print(f"Fetching active listings page {page}...")
 
-            html = self.fetch_page(url)
+            # Try Playwright first (more reliable), fall back to requests
+            html = None
+            if self.use_playwright:
+                html = self.fetch_page_playwright(url)
+            if not html:
+                html = self.fetch_page(url)
             if not html:
                 print(f"Failed to fetch page {page}, stopping.")
                 break
@@ -308,7 +346,12 @@ class EbayScraper:
             url = f"{base_url}&_pgn={page}"
             print(f"Fetching page {page}...")
 
-            html = self.fetch_page(url)
+            # Try Playwright first (more reliable), fall back to requests
+            html = None
+            if self.use_playwright:
+                html = self.fetch_page_playwright(url)
+            if not html:
+                html = self.fetch_page(url)
             if not html:
                 print(f"Failed to fetch page {page}, stopping.")
                 break
