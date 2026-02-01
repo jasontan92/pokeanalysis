@@ -26,13 +26,19 @@ class FanaticsScraper:
             print("Playwright not installed. Fanatics scraping disabled.")
 
     def search_listings(self, search_term: str, max_pages: int = 1) -> list[dict]:
-        """Search for listings on Fanatics Collect marketplace."""
+        """Search for listings on Fanatics Collect marketplace (both auction and buy now)."""
         if not PLAYWRIGHT_AVAILABLE:
             print("Playwright not available. Skipping Fanatics.")
             return []
 
         all_listings = []
         search_query = quote_plus(search_term)
+
+        # Search both WEEKLY (auctions) and FIXED (buy now) listings
+        listing_types = [
+            ("WEEKLY", "auction"),   # Auctions
+            ("FIXED", "buy_now"),    # Buy Now
+        ]
 
         try:
             with sync_playwright() as p:
@@ -42,29 +48,34 @@ class FanaticsScraper:
                 )
                 page = context.new_page()
 
-                url = f"{self.BASE_URL}/marketplace?q={search_query}"
-                print(f"Fetching Fanatics Collect: {search_term}")
+                for type_param, type_name in listing_types:
+                    url = f"{self.BASE_URL}/marketplace?q={search_query}&type={type_param}"
+                    print(f"Fetching Fanatics {type_name}: {search_term}")
 
-                try:
-                    page.goto(url, timeout=60000)
-
-                    # Close cookie popup
                     try:
-                        page.click('text=Accept all', timeout=3000)
-                    except:
-                        pass
+                        page.goto(url, timeout=60000)
 
-                    page.wait_for_timeout(5000)
+                        # Close cookie popup (only on first page)
+                        try:
+                            page.click('text=Accept all', timeout=3000)
+                        except:
+                            pass
 
-                except PlaywrightTimeout:
-                    print("Timeout loading Fanatics page")
-                    browser.close()
-                    return []
+                        page.wait_for_timeout(5000)
 
-                # Extract listings from page content
-                listings = self._extract_listings_from_text(page, search_term)
-                all_listings.extend(listings)
-                print(f"Found {len(listings)} Fanatics listings")
+                    except PlaywrightTimeout:
+                        print(f"Timeout loading Fanatics {type_name} page")
+                        continue
+
+                    # Extract listings from page content
+                    listings = self._extract_listings_from_text(page, search_term)
+
+                    # Override listing type based on search type
+                    for listing in listings:
+                        listing['listing_type'] = type_name
+
+                    all_listings.extend(listings)
+                    print(f"Found {len(listings)} Fanatics {type_name} listings")
 
                 browser.close()
 
