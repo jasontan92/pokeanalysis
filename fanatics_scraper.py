@@ -1,404 +1,194 @@
 """
-Fanatics Collect Marketplace Scraper.
-Scrapes listings from fanaticscollect.com (formerly PWCC).
+Fanatics Collect Marketplace Scraper using Playwright.
+Handles JavaScript-rendered content.
 """
 
 import re
-import time
-import random
 import json
 from datetime import datetime
 from typing import Optional
-from urllib.parse import urlencode, quote_plus
+from urllib.parse import quote_plus
 
-import requests
-from bs4 import BeautifulSoup
-from fake_useragent import UserAgent
-
-from config import Config
+try:
+    from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
+    PLAYWRIGHT_AVAILABLE = True
+except ImportError:
+    PLAYWRIGHT_AVAILABLE = False
 
 
 class FanaticsScraper:
-    """Scraper for Fanatics Collect marketplace."""
+    """Scraper for Fanatics Collect marketplace using Playwright."""
 
     BASE_URL = "https://www.fanaticscollect.com"
-    SEARCH_URL = f"{BASE_URL}/marketplace"
 
-    def __init__(self, email: str = None, password: str = None):
-        self.session = requests.Session()
-        self.ua = UserAgent()
-        self.email = email or Config.FANATICS_EMAIL
-        self.password = password or Config.FANATICS_PASSWORD
-        self.authenticated = False
-        self._update_headers()
+    def __init__(self):
+        if not PLAYWRIGHT_AVAILABLE:
+            print("Playwright not installed. Fanatics scraping disabled.")
 
-    def _update_headers(self):
-        """Update session headers with a random user agent."""
-        self.session.headers.update({
-            'User-Agent': self.ua.random,
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'DNT': '1',
-            'Connection': 'keep-alive',
-            'Upgrade-Insecure-Requests': '1',
-        })
+    def search_listings(self, search_term: str, max_pages: int = 1) -> list[dict]:
+        """Search for listings on Fanatics Collect marketplace."""
+        if not PLAYWRIGHT_AVAILABLE:
+            print("Playwright not available. Skipping Fanatics.")
+            return []
 
-    def authenticate(self) -> bool:
-        """
-        Attempt to authenticate with Fanatics Collect.
-        Note: This may need adjustment based on their actual auth flow.
-        """
-        if not self.email or not self.password:
-            print("Fanatics credentials not configured. Proceeding without auth.")
-            return False
-
-        try:
-            # First get the login page to get any CSRF tokens
-            login_page = self.session.get(f"{self.BASE_URL}/login", timeout=30)
-            if login_page.status_code != 200:
-                print(f"Failed to load login page: {login_page.status_code}")
-                return False
-
-            # Parse for CSRF token if present
-            soup = BeautifulSoup(login_page.text, 'lxml')
-            csrf_token = None
-            csrf_input = soup.select_one('input[name="csrf_token"], input[name="_token"]')
-            if csrf_input:
-                csrf_token = csrf_input.get('value')
-
-            # Attempt login
-            login_data = {
-                'email': self.email,
-                'password': self.password,
-            }
-            if csrf_token:
-                login_data['csrf_token'] = csrf_token
-
-            response = self.session.post(
-                f"{self.BASE_URL}/login",
-                data=login_data,
-                timeout=30,
-                allow_redirects=True
-            )
-
-            # Check if login was successful
-            if response.status_code == 200 and 'logout' in response.text.lower():
-                print("Successfully authenticated with Fanatics Collect")
-                self.authenticated = True
-                return True
-            else:
-                print("Authentication may have failed. Proceeding anyway.")
-                return False
-
-        except requests.RequestException as e:
-            print(f"Authentication error: {e}")
-            return False
-
-    def fetch_page(self, url: str, max_retries: int = 3) -> Optional[str]:
-        """Fetch a page with retry logic and rate limiting."""
-        for attempt in range(max_retries):
-            try:
-                # Random delay between requests
-                delay = random.uniform(2, 5)
-                time.sleep(delay)
-
-                # Rotate user agent occasionally
-                if random.random() < 0.3:
-                    self._update_headers()
-
-                response = self.session.get(url, timeout=30)
-
-                if response.status_code == 200:
-                    return response.text
-                elif response.status_code == 429:
-                    wait_time = 60 * (attempt + 1)
-                    print(f"Rate limited. Waiting {wait_time} seconds...")
-                    time.sleep(wait_time)
-                elif response.status_code == 403:
-                    print("Access forbidden. May need authentication.")
-                    if not self.authenticated and self.email:
-                        self.authenticate()
-                else:
-                    print(f"HTTP {response.status_code} on attempt {attempt + 1}")
-
-            except requests.RequestException as e:
-                print(f"Request error on attempt {attempt + 1}: {e}")
-                if attempt < max_retries - 1:
-                    time.sleep(30)
-
-        return None
-
-    def search_listings(self, search_term: str, max_pages: int = 2) -> list[dict]:
-        """
-        Search for listings on Fanatics Collect marketplace.
-
-        Args:
-            search_term: Keywords to search for
-            max_pages: Maximum pages to fetch
-
-        Returns:
-            List of listing dictionaries
-        """
         all_listings = []
-
-        # Build search URL
         search_query = quote_plus(search_term)
 
-        for page in range(1, max_pages + 1):
-            # Fanatics Collect marketplace search URL pattern
-            url = f"{self.SEARCH_URL}?q={search_query}&page={page}"
-            print(f"Fetching Fanatics Collect page {page}...")
+        try:
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=True)
+                context = browser.new_context(
+                    user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                )
+                page = context.new_page()
 
-            html = self.fetch_page(url)
-            if not html:
-                print(f"Failed to fetch page {page}")
-                break
+                url = f"{self.BASE_URL}/marketplace?q={search_query}"
+                print(f"Fetching Fanatics Collect: {search_term}")
 
-            listings = self._parse_listings(html)
+                try:
+                    page.goto(url, timeout=60000)
 
-            if not listings:
-                print(f"No more listings found on page {page}")
-                break
+                    # Close cookie popup
+                    try:
+                        page.click('text=Accept all', timeout=3000)
+                    except:
+                        pass
 
-            all_listings.extend(listings)
-            print(f"Found {len(listings)} listings on page {page} (total: {len(all_listings)})")
+                    page.wait_for_timeout(5000)
+
+                except PlaywrightTimeout:
+                    print("Timeout loading Fanatics page")
+                    browser.close()
+                    return []
+
+                # Extract listings from page content
+                listings = self._extract_listings_from_text(page, search_term)
+                all_listings.extend(listings)
+                print(f"Found {len(listings)} Fanatics listings")
+
+                browser.close()
+
+        except Exception as e:
+            print(f"Fanatics scraper error: {e}")
 
         return all_listings
 
-    def _parse_listings(self, html_content: str) -> list[dict]:
-        """Parse listings from Fanatics Collect HTML."""
-        soup = BeautifulSoup(html_content, 'lxml')
+    def _extract_listings_from_text(self, page, search_term: str) -> list[dict]:
+        """Extract listings by parsing page text content."""
         listings = []
+        seen_titles = set()
 
-        # Try various possible selectors for listing cards
-        # These may need adjustment based on actual site structure
-        selectors = [
-            'div[data-testid="listing-card"]',
-            'div.listing-card',
-            'div.product-card',
-            'article.listing',
-            'div[class*="ListingCard"]',
-            'a[href*="/marketplace/listing/"]',
-        ]
+        # Find all divs that might be product cards
+        cards = page.query_selector_all('div')
 
-        items = []
-        for selector in selectors:
-            items = soup.select(selector)
-            if items:
-                break
+        for card in cards:
+            try:
+                text = card.inner_text()
 
-        if not items:
-            # Fallback: look for links to listings
-            items = soup.select('a[href*="/listing/"]')
+                # Filter: must have price, reasonable length, and search terms
+                if '$' not in text:
+                    continue
+                if len(text) < 30 or len(text) > 600:
+                    continue
 
-        for item in items:
-            listing = self._parse_single_listing(item, soup)
-            if listing:
-                listings.append(listing)
+                text_lower = text.lower()
+                # Must match search terms somewhat
+                search_words = search_term.lower().split()
+                if not any(word in text_lower for word in search_words):
+                    continue
+
+                # Parse the card text
+                listing = self._parse_card_text(text)
+
+                if listing and listing.get('title'):
+                    # Deduplicate by title
+                    title_key = listing['title'][:50]
+                    if title_key not in seen_titles:
+                        seen_titles.add(title_key)
+                        listings.append(listing)
+
+            except Exception:
+                continue
 
         return listings
 
-    def _parse_single_listing(self, item, full_soup) -> Optional[dict]:
-        """Extract data from a single listing element."""
-        try:
-            # Get title
-            title = None
-            title_selectors = [
-                '.listing-title',
-                '.product-title',
-                'h3',
-                'h4',
-                '[class*="title"]',
-            ]
-            for sel in title_selectors:
-                title_elem = item.select_one(sel)
-                if title_elem:
-                    title = title_elem.get_text(strip=True)
+    def _parse_card_text(self, text: str) -> Optional[dict]:
+        """Parse card text content into listing dict."""
+        lines = [l.strip() for l in text.split('\n') if l.strip()]
+
+        if len(lines) < 2:
+            return None
+
+        # Find title - usually the longest descriptive line
+        title = None
+        for line in lines:
+            if len(line) > 30 and ('pokemon' in line.lower() or 'psa' in line.lower() or '1996' in line.lower()):
+                title = line
+                break
+
+        if not title:
+            # Take first long line
+            for line in lines:
+                if len(line) > 20 and not line.startswith('$'):
+                    title = line
                     break
 
-            if not title:
-                # If item is a link, get text content
-                if item.name == 'a':
-                    title = item.get_text(strip=True)
-
-            if not title:
-                return None
-
-            # Get price
-            price = None
-            price_selectors = [
-                '.price',
-                '.listing-price',
-                '[class*="price"]',
-                'span[class*="Price"]',
-            ]
-            for sel in price_selectors:
-                price_elem = item.select_one(sel)
-                if price_elem:
-                    price_text = price_elem.get_text(strip=True)
-                    price = self._parse_price(price_text)
-                    if price:
-                        break
-
-            # Get link
-            link = None
-            if item.name == 'a':
-                link = item.get('href')
-            else:
-                link_elem = item.select_one('a[href*="/listing/"], a[href*="/marketplace/"]')
-                if link_elem:
-                    link = link_elem.get('href')
-
-            if link and not link.startswith('http'):
-                link = f"{self.BASE_URL}{link}"
-
-            # Extract listing ID from URL
-            listing_id = self._extract_listing_id(link)
-
-            # Get listing type (auction vs buy now)
-            listing_type = "unknown"
-            item_text = item.get_text().lower()
-            if 'auction' in item_text or 'bid' in item_text:
-                listing_type = "auction"
-            elif 'buy now' in item_text or 'buy it now' in item_text:
-                listing_type = "buy_now"
-
-            # Get end time if auction
-            end_time = None
-            time_elem = item.select_one('[class*="time"], [class*="countdown"]')
-            if time_elem:
-                end_time = time_elem.get_text(strip=True)
-
-            return {
-                'listing_id': listing_id,
-                'title': title,
-                'price': price,
-                'listing_type': listing_type,
-                'end_time': end_time,
-                'link': link,
-                'platform': 'fanatics',
-                'scraped_at': datetime.now().isoformat()
-            }
-
-        except Exception as e:
-            print(f"Error parsing Fanatics listing: {e}")
+        if not title:
             return None
 
-    def _parse_price(self, price_text: str) -> Optional[float]:
-        """Convert price text to float."""
-        if not price_text:
-            return None
-        match = re.search(r'\$?([\d,]+\.?\d*)', price_text.replace(',', ''))
-        return float(match.group(1)) if match else None
-
-    def _extract_listing_id(self, url: str) -> Optional[str]:
-        """Extract listing ID from Fanatics URL."""
-        if not url:
-            return None
-        # Pattern: /listing/12345 or /marketplace/listing/12345
-        match = re.search(r'/listing/(\d+)', url)
-        if match:
-            return match.group(1)
-        # Try to get any ID from the URL
-        match = re.search(r'/(\d{5,})', url)
-        return match.group(1) if match else None
-
-    def get_sales_history(self, search_term: str, max_pages: int = 2) -> list[dict]:
-        """
-        Fetch sales history from sales-history.fanaticscollect.com
-
-        Args:
-            search_term: Keywords to search for
-            max_pages: Maximum pages to fetch
-
-        Returns:
-            List of sold listing dictionaries
-        """
-        all_sales = []
-        search_query = quote_plus(search_term)
-        base_url = "https://sales-history.fanaticscollect.com"
-
-        for page in range(1, max_pages + 1):
-            url = f"{base_url}/search?q={search_query}&page={page}"
-            print(f"Fetching Fanatics sales history page {page}...")
-
-            html = self.fetch_page(url)
-            if not html:
+        # Find price
+        price = None
+        for line in lines:
+            match = re.search(r'\$[\d,]+\.?\d*', line)
+            if match:
+                price_text = match.group().replace('$', '').replace(',', '')
+                try:
+                    price = float(price_text)
+                except:
+                    pass
                 break
 
-            sales = self._parse_sales_history(html)
-            if not sales:
+        # Find lot number as ID
+        listing_id = None
+        for line in lines:
+            lot_match = re.search(r'LOT[:\s]*(\d+)', line, re.IGNORECASE)
+            if lot_match:
+                listing_id = f"lot-{lot_match.group(1)}"
                 break
 
-            all_sales.extend(sales)
-            print(f"Found {len(sales)} sales on page {page} (total: {len(all_sales)})")
+        if not listing_id:
+            # Generate ID from title hash
+            listing_id = f"fc-{abs(hash(title)) % 1000000}"
 
-        return all_sales
+        # Check if it's an auction
+        listing_type = "auction" if 'bid' in text.lower() else "buy_now"
 
-    def _parse_sales_history(self, html_content: str) -> list[dict]:
-        """Parse sales history listings."""
-        soup = BeautifulSoup(html_content, 'lxml')
-        sales = []
+        # Get time left
+        time_left = None
+        time_match = re.search(r'(\d+[hd])\s*(\d+m)?', text)
+        if time_match:
+            time_left = time_match.group(0).strip()
 
-        # Try to find sale entries
-        items = soup.select('div.sale-item, tr.sale-row, div[class*="sale"], a[href*="/sale/"]')
+        return {
+            'listing_id': listing_id,
+            'title': title,
+            'price': price,
+            'listing_type': listing_type,
+            'time_left': time_left,
+            'link': f"{self.BASE_URL}/marketplace?q={quote_plus(title[:30])}",
+            'platform': 'fanatics',
+            'scraped_at': datetime.now().isoformat()
+        }
 
-        for item in items:
-            try:
-                title = None
-                price = None
-                sold_date = None
-                link = None
-
-                # Extract title
-                title_elem = item.select_one('.title, h3, h4, [class*="title"]')
-                if title_elem:
-                    title = title_elem.get_text(strip=True)
-
-                # Extract price
-                price_elem = item.select_one('.price, [class*="price"]')
-                if price_elem:
-                    price = self._parse_price(price_elem.get_text())
-
-                # Extract date
-                date_elem = item.select_one('.date, [class*="date"], time')
-                if date_elem:
-                    sold_date = date_elem.get_text(strip=True)
-
-                # Extract link
-                if item.name == 'a':
-                    link = item.get('href')
-                else:
-                    link_elem = item.select_one('a')
-                    if link_elem:
-                        link = link_elem.get('href')
-
-                if title:
-                    sales.append({
-                        'listing_id': self._extract_listing_id(link),
-                        'title': title,
-                        'price': price,
-                        'sold_date': sold_date,
-                        'link': link,
-                        'platform': 'fanatics',
-                        'scraped_at': datetime.now().isoformat()
-                    })
-
-            except Exception as e:
-                continue
-
-        return sales
+    def get_sales_history(self, search_term: str, max_pages: int = 1) -> list[dict]:
+        """Fetch sales history - not implemented yet."""
+        return []
 
 
 if __name__ == '__main__':
-    # Test the scraper
     scraper = FanaticsScraper()
-
-    print("Testing Fanatics Collect marketplace search...")
+    print("Testing Fanatics Collect search...")
     listings = scraper.search_listings("1996 no rarity", max_pages=1)
     print(f"\nTotal listings found: {len(listings)}")
-
-    if listings:
-        print("\nSample listing:")
-        print(json.dumps(listings[0], indent=2))
+    for listing in listings[:3]:
+        print(json.dumps(listing, indent=2))
