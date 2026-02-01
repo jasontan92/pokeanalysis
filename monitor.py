@@ -120,11 +120,11 @@ class ListingMonitor:
 
         # First run notification
         if self.state.is_first_run:
-            logger.info("First run detected - populating state without sending alerts")
+            logger.info("First run detected - will send alerts for most recent listings only")
             self.notifier.send_message(
-                "🔄 <b>Monitor Initialized</b>\n\n"
-                "Scanning current listings to establish baseline.\n"
-                "You'll only receive alerts for NEW listings from now on."
+                "🔄 <b>Monitor Started</b>\n\n"
+                "Sending alerts for recent listings.\n"
+                "Future runs will only alert on NEW listings."
             )
 
         new_listings = []
@@ -184,6 +184,9 @@ class ListingMonitor:
 
         return new_listings, sold_listings
 
+    # Max alerts to send on first run (most recent listings only)
+    FIRST_RUN_ALERT_LIMIT = 20
+
     def _process_listings(
         self,
         listings: list[dict],
@@ -204,18 +207,20 @@ class ListingMonitor:
             List of new listings that were alerted
         """
         new_listings = []
+        alerts_sent = 0
 
         for listing in listings:
             # Get the unique ID
             listing_id = listing.get('item_id') or listing.get('listing_id')
 
             if self.state.is_new(category, listing_id):
-                # Mark as seen first
+                # Mark as seen first (always, for deduplication)
                 self.state.mark_seen(category, listing_id)
 
-                # On first run, just populate state without sending alerts
+                # On first run, only alert for first N listings (most recent)
                 if self.state.is_first_run:
-                    continue
+                    if alerts_sent >= self.FIRST_RUN_ALERT_LIMIT:
+                        continue  # Skip alert but still mark as seen
 
                 # This is a new listing!
                 logger.info(f"New {listing_type} listing: {listing.get('title', 'Unknown')[:50]}")
@@ -231,6 +236,7 @@ class ListingMonitor:
 
                 if success:
                     logger.info(f"Alert sent for {listing_id}")
+                    alerts_sent += 1
                 else:
                     logger.warning(f"Failed to send alert for {listing_id}")
 
