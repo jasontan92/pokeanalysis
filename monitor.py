@@ -18,6 +18,7 @@ from typing import Optional
 from config import Config
 from scraper import EbayScraper
 from fanatics_scraper import FanaticsScraper
+from mercari_scraper import MercariScraper
 from notifier import TelegramNotifier
 
 
@@ -55,6 +56,7 @@ class StateManager:
             'ebay_sold': {},
             'fanatics_active': {},
             'fanatics_sold': {},
+            'mercari_active': {},
             'last_check': None
         }
 
@@ -74,7 +76,7 @@ class StateManager:
         cutoff = datetime.now() - timedelta(days=days)
         cutoff_str = cutoff.isoformat()
 
-        for category in ['ebay_active', 'ebay_sold', 'fanatics_active', 'fanatics_sold']:
+        for category in ['ebay_active', 'ebay_sold', 'fanatics_active', 'fanatics_sold', 'mercari_active']:
             if category in self.state and isinstance(self.state[category], dict):
                 self.state[category] = {
                     k: v for k, v in self.state[category].items()
@@ -104,6 +106,7 @@ class ListingMonitor:
         self.notifier = TelegramNotifier()
         self.ebay_scraper = EbayScraper()
         self.fanatics_scraper = FanaticsScraper()
+        self.mercari_scraper = MercariScraper()
         self.search_term = Config.SEARCH_TERM
         self.target_pokemon = Config.TARGET_POKEMON
 
@@ -178,6 +181,16 @@ class ListingMonitor:
                 fanatics_sold, 'fanatics_sold', 'Fanatics', 'SOLD'
             )
             sold_listings.extend(new_fanatics_sold)
+
+            # 5. Scrape Mercari listings
+            logger.info("Checking Mercari marketplace...")
+            mercari_active = self.mercari_scraper.search_listings(
+                self.search_term, max_pages=2
+            )
+            new_mercari_active = self._process_listings(
+                mercari_active, 'mercari_active', 'Mercari', 'NEW'
+            )
+            new_listings.extend(new_mercari_active)
 
         except Exception as e:
             logger.error(f"Error during scraping: {e}")
