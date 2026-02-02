@@ -105,6 +105,14 @@ class ListingMonitor:
         self.ebay_scraper = EbayScraper()
         self.fanatics_scraper = FanaticsScraper()
         self.search_term = Config.SEARCH_TERM
+        self.target_pokemon = Config.TARGET_POKEMON
+
+    def _matches_target_pokemon(self, title: str) -> bool:
+        """Check if listing title contains any target Pokemon name."""
+        if not title:
+            return False
+        title_lower = title.lower()
+        return any(pokemon in title_lower for pokemon in self.target_pokemon)
 
     def run(self):
         """Run the full monitoring cycle."""
@@ -212,6 +220,13 @@ class ListingMonitor:
         for listing in listings:
             # Get the unique ID
             listing_id = listing.get('item_id') or listing.get('listing_id')
+
+            # Filter: only process listings that match target Pokemon
+            title = listing.get('title', '')
+            if not self._matches_target_pokemon(title):
+                # Still mark as seen to avoid reprocessing, but don't alert
+                self.state.mark_seen(category, listing_id)
+                continue
 
             if self.state.is_new(category, listing_id):
                 # Mark as seen first (always, for deduplication)
