@@ -30,6 +30,23 @@ class Config:
     # Search settings
     SEARCH_TERM: str = os.getenv('SEARCH_TERM', '1996 no rarity')
 
+    # Pokemon filter - only alert for listings containing these Pokemon names
+    # Holos + Starters (all 3 evolution lines) + Pikachu + Magikarp
+    TARGET_POKEMON: list[str] = [
+        # Holos
+        'alakazam', 'gyarados', 'charizard', 'blastoise', 'venusaur',
+        'chansey', 'clefairy', 'hitmonchan', 'machamp', 'magneton',
+        'mewtwo', 'nidoking', 'ninetales', 'poliwrath', 'raichu',
+        'zapdos', 'moltres', 'articuno', 'dragonite',
+        # Starters (all evolutions)
+        'bulbasaur', 'ivysaur',  # venusaur already listed
+        'charmander', 'charmeleon',  # charizard already listed
+        'squirtle', 'wartortle',  # blastoise already listed
+        # Special
+        'pikachu',
+        'magikarp',
+    ]
+
     # File paths
     BASE_DIR: Path = Path(__file__).parent
     DATA_DIR: Path = BASE_DIR / 'data'
