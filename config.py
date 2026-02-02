@@ -37,7 +37,7 @@ class Config:
         'alakazam', 'gyarados', 'charizard', 'blastoise', 'venusaur',
         'chansey', 'clefairy', 'hitmonchan', 'machamp', 'magneton',
         'mewtwo', 'nidoking', 'ninetales', 'poliwrath', 'raichu',
-        'zapdos', 'moltres', 'articuno', 'dragonite', 'electrode',
+        'zapdos', 
         # Starters (all evolutions)
         'bulbasaur', 'ivysaur',  # venusaur already listed
         'charmander', 'charmeleon',  # charizard already listed
@@ -45,6 +45,7 @@ class Config:
         # Special
         'pikachu',
         'magikarp',
+         'electrode'
     ]
 
     # File paths
