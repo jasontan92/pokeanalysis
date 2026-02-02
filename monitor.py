@@ -57,6 +57,7 @@ class StateManager:
             'fanatics_active': {},
             'fanatics_sold': {},
             'mercari_active': {},
+            'ending_soon_alerted': {},  # Track auctions we've sent ending-soon alerts for
             'last_check': None
         }
 
@@ -76,7 +77,7 @@ class StateManager:
         cutoff = datetime.now() - timedelta(days=days)
         cutoff_str = cutoff.isoformat()
 
-        for category in ['ebay_active', 'ebay_sold', 'fanatics_active', 'fanatics_sold', 'mercari_active']:
+        for category in ['ebay_active', 'ebay_sold', 'fanatics_active', 'fanatics_sold', 'mercari_active', 'ending_soon_alerted']:
             if category in self.state and isinstance(self.state[category], dict):
                 self.state[category] = {
                     k: v for k, v in self.state[category].items()
@@ -117,6 +118,94 @@ class ListingMonitor:
         title_lower = title.lower()
         return any(pokemon in title_lower for pokemon in self.target_pokemon)
 
+    def _parse_time_left_minutes(self, time_left: str) -> Optional[int]:
+        """
+        Parse time_left string and return total minutes remaining.
+        Handles formats like: "30m", "1h 30m", "2d 5h", "5h 23m 15s"
+        Returns None if can't parse.
+        """
+        if not time_left:
+            return None
+
+        import re
+        time_left = time_left.lower().strip()
+
+        # Extract days, hours, minutes
+        days = 0
+        hours = 0
+        minutes = 0
+
+        day_match = re.search(r'(\d+)\s*d', time_left)
+        hour_match = re.search(r'(\d+)\s*h', time_left)
+        min_match = re.search(r'(\d+)\s*m', time_left)
+
+        if day_match:
+            days = int(day_match.group(1))
+        if hour_match:
+            hours = int(hour_match.group(1))
+        if min_match:
+            minutes = int(min_match.group(1))
+
+        total_minutes = days * 24 * 60 + hours * 60 + minutes
+
+        # If we couldn't parse anything meaningful, return None
+        if total_minutes == 0 and not any([day_match, hour_match, min_match]):
+            return None
+
+        return total_minutes
+
+    def _is_ending_soon(self, time_left: str, threshold_minutes: int = 30) -> bool:
+        """Check if auction is ending within threshold minutes."""
+        minutes = self._parse_time_left_minutes(time_left)
+        if minutes is None:
+            return False
+        return minutes <= threshold_minutes and minutes > 0
+
+    def _check_ending_soon_auctions(self, listings: list[dict]):
+        """
+        Check listings for auctions ending soon and send alerts.
+        Only alerts once per auction (tracked in ending_soon_alerted state).
+        """
+        for listing in listings:
+            # Only check auctions
+            if listing.get('listing_type') != 'auction':
+                continue
+
+            listing_id = listing.get('item_id') or listing.get('listing_id')
+            if not listing_id:
+                continue
+
+            # Check if matches target pokemon filter
+            title = listing.get('title', '')
+            if not self._matches_target_pokemon(title):
+                continue
+
+            # Check if ending soon
+            time_left = listing.get('time_left', '')
+            if not self._is_ending_soon(time_left):
+                continue
+
+            # Check if we already sent an ending-soon alert for this auction
+            if not self.state.is_new('ending_soon_alerted', listing_id):
+                continue
+
+            # Send ending-soon alert
+            logger.info(f"Auction ending soon: {title[:50]} ({time_left})")
+
+            success = self.notifier.send_listing_alert(
+                platform='eBay',
+                title=title,
+                price=listing.get('price'),
+                link=listing.get('link', ''),
+                listing_type='ENDING',
+                time_left=time_left
+            )
+
+            if success:
+                # Mark as alerted so we don't alert again
+                self.state.mark_seen('ending_soon_alerted', listing_id)
+                logger.info(f"Ending soon alert sent for {listing_id}")
+
     def run(self):
         """Run the full monitoring cycle."""
         logger.info("=" * 50)
@@ -151,6 +240,9 @@ class ListingMonitor:
                 ebay_active, 'ebay_active', 'eBay', 'NEW'
             )
             new_listings.extend(new_ebay_active)
+
+            # 1b. Check for auctions ending soon (within 30 minutes)
+            self._check_ending_soon_auctions(ebay_active)
 
             # 2. Scrape eBay sold listings
             logger.info("Checking eBay sold listings...")

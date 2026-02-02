@@ -56,7 +56,8 @@ class TelegramNotifier:
         title: str,
         price: Optional[float],
         link: str,
-        listing_type: str = "NEW"
+        listing_type: str = "NEW",
+        time_left: str = None
     ) -> bool:
         """
         Send a formatted listing alert.
@@ -66,11 +67,15 @@ class TelegramNotifier:
             title: Listing title
             price: Price in USD (or None if not available)
             link: URL to the listing
-            listing_type: "NEW" for new listing, "SOLD" for just sold
+            listing_type: "NEW" for new listing, "SOLD" for just sold, "ENDING" for ending soon
+            time_left: Time remaining for auctions (optional)
         """
         if listing_type == "SOLD":
             emoji = "💰"
             header = f"JUST SOLD [{platform}]"
+        elif listing_type == "ENDING":
+            emoji = "🔥"
+            header = f"ENDING SOON [{platform}]"
         else:
             emoji = "🆕"
             header = f"NEW LISTING [{platform}]"
@@ -81,8 +86,12 @@ class TelegramNotifier:
             f"{emoji} <b>{header}</b>\n\n"
             f"📦 {title}\n"
             f"💵 {price_str}\n"
-            f"🔗 <a href=\"{link}\">View Listing</a>"
         )
+
+        if time_left and listing_type == "ENDING":
+            message += f"⏰ {time_left} left\n"
+
+        message += f"🔗 <a href=\"{link}\">View Listing</a>"
 
         return self.send_message(message)
 
