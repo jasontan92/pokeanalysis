@@ -58,7 +58,8 @@ class StateManager:
             'fanatics_sold': {},
             'mercari_active': {},
             'ending_soon_alerted': {},  # Track auctions we've sent ending-soon alerts for
-            'last_check': None
+            'last_check': None,
+            'last_heartbeat': None  # Track daily heartbeat
         }
 
     def save_state(self):
@@ -161,6 +162,34 @@ class ListingMonitor:
             return False
         return minutes <= threshold_minutes and minutes > 0
 
+    def _should_send_heartbeat(self) -> bool:
+        """Check if we should send a daily heartbeat (once per 24 hours)."""
+        last_heartbeat = self.state.state.get('last_heartbeat')
+        if not last_heartbeat:
+            return True
+
+        try:
+            last_dt = datetime.fromisoformat(last_heartbeat)
+            hours_since = (datetime.now() - last_dt).total_seconds() / 3600
+            return hours_since >= 24
+        except (ValueError, TypeError):
+            return True
+
+    def _send_heartbeat(self):
+        """Send daily heartbeat message to confirm bot is running."""
+        if not self._should_send_heartbeat():
+            return
+
+        message = (
+            "💚 <b>Monitor Active</b>\n\n"
+            f"Daily check-in at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+            "Watching for: 1996 No Rarity Pokemon"
+        )
+
+        if self.notifier.send_message(message):
+            self.state.state['last_heartbeat'] = datetime.now().isoformat()
+            logger.info("Daily heartbeat sent")
+
     def _check_ending_soon_auctions(self, listings: list[dict]):
         """
         Check listings for auctions ending soon and send alerts.
@@ -217,6 +246,9 @@ class ListingMonitor:
         if missing:
             logger.warning(f"Missing configuration: {', '.join(missing)}")
             logger.warning("Telegram notifications will be disabled.")
+
+        # Send daily heartbeat (once per 24 hours)
+        self._send_heartbeat()
 
         # First run notification
         if self.state.is_first_run:
