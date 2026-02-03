@@ -306,11 +306,9 @@ class ListingMonitor:
             )
             sold_listings.extend(new_fanatics_sold)
 
-            # 5. Scrape Mercari listings
-            logger.info("Checking Mercari marketplace...")
-            mercari_active = self.mercari_scraper.search_listings(
-                self.search_term, max_pages=2
-            )
+            # 5. Scrape Mercari Japan listings (旧裏初版psa = no rarity PSA cards)
+            logger.info("Checking Mercari Japan marketplace...")
+            mercari_active = self.mercari_scraper.search_listings()
             new_mercari_active = self._process_listings(
                 mercari_active, 'mercari_active', 'Mercari', 'NEW'
             )
