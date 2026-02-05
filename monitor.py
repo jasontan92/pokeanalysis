@@ -309,6 +309,17 @@ class ListingMonitor:
             # 5. Scrape Mercari Japan listings (旧裏初版psa = no rarity PSA cards)
             logger.info("Checking Mercari Japan marketplace...")
             mercari_active = self.mercari_scraper.search_listings()
+
+            # Debug: Log sample Mercari titles and filter matches
+            if mercari_active:
+                logger.info(f"Mercari debug - checking {len(mercari_active)} listings against filter")
+                for i, listing in enumerate(mercari_active[:5]):
+                    title = listing.get('title', '')
+                    # Safely encode title for logging
+                    safe_title = title.encode('ascii', 'replace').decode('ascii')[:60]
+                    matches = self._matches_target_pokemon(title)
+                    logger.info(f"Mercari [{i}]: '{safe_title}' -> matches={matches}")
+
             new_mercari_active = self._process_listings(
                 mercari_active, 'mercari_active', 'Mercari', 'NEW'
             )
