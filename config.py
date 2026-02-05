@@ -31,21 +31,40 @@ class Config:
     SEARCH_TERM: str = os.getenv('SEARCH_TERM', '1996 no rarity')
 
     # Pokemon filter - only alert for listings containing these Pokemon names
-    # Holos + Starters (all 3 evolution lines) + Pikachu + Magikarp
+    # Includes both English and Japanese names for Mercari Japan support
     TARGET_POKEMON: list[str] = [
-        # Holos
-        'alakazam', 'gyarados', 'charizard', 'blastoise', 'venusaur',
-        'chansey', 'clefairy', 'hitmonchan', 'machamp', 'magneton',
-        'mewtwo', 'nidoking', 'ninetales', 'poliwrath', 'raichu',
-        'zapdos', 
+        # Holos (English + Japanese)
+        'alakazam', 'フーディン',
+        'gyarados', 'ギャラドス',
+        'charizard', 'リザードン',
+        'blastoise', 'カメックス',
+        'venusaur', 'フシギバナ',
+        'chansey', 'ラッキー',
+        'clefairy', 'ピッピ',
+        'hitmonchan', 'エビワラー',
+        'machamp', 'カイリキー',
+        'magneton', 'レアコイル',
+        'mewtwo', 'ミュウツー',
+        'nidoking', 'ニドキング',
+        'ninetales', 'キュウコン',
+        'poliwrath', 'ニョロボン',
+        'raichu', 'ライチュウ',
+        'zapdos', 'サンダー',
         # Starters (all evolutions)
-        'bulbasaur', 'ivysaur',  # venusaur already listed
-        'charmander', 'charmeleon',  # charizard already listed
-        'squirtle', 'wartortle',  # blastoise already listed
+        'bulbasaur', 'フシギダネ',
+        'ivysaur', 'フシギソウ',
+        'charmander', 'ヒトカゲ',
+        'charmeleon', 'リザード',
+        'squirtle', 'ゼニガメ',
+        'wartortle', 'カメール',
         # Special
-        'pikachu',
-        'magikarp',
-         'electrode'
+        'pikachu', 'ピカチュウ',
+        'magikarp', 'コイキング',
+        'electrode', 'マルマイン',
+        'electabuzz', 'エレブー',
+        # Dragon line
+        'dratini', 'ミニリュウ',
+        'dragonair', 'ハクリュー',
     ]
 
     # File paths
