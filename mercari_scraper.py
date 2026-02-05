@@ -133,22 +133,24 @@ class MercariScraper:
 
                     lines = [l.strip() for l in text.split('\n') if l.strip()]
 
-                    # Filter out price lines (SG$, numbers, etc.) to find the actual title
+                    # Filter out price lines (SG$, US$, yen, numbers, etc.) to find the actual title
                     title_lines = [
                         l for l in lines
                         if not l.startswith('SG')
+                        and not l.startswith('US$')
+                        and not l.startswith('$')
                         and not l.startswith('¥')
                         and not l.startswith('￥')
                         and not re.match(r'^[\d,\.]+$', l.replace(',', ''))
                     ]
                     title = title_lines[0][:100] if title_lines else item_id
 
-                    # Find price (Japanese yen ¥/円, or SG$ for Singapore)
+                    # Find price (Japanese yen ¥/円, SG$, or US$)
                     price = None
                     for line in lines:
-                        # Match SG$1,234 or ¥1,234 or 1234円
-                        price_match = re.search(r'(?:SG\$|[¥￥])?([\d,]+(?:\.\d{2})?)', line)
-                        if price_match and (line.startswith('SG') or '¥' in line or '￥' in line or line[0].isdigit()):
+                        # Match US$1,234 or SG$1,234 or ¥1,234 or 1234円
+                        price_match = re.search(r'(?:US\$|SG\$|\$|[¥￥])?([\d,]+(?:\.\d{2})?)', line)
+                        if price_match and (line.startswith('US$') or line.startswith('SG') or line.startswith('$') or '¥' in line or '￥' in line or line[0].isdigit()):
                             try:
                                 price = float(price_match.group(1).replace(',', ''))
                             except:
