@@ -4,9 +4,12 @@ Searches for 旧裏初版 (no rarity/first edition) Pokemon cards.
 Note: Requires xvfb on Linux (headless=False needed to bypass bot detection).
 """
 
+import logging
 import re
 from datetime import datetime
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 try:
     from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
@@ -24,12 +27,12 @@ class MercariScraper:
 
     def __init__(self):
         if not PLAYWRIGHT_AVAILABLE:
-            print("Playwright not installed. Mercari scraping disabled.")
+            logger.warning("Playwright not installed. Mercari scraping disabled.")
 
     def search_listings(self, max_pages: int = 1) -> list[dict]:
         """Search for no-rarity PSA Pokemon cards on Mercari Japan."""
         if not PLAYWRIGHT_AVAILABLE:
-            print("Playwright not available. Skipping Mercari.")
+            logger.warning("Playwright not available. Skipping Mercari.")
             return []
 
         all_listings = []
@@ -61,7 +64,7 @@ class MercariScraper:
 
                 page = context.new_page()
 
-                print("Fetching Mercari Japan...")
+                logger.info("Fetching Mercari Japan...")
 
                 try:
                     # Go directly to search URL
@@ -80,7 +83,7 @@ class MercariScraper:
                     listings = self._extract_listings(page)
                     if listings:
                         all_listings.extend(listings)
-                        print(f"Found {len(listings)} Mercari Japan listings")
+                        logger.info(f"Found {len(listings)} Mercari Japan listings")
                     else:
                         print("No Mercari Japan listings found")
 
