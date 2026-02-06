@@ -274,7 +274,13 @@ class ListingMonitor:
             new_listings.extend(new_ebay_active)
 
             # 1b. Check for auctions ending soon (within 30 minutes)
-            self._check_ending_soon_auctions(ebay_active)
+            # Scrape separately sorted by ending soonest, since active listings
+            # are sorted by newly listed and miss auctions about to end
+            logger.info("Checking eBay auctions ending soon...")
+            ebay_ending_soon = self.ebay_scraper.scrape_ending_soon(
+                self.search_term, max_pages=1
+            )
+            self._check_ending_soon_auctions(ebay_ending_soon)
 
             # 2. Scrape eBay sold listings
             logger.info("Checking eBay sold listings...")

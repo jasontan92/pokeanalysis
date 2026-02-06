@@ -322,6 +322,62 @@ class EbayScraper:
 
         return all_listings
 
+    def scrape_ending_soon(self, search_term, max_pages=1, items_per_page=60):
+        """Scrape auction listings sorted by ending soonest.
+
+        Used specifically to find auctions about to end, since
+        scrape_active_listings sorts by newly listed and misses them.
+
+        Args:
+            search_term: Keywords to search for
+            max_pages: Maximum pages to fetch (default 1)
+            items_per_page: Items per page (60, 120, or 240)
+        """
+        # Sort by ending soonest (_sop=1) and filter to auctions only (LH_Auction=1)
+        base_url = (
+            f"https://www.ebay.com/sch/i.html?"
+            f"_nkw={search_term.replace(' ', '+')}&"
+            f"_sacat=0&"
+            f"_sop=1&"  # Sort by ending soonest
+            f"LH_Auction=1&"  # Auctions only
+            f"_ipg={items_per_page}"
+        )
+
+        all_listings = []
+        page = 1
+
+        print(f"Scraping eBay ending-soon auctions for: '{search_term}'")
+
+        while page <= max_pages:
+            url = f"{base_url}&_pgn={page}"
+            print(f"Fetching ending-soon page {page}...")
+
+            html = None
+            if self.use_playwright:
+                html = self.fetch_page_playwright(url)
+            if not html:
+                html = self.fetch_page(url)
+            if not html:
+                print(f"Failed to fetch page {page}, stopping.")
+                break
+
+            listings = self.parse_active_listings(html)
+
+            if not listings:
+                print(f"No more listings found on page {page}.")
+                break
+
+            # Force listing_type to 'auction' since we filtered for auctions
+            for listing in listings:
+                listing['listing_type'] = 'auction'
+
+            all_listings.extend(listings)
+            print(f"Found {len(listings)} ending-soon auctions on page {page} (total: {len(all_listings)})")
+
+            page += 1
+
+        return all_listings
+
     def scrape_all_pages(self, search_term, max_pages=30, items_per_page=240):
         """Scrape all pages of sold listings for a search term.
 
