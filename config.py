@@ -59,12 +59,27 @@ class Config:
         'wartortle', 'カメール',
         # Special
         'pikachu', 'ピカチュウ',
+        'jigglypuff', 'プリン',
         'magikarp', 'コイキング',
         'electrode', 'マルマイン',
         'electabuzz', 'エレブー',
         # Dragon line
         'dratini', 'ミニリュウ',
         'dragonair', 'ハクリュー',
+    ]
+
+    # CoroCoro glossy card search terms (separate from the main NR search)
+    COROCORO_EBAY_TERMS: list[str] = [
+        '1996 corocoro glossy pikachu pokemon',
+        '1996 corocoro glossy jigglypuff pokemon',
+    ]
+    COROCORO_FANATICS_TERMS: list[str] = [
+        '1996 corocoro pikachu',
+        '1996 corocoro jigglypuff',
+    ]
+    COROCORO_MERCARI_KEYWORDS: list[str] = [
+        '1996 コロコロ ピカチュウ ポケモンカード',
+        '1996 コロコロ プリン ポケモンカード',
     ]
 
     # File paths

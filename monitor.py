@@ -183,7 +183,7 @@ class ListingMonitor:
         message = (
             "💚 <b>Monitor Active</b>\n\n"
             f"Daily check-in at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
-            "Watching for: 1996 No Rarity Pokemon"
+            "Watching for: 1996 No Rarity Pokemon + CoroCoro Glossy Pikachu/Jigglypuff"
         )
 
         if self.notifier.send_message(message):
@@ -330,6 +330,51 @@ class ListingMonitor:
                 mercari_active, 'mercari_active', 'Mercari', 'NEW'
             )
             new_listings.extend(new_mercari_active)
+
+            # ----------------------------------------------------------
+            # 6-8. CoroCoro glossy Pikachu & Jigglypuff (separate search
+            #       queries since the NR search term won't find these)
+            # ----------------------------------------------------------
+
+            # 6. eBay - CoroCoro glossy searches
+            for term in Config.COROCORO_EBAY_TERMS:
+                logger.info(f"Checking eBay CoroCoro: '{term}'...")
+                cc_ebay_active = self.ebay_scraper.scrape_active_listings(
+                    term, max_pages=1
+                )
+                new_cc_ebay = self._process_listings(
+                    cc_ebay_active, 'ebay_active', 'eBay', 'NEW'
+                )
+                new_listings.extend(new_cc_ebay)
+
+                # Also check ending-soon auctions
+                cc_ebay_ending = self.ebay_scraper.scrape_ending_soon(
+                    term, max_pages=1
+                )
+                self._check_ending_soon_auctions(cc_ebay_ending)
+
+            # 7. Fanatics - CoroCoro searches
+            for term in Config.COROCORO_FANATICS_TERMS:
+                logger.info(f"Checking Fanatics CoroCoro: '{term}'...")
+                cc_fanatics = self.fanatics_scraper.search_listings(
+                    term, max_pages=2
+                )
+                new_cc_fanatics = self._process_listings(
+                    cc_fanatics, 'fanatics_active', 'Fanatics', 'NEW'
+                )
+                new_listings.extend(new_cc_fanatics)
+
+            # 8. Mercari Japan - CoroCoro searches (Japanese keywords)
+            for keyword in Config.COROCORO_MERCARI_KEYWORDS:
+                safe_kw = keyword.encode('ascii', 'replace').decode('ascii')
+                logger.info(f"Checking Mercari CoroCoro: '{safe_kw}'...")
+                cc_mercari = self.mercari_scraper.search_listings(
+                    keyword=keyword
+                )
+                new_cc_mercari = self._process_listings(
+                    cc_mercari, 'mercari_active', 'Mercari', 'NEW'
+                )
+                new_listings.extend(new_cc_mercari)
 
         except Exception as e:
             logger.error(f"Error during scraping: {e}")

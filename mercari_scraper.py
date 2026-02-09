@@ -29,13 +29,26 @@ class MercariScraper:
         if not PLAYWRIGHT_AVAILABLE:
             logger.warning("Playwright not installed. Mercari scraping disabled.")
 
-    def search_listings(self, max_pages: int = 1) -> list[dict]:
-        """Search for no-rarity PSA Pokemon cards on Mercari Japan."""
+    def search_listings(self, max_pages: int = 1, keyword: str = None) -> list[dict]:
+        """Search for Pokemon cards on Mercari Japan.
+
+        Args:
+            max_pages: Maximum pages to fetch
+            keyword: Custom search keyword. If None, uses the default NR search URL.
+        """
         if not PLAYWRIGHT_AVAILABLE:
             logger.warning("Playwright not available. Skipping Mercari.")
             return []
 
         all_listings = []
+
+        # Build the search URL
+        if keyword:
+            from urllib.parse import quote
+            encoded = quote(keyword)
+            search_url = f"{self.BASE_URL}/search?keyword={encoded}&order=desc&sort=created_time&status=on_sale"
+        else:
+            search_url = self.SEARCH_URL
 
         try:
             with sync_playwright() as p:
@@ -64,11 +77,11 @@ class MercariScraper:
 
                 page = context.new_page()
 
-                logger.info("Fetching Mercari Japan...")
+                logger.info(f"Fetching Mercari Japan{f' ({keyword})' if keyword else ''}...")
 
                 try:
                     # Go directly to search URL
-                    page.goto(self.SEARCH_URL, timeout=60000)
+                    page.goto(search_url, timeout=60000)
 
                     # Wait for any challenge to complete
                     for _ in range(6):
