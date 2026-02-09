@@ -19,6 +19,7 @@ from config import Config
 from scraper import EbayScraper
 from fanatics_scraper import FanaticsScraper
 from mercari_scraper import MercariScraper
+from snkrdunk_scraper import SnkrdunkScraper
 from notifier import TelegramNotifier
 
 
@@ -57,6 +58,7 @@ class StateManager:
             'fanatics_active': {},
             'fanatics_sold': {},
             'mercari_active': {},
+            'snkrdunk_active': {},
             'ending_soon_alerted': {},  # Track auctions we've sent ending-soon alerts for
             'last_check': None,
             'last_heartbeat': None  # Track daily heartbeat
@@ -78,7 +80,7 @@ class StateManager:
         cutoff = datetime.now() - timedelta(days=days)
         cutoff_str = cutoff.isoformat()
 
-        for category in ['ebay_active', 'ebay_sold', 'fanatics_active', 'fanatics_sold', 'mercari_active', 'ending_soon_alerted']:
+        for category in ['ebay_active', 'ebay_sold', 'fanatics_active', 'fanatics_sold', 'mercari_active', 'snkrdunk_active', 'ending_soon_alerted']:
             if category in self.state and isinstance(self.state[category], dict):
                 self.state[category] = {
                     k: v for k, v in self.state[category].items()
@@ -109,6 +111,7 @@ class ListingMonitor:
         self.ebay_scraper = EbayScraper()
         self.fanatics_scraper = FanaticsScraper()
         self.mercari_scraper = MercariScraper()
+        self.snkrdunk_scraper = SnkrdunkScraper()
         self.search_term = Config.SEARCH_TERM
         self.target_pokemon = Config.TARGET_POKEMON
 
@@ -183,7 +186,7 @@ class ListingMonitor:
         message = (
             "💚 <b>Monitor Active</b>\n\n"
             f"Daily check-in at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
-            "Watching for: 1996 No Rarity Pokemon + CoroCoro Glossy Pikachu/Jigglypuff"
+            "Watching for: 1996 No Rarity Pokemon"
         )
 
         if self.notifier.send_message(message):
@@ -332,49 +335,18 @@ class ListingMonitor:
             new_listings.extend(new_mercari_active)
 
             # ----------------------------------------------------------
-            # 6-8. CoroCoro glossy Pikachu & Jigglypuff (separate search
-            #       queries since the NR search term won't find these)
+            # 6. SNKRDUNK (Japanese marketplace)
             # ----------------------------------------------------------
 
-            # 6. eBay - CoroCoro glossy searches
-            for term in Config.COROCORO_EBAY_TERMS:
-                logger.info(f"Checking eBay CoroCoro: '{term}'...")
-                cc_ebay_active = self.ebay_scraper.scrape_active_listings(
-                    term, max_pages=1
-                )
-                new_cc_ebay = self._process_listings(
-                    cc_ebay_active, 'ebay_active', 'eBay', 'NEW'
-                )
-                new_listings.extend(new_cc_ebay)
-
-                # Also check ending-soon auctions
-                cc_ebay_ending = self.ebay_scraper.scrape_ending_soon(
-                    term, max_pages=1
-                )
-                self._check_ending_soon_auctions(cc_ebay_ending)
-
-            # 7. Fanatics - CoroCoro searches
-            for term in Config.COROCORO_FANATICS_TERMS:
-                logger.info(f"Checking Fanatics CoroCoro: '{term}'...")
-                cc_fanatics = self.fanatics_scraper.search_listings(
-                    term, max_pages=2
-                )
-                new_cc_fanatics = self._process_listings(
-                    cc_fanatics, 'fanatics_active', 'Fanatics', 'NEW'
-                )
-                new_listings.extend(new_cc_fanatics)
-
-            # 8. Mercari Japan - CoroCoro searches (Japanese keywords)
-            for keyword in Config.COROCORO_MERCARI_KEYWORDS:
+            # 6. SNKRDUNK - NR search
+            for keyword in Config.SNKRDUNK_NR_KEYWORDS:
                 safe_kw = keyword.encode('ascii', 'replace').decode('ascii')
-                logger.info(f"Checking Mercari CoroCoro: '{safe_kw}'...")
-                cc_mercari = self.mercari_scraper.search_listings(
-                    keyword=keyword
+                logger.info(f"Checking SNKRDUNK NR: '{safe_kw}'...")
+                snkr_listings = self.snkrdunk_scraper.search_listings(keyword)
+                new_snkr = self._process_listings(
+                    snkr_listings, 'snkrdunk_active', 'SNKRDUNK', 'NEW'
                 )
-                new_cc_mercari = self._process_listings(
-                    cc_mercari, 'mercari_active', 'Mercari', 'NEW'
-                )
-                new_listings.extend(new_cc_mercari)
+                new_listings.extend(new_snkr)
 
         except Exception as e:
             logger.error(f"Error during scraping: {e}")
