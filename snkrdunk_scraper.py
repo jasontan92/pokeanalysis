@@ -148,6 +148,12 @@ class SnkrdunkScraper:
                     if grade_el:
                         grade = grade_el.inner_text().strip()
 
+                    # Get image URL
+                    image_url = None
+                    img_el = tile.query_selector('img')
+                    if img_el:
+                        image_url = img_el.get_attribute('src') or None
+
                     full_link = href if href.startswith('http') else f"{self.BASE_URL}{href}"
 
                     listings.append({
@@ -157,6 +163,7 @@ class SnkrdunkScraper:
                         'price': price,
                         'listing_type': 'buy_now',
                         'link': full_link,
+                        'image_url': image_url,
                         'platform': 'snkrdunk',
                         'scraped_at': datetime.now().isoformat(),
                     })

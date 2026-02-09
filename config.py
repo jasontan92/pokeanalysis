@@ -63,6 +63,9 @@ class Config:
         'magikarp', 'コイキング',
         'electrode', 'マルマイン',
         'electabuzz', 'エレブー',
+        'pidgeotto', 'ピジョン',
+        # Ghost line
+        'haunter', 'ゴースト',
         # Dragon line
         'dratini', 'ミニリュウ',
         'dragonair', 'ハクリュー',

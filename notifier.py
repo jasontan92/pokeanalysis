@@ -50,6 +50,40 @@ class TelegramNotifier:
             print(f"Failed to send Telegram message: {e}")
             return False
 
+    def send_photo(self, photo_url: str, caption: str, parse_mode: str = "HTML") -> bool:
+        """Send a photo message to the configured chat.
+
+        Args:
+            photo_url: URL of the image to send
+            caption: Caption text (can include HTML formatting)
+            parse_mode: "HTML" or "Markdown"
+
+        Returns:
+            True if message was sent successfully
+        """
+        if not self.bot_token or not self.chat_id:
+            print("Telegram not configured. Skipping notification.")
+            return False
+
+        url = f"{self.api_base}/sendPhoto"
+        payload = {
+            "chat_id": self.chat_id,
+            "photo": photo_url,
+            "caption": caption,
+            "parse_mode": parse_mode,
+        }
+
+        try:
+            response = requests.post(url, json=payload, timeout=10)
+            if response.status_code == 200:
+                return True
+            else:
+                print(f"Telegram sendPhoto error: {response.status_code} - {response.text}")
+                return False
+        except requests.RequestException as e:
+            print(f"Failed to send Telegram photo: {e}")
+            return False
+
     def send_listing_alert(
         self,
         platform: str,
@@ -57,7 +91,9 @@ class TelegramNotifier:
         price: Optional[float],
         link: str,
         listing_type: str = "NEW",
-        time_left: str = None
+        time_left: str = None,
+        currency: str = "$",
+        image_url: str = None
     ) -> bool:
         """
         Send a formatted listing alert.
@@ -65,10 +101,11 @@ class TelegramNotifier:
         Args:
             platform: "eBay" or "Fanatics"
             title: Listing title
-            price: Price in USD (or None if not available)
+            price: Price in USD/JPY (or None if not available)
             link: URL to the listing
             listing_type: "NEW" for new listing, "SOLD" for just sold, "ENDING" for ending soon
             time_left: Time remaining for auctions (optional)
+            currency: Currency symbol ("$" for USD, "¥" for JPY)
         """
         if listing_type == "SOLD":
             emoji = "💰"
@@ -80,7 +117,13 @@ class TelegramNotifier:
             emoji = "🆕"
             header = f"NEW LISTING [{platform}]"
 
-        price_str = f"${price:,.2f}" if price else "Price not listed"
+        if price:
+            if currency == "¥":
+                price_str = f"¥{price:,.0f}"
+            else:
+                price_str = f"${price:,.2f}"
+        else:
+            price_str = "Price not listed"
 
         message = (
             f"{emoji} <b>{header}</b>\n\n"
@@ -93,6 +136,8 @@ class TelegramNotifier:
 
         message += f"🔗 <a href=\"{link}\">View Listing</a>"
 
+        if image_url:
+            return self.send_photo(image_url, message)
         return self.send_message(message)
 
     def send_summary(self, new_count: int, sold_count: int) -> bool:

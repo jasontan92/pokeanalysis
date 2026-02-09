@@ -115,6 +115,23 @@ class ListingMonitor:
         self.search_term = Config.SEARCH_TERM
         self.target_pokemon = Config.TARGET_POKEMON
 
+        # Build Japanese -> English Pokemon name mapping from the pairs in TARGET_POKEMON
+        self.jp_to_en = {}
+        names = Config.TARGET_POKEMON
+        for i in range(0, len(names) - 1, 2):
+            en_name = names[i]
+            jp_name = names[i + 1]
+            self.jp_to_en[jp_name] = en_name.capitalize()
+
+    def _get_english_pokemon_name(self, title: str) -> str:
+        """Find the matching English Pokemon name for a Japanese title."""
+        if not title:
+            return ''
+        for jp_name, en_name in self.jp_to_en.items():
+            if jp_name in title:
+                return en_name
+        return ''
+
     def _matches_target_pokemon(self, title: str) -> bool:
         """Check if listing title contains any target Pokemon name."""
         if not title:
@@ -409,13 +426,23 @@ class ListingMonitor:
                 # This is a new listing!
                 logger.info(f"New {listing_type} listing: {listing.get('title', 'Unknown')[:50]}")
 
+                # For Japanese platforms, prepend the English Pokemon name
+                alert_title = title
+                if platform in ('Mercari', 'SNKRDUNK'):
+                    en_name = self._get_english_pokemon_name(title)
+                    if en_name:
+                        alert_title = f"[{en_name}] {title}"
+
                 # Send Telegram alert
+                currency = '¥' if platform in ('Mercari', 'SNKRDUNK') else '$'
                 success = self.notifier.send_listing_alert(
                     platform=platform,
-                    title=listing.get('title', 'Unknown'),
+                    title=alert_title,
                     price=listing.get('price'),
                     link=listing.get('link', ''),
-                    listing_type=listing_type
+                    listing_type=listing_type,
+                    currency=currency,
+                    image_url=listing.get('image_url')
                 )
 
                 if success:
