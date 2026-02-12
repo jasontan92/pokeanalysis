@@ -52,7 +52,7 @@ class StateManager:
             except (json.JSONDecodeError, IOError) as e:
                 logger.warning(f"Failed to load state: {e}. Starting fresh.")
 
-        return {
+        state = {
             'ebay_active': {},
             'ebay_sold': {},
             'fanatics_active': {},
@@ -63,6 +63,12 @@ class StateManager:
             'last_check': None,
             'last_heartbeat': None  # Track daily heartbeat
         }
+        # Add state categories for custom searches
+        for search in Config.CUSTOM_SEARCHES:
+            cat = search['state_category']
+            if cat not in state:
+                state[cat] = {}
+        return state
 
     def save_state(self):
         """Save state to JSON file."""
@@ -80,7 +86,9 @@ class StateManager:
         cutoff = datetime.now() - timedelta(days=days)
         cutoff_str = cutoff.isoformat()
 
-        for category in ['ebay_active', 'ebay_sold', 'fanatics_active', 'fanatics_sold', 'mercari_active', 'snkrdunk_active', 'ending_soon_alerted']:
+        cleanup_categories = ['ebay_active', 'ebay_sold', 'fanatics_active', 'fanatics_sold', 'mercari_active', 'snkrdunk_active', 'ending_soon_alerted']
+        cleanup_categories.extend(s['state_category'] for s in Config.CUSTOM_SEARCHES)
+        for category in cleanup_categories:
             if category in self.state and isinstance(self.state[category], dict):
                 self.state[category] = {
                     k: v for k, v in self.state[category].items()
@@ -365,6 +373,33 @@ class ListingMonitor:
                 )
                 new_listings.extend(new_snkr)
 
+            # ----------------------------------------------------------
+            # 7. Custom searches (no Pokemon filter - alert on everything)
+            # ----------------------------------------------------------
+            for search in Config.CUSTOM_SEARCHES:
+                name = search['name']
+                platform = search['platform']
+                category = search['state_category']
+                logger.info(f"Checking custom search: {name} ({platform})...")
+
+                custom_listings = []
+                if platform == 'ebay':
+                    custom_listings = self.ebay_scraper.scrape_active_listings(
+                        search['search_term'], max_pages=1
+                    )
+                elif platform == 'mercari':
+                    custom_listings = self.mercari_scraper.search_listings(
+                        keyword=search['keyword']
+                    )
+
+                platform_label = f"eBay ({name})" if platform == 'ebay' else f"Mercari ({name})"
+                currency = '¥' if platform == 'mercari' else '$'
+                new_custom = self._process_listings(
+                    custom_listings, category, platform_label, 'NEW',
+                    skip_pokemon_filter=True
+                )
+                new_listings.extend(new_custom)
+
         except Exception as e:
             logger.error(f"Error during scraping: {e}")
             self.notifier.send_error(f"Scraping error: {str(e)[:200]}")
@@ -386,7 +421,8 @@ class ListingMonitor:
         listings: list[dict],
         category: str,
         platform: str,
-        listing_type: str
+        listing_type: str,
+        skip_pokemon_filter: bool = False
     ) -> list[dict]:
         """
         Process listings: filter new ones and send alerts.
@@ -396,6 +432,7 @@ class ListingMonitor:
             category: State category (ebay_active, ebay_sold, etc.)
             platform: Platform name for alerts
             listing_type: 'NEW' or 'SOLD'
+            skip_pokemon_filter: If True, alert on all listings (for custom searches)
 
         Returns:
             List of new listings that were alerted
@@ -407,9 +444,9 @@ class ListingMonitor:
             # Get the unique ID
             listing_id = listing.get('item_id') or listing.get('listing_id')
 
-            # Filter: only process listings that match target Pokemon
+            # Filter: only process listings that match target Pokemon (unless skipped)
             title = listing.get('title', '')
-            if not self._matches_target_pokemon(title):
+            if not skip_pokemon_filter and not self._matches_target_pokemon(title):
                 # Still mark as seen to avoid reprocessing, but don't alert
                 self.state.mark_seen(category, listing_id)
                 continue
@@ -428,13 +465,14 @@ class ListingMonitor:
 
                 # For Japanese platforms, prepend the English Pokemon name
                 alert_title = title
-                if platform in ('Mercari', 'SNKRDUNK'):
+                is_jp_platform = platform.startswith('Mercari') or platform.startswith('SNKRDUNK')
+                if is_jp_platform:
                     en_name = self._get_english_pokemon_name(title)
                     if en_name:
                         alert_title = f"[{en_name}] {title}"
 
                 # Send Telegram alert
-                currency = '¥' if platform in ('Mercari', 'SNKRDUNK') else '$'
+                currency = '¥' if is_jp_platform else '$'
                 success = self.notifier.send_listing_alert(
                     platform=platform,
                     title=alert_title,

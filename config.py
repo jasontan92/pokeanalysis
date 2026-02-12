@@ -64,6 +64,7 @@ class Config:
         'electrode', 'マルマイン',
         'electabuzz', 'エレブー',
         'pidgeotto', 'ピジョン',
+        'arcanine', 'ウインディ',
         # Ghost line
         'haunter', 'ゴースト',
         # Dragon line
@@ -74,6 +75,22 @@ class Config:
     # SNKRDUNK search keywords (Japanese marketplace)
     SNKRDUNK_NR_KEYWORDS: list[str] = [
         '旧裏初版psa',
+    ]
+
+    # Custom search monitors - alert on ALL new listings (no Pokemon name filter)
+    CUSTOM_SEARCHES: list[dict] = [
+        {
+            'name': 'CoroCoro Ivy',
+            'platform': 'ebay',
+            'search_term': 'corocoro ivy',
+            'state_category': 'ebay_corocoro_ivy',
+        },
+        {
+            'name': 'CoroCoro Ivy Pikachu Promo',
+            'platform': 'mercari',
+            'keyword': 'ピカチュウ 旧裏 プロモ ivy コロコロ 光沢あり',
+            'state_category': 'mercari_corocoro_ivy',
+        },
     ]
 
     # File paths
