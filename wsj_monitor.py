@@ -105,8 +105,8 @@ class WSJTelegramNotifier:
             return False
 
     def send_listing_alert(self, series_name, platform, title, price, link,
-                           currency='$', image_url=None, item_type='WSJ'):
-        """Send a formatted alert for a new WSJ/Vol1 listing."""
+                           currency='$', image_url=None):
+        """Send a formatted alert for a new WSJ listing."""
         if currency == '¥' and price:
             price_str = f"¥{price:,.0f}" if isinstance(price, (int, float)) else str(price)
         elif price:
@@ -114,10 +114,9 @@ class WSJTelegramNotifier:
         else:
             price_str = "Price not listed"
 
-        tag = "📖" if item_type == 'Vol1' else "📰"
         message = (
             f"🆕 <b>NEW LISTING [{platform}]</b>\n\n"
-            f"{tag} <b>{series_name}</b> ({item_type})\n"
+            f"📰 <b>{series_name}</b>\n"
             f"📦 {title}\n"
             f"💵 {price_str}\n"
             f"🔗 <a href=\"{link}\">View Listing</a>"
@@ -226,7 +225,7 @@ def wait_for_page_load(page, timeout_seconds=30):
 
 
 # ---------------------------------------------------------------------------
-# Exclusion filter
+# Exclusion & relevance filters
 # ---------------------------------------------------------------------------
 
 def should_exclude(title: str, exclude_keywords: list[str]) -> bool:
@@ -235,6 +234,54 @@ def should_exclude(title: str, exclude_keywords: list[str]) -> bool:
         if kw.lower() in t:
             return True
     return False
+
+
+def _is_reprint(title: str) -> bool:
+    """Check if a listing is a reprint/reproduction."""
+    t = title.lower()
+    t_orig = title
+    reprint_keywords = [
+        'reprint', 'reproduction', 'replica', 'facsimile', 'reissue',
+        '復刻', '復刻版', '復刻盤', 'リプリント', '再版', '再録',
+        '愛蔵版', '完全版', '文庫版', '新装版', 'bunko', 'kanzenban',
+    ]
+    return any(kw in t or kw in t_orig for kw in reprint_keywords)
+
+
+def is_relevant_listing(title: str, series: dict) -> bool:
+    """Check if a listing is the target WSJ issue.
+
+    Requires: correct year + exact issue number + jump/magazine reference, no reprints.
+    """
+    t = title.lower()
+    t_orig = title
+
+    if _is_reprint(title):
+        return False
+
+    wsj_year = series.get('wsj_year')
+    wsj_number = series.get('wsj_number')
+
+    if not wsj_year or not wsj_number:
+        return False
+
+    has_year = wsj_year in t
+
+    # Match exact issue number with word boundaries
+    num = wsj_number
+    has_number = bool(
+        re.search(rf'(?<!\d){num}号', t_orig)                        # 43号
+        or re.search(rf'#{num}(?!\d)', t)                             # #43
+        or re.search(rf'no\.?\s*{num}(?!\d)', t)                      # No.43, No 43
+        or re.search(rf'(?:^|[\s#＃])0*{num}(?:[号\s,.\-]|$)', t_orig)  # standalone
+    )
+
+    # Must reference jump magazine
+    has_jump = any(kw in t or kw in t_orig for kw in [
+        'jump', 'wsj', 'ジャンプ',
+    ])
+
+    return has_year and has_number and has_jump
 
 
 # ---------------------------------------------------------------------------
@@ -264,6 +311,8 @@ def search_ebay(series_key: str, series: dict) -> list[dict]:
 
                 title = listing.get('title', '')
                 if should_exclude(title, series['exclude_keywords']):
+                    continue
+                if not is_relevant_listing(title, series):
                     continue
 
                 results.append({
@@ -331,6 +380,8 @@ def search_mercari(page, series_key: str, series: dict) -> list[dict]:
                     title = title_lines[0][:120] if title_lines else item_id
 
                     if should_exclude(title, series['exclude_keywords']):
+                        continue
+                    if not is_relevant_listing(title, series):
                         continue
 
                     price = None
@@ -404,6 +455,8 @@ def search_yahoo_auctions(page, series_key: str, series: dict) -> list[dict]:
                     href = title_el.get_attribute('href')
 
                     if should_exclude(title, series['exclude_keywords']):
+                        continue
+                    if not is_relevant_listing(title, series):
                         continue
 
                     title_key = title[:50]
@@ -485,21 +538,6 @@ class WSJMonitor:
             self.state.state['last_heartbeat'] = datetime.now().isoformat()
             logger.info("Heartbeat sent")
 
-    def _classify_item_type(self, title: str, series: dict) -> str:
-        """Classify a listing as WSJ or Vol1 based on title content."""
-        t = title.lower()
-        t_orig = title
-
-        # Vol 1 signals
-        vol1_signals = ['1巻', '第1巻', 'vol.1', 'vol 1', 'volume 1', '初版']
-        if any(s in t or s in t_orig for s in vol1_signals):
-            # Make sure it's not also a WSJ issue
-            wsj_signals = ['ジャンプ', 'jump', 'wsj', '号']
-            if not any(s in t or s in t_orig for s in wsj_signals):
-                return 'Vol1'
-
-        return 'WSJ'
-
     def _process_results(self, all_results: list[dict]) -> int:
         """Process results, send alerts for new listings. Returns alert count."""
         alerts_sent = 0
@@ -524,7 +562,6 @@ class WSJMonitor:
                 alerts_per_series[series_key] = count + 1
 
             title = result['title']
-            item_type = self._classify_item_type(title, series)
             currency = '¥' if result['currency'] == 'JPY' else '$'
 
             success = self.notifier.send_listing_alert(
@@ -535,7 +572,6 @@ class WSJMonitor:
                 link=result['link'],
                 currency=currency,
                 image_url=result.get('image_url'),
-                item_type=item_type,
             )
 
             if success:
@@ -564,15 +600,13 @@ class WSJMonitor:
 
         if self.state.is_first_run:
             logger.info("First run - will limit alerts to most recent listings")
+            series_lines = '\n'.join(
+                f"• {s['name']} ({s['wsj_issue']})" for s in WSJConfig.SERIES.values() if s.get('wsj_issue')
+            )
             self.notifier.send_message(
-                "🔄 <b>WSJ Monitor Started</b>\n\n"
-                "Watching for WSJ first appearances & Vol 1:\n"
-                "• Naruto (WSJ 1999 #43)\n"
-                "• Bleach (WSJ 2001 #36-37)\n"
-                "• Yu-Gi-Oh! (WSJ 1996 #42)\n"
-                "• Dragon Ball (WSJ 1984 #51)\n"
-                "• Hunter×Hunter (WSJ 1998 #14)\n\n"
-                "Platforms: eBay, Mercari JP, Yahoo Auctions JP"
+                f"🔄 <b>WSJ Monitor Started</b>\n\n"
+                f"Watching for WSJ first appearances:\n{series_lines}\n\n"
+                f"Platforms: eBay, Mercari JP, Yahoo Auctions JP"
             )
 
         all_results = []
