@@ -112,15 +112,22 @@ class ListingMonitor:
         self.ebay_scraper = EbayScraper()
         self.mercari_scraper = MercariScraper()
 
-    def _validate_listing(self, title: str, validators: list[list[str]]) -> bool:
+    def _validate_listing(self, title: str, validators: list[list[str]], exclude: list[str] = None) -> bool:
         """Check title against validation rules.
 
         Each validator is a list of alternatives (OR).
         All validators must pass (AND).
+        If any exclude term is found, the listing is rejected.
         """
         if not title:
             return False
         title_lower = title.lower()
+
+        # Reject if any exclude term found
+        all_exclude = list(Config.GLOBAL_EXCLUDE) + (exclude or [])
+        if any(term.lower() in title_lower for term in all_exclude):
+            return False
+
         return all(
             any(alt.lower() in title_lower for alt in alternatives)
             for alternatives in validators
@@ -207,7 +214,7 @@ class ListingMonitor:
                     title = listing.get('title', '')
 
                     # Validate title matches expected content
-                    if not self._validate_listing(title, validators):
+                    if not self._validate_listing(title, validators, search.get('exclude')):
                         self.state.mark_seen(category, listing_id)
                         continue
 

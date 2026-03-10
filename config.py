@@ -25,8 +25,15 @@ class Config:
     WSJ_TELEGRAM_BOT_TOKEN: str = os.getenv('WSJ_TELEGRAM_BOT_TOKEN', '')
     WSJ_TELEGRAM_CHAT_ID: str = os.getenv('WSJ_TELEGRAM_CHAT_ID', '')
 
+    # Global exclude terms — reject any listing whose title contains these (reprint indicators)
+    GLOBAL_EXCLUDE: list[str] = [
+        'reprint', 'reproduction',
+        '再版', '重版', '復刻', '復刻版', '再刷', '複製',
+    ]
+
     # Monitored searches — each has a keyword, platform, and title validators
     # validators: list of lists — each inner list = alternatives (OR), all outer lists must pass (AND)
+    # optional 'exclude': per-search extra exclude terms (on top of GLOBAL_EXCLUDE)
     MONITORED_SEARCHES: list[dict] = [
         {
             'name': 'Naruto Vol 1 First Edition',
@@ -62,6 +69,36 @@ class Config:
             'keyword': 'weekly shonen jump 1997 vol 34',
             'state_category': 'ebay_wsj_1997_34',
             'validators': [['jump'], ['1997'], ['34']],
+        },
+        # JoJo's Bizarre Adventure - WSJ 1987 #1-2
+        {
+            'name': 'WSJ 1987 #1-2 JoJo',
+            'platform': 'mercari',
+            'keyword': '週刊少年ジャンプ 1987 1・2 ジョジョ',
+            'state_category': 'mercari_wsj_jojo',
+            'validators': [['ジャンプ', 'jump'], ['1987'], ['ジョジョ', 'jojo']],
+        },
+        {
+            'name': 'WSJ 1987 JoJo',
+            'platform': 'ebay',
+            'keyword': 'weekly shonen jump 1987 jojo',
+            'state_category': 'ebay_wsj_jojo',
+            'validators': [['jump'], ['1987'], ['jojo']],
+        },
+        # Hunter x Hunter - WSJ 1998 #14
+        {
+            'name': 'WSJ 1998 #14 HxH',
+            'platform': 'mercari',
+            'keyword': '週刊少年ジャンプ 1998 14 ハンターハンター',
+            'state_category': 'mercari_wsj_hxh',
+            'validators': [['ジャンプ', 'jump'], ['1998'], ['14']],
+        },
+        {
+            'name': 'WSJ 1998 No 14 HxH',
+            'platform': 'ebay',
+            'keyword': 'weekly shonen jump 1998 no 14 hunter',
+            'state_category': 'ebay_wsj_hxh',
+            'validators': [['jump'], ['1998'], ['14']],
         },
         {
             'name': 'Pokemon Red 22 (eBay)',
