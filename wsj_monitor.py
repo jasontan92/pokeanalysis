@@ -352,6 +352,7 @@ def search_mercari(page, series_key: str, series: dict) -> list[dict]:
             page.wait_for_timeout(3000)
 
             links = page.query_selector_all('a[href*="/item/"]')
+            logger.info(f"    Query '{query}': found {len(links)} raw links on page")
 
             for link in links:
                 try:
@@ -375,15 +376,20 @@ def search_mercari(page, series_key: str, series: dict) -> list[dict]:
                         if not l.startswith('SG') and not l.startswith('US$')
                         and not l.startswith('$') and not l.startswith('¥')
                         and not l.startswith('￥') and not re.match(r'^[\d,\.]+$', l.replace(',', ''))
+                        and '¥' not in l and '￥' not in l
+                        and not l.startswith('現在')
                         and len(l) > 3
                     ]
                     title = title_lines[0][:120] if title_lines else item_id
 
                     if should_exclude(title, series['exclude_keywords']):
+                        logger.debug(f"    Excluded (keyword): {title[:60]}")
                         continue
                     if not is_relevant_listing(title, series):
+                        logger.debug(f"    Excluded (relevance): {title[:60]}")
                         continue
 
+                    logger.info(f"    MATCH: {title[:80]}")
                     price = None
                     price_raw = None
                     for line in lines:
@@ -444,6 +450,7 @@ def search_yahoo_auctions(page, series_key: str, series: dict) -> list[dict]:
             page.wait_for_timeout(3000)
 
             items = page.query_selector_all('.Product, .cf, [data-auction-id], .Product__titleLink')
+            logger.info(f"    Query '{query}': found {len(items)} raw items on page")
 
             for item in items[:30]:
                 try:

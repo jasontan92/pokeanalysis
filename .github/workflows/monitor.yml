@@ -40,4 +40,5 @@ jobs:
           git config user.name "GitHub Actions"
           git add data/seen_listings.json || true
           git diff --staged --quiet || git commit -m "Update state"
+          git pull --rebase || true
           git push || true
