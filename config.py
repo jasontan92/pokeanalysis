@@ -22,74 +22,96 @@ class Config:
     # Telegram settings
     TELEGRAM_BOT_TOKEN: str = os.getenv('TELEGRAM_BOT_TOKEN', '')
     TELEGRAM_CHAT_ID: str = os.getenv('TELEGRAM_CHAT_ID', '')
+    WSJ_TELEGRAM_BOT_TOKEN: str = os.getenv('WSJ_TELEGRAM_BOT_TOKEN', '')
+    WSJ_TELEGRAM_CHAT_ID: str = os.getenv('WSJ_TELEGRAM_CHAT_ID', '')
 
-    # Fanatics Collect credentials
-    FANATICS_EMAIL: str = os.getenv('FANATICS_EMAIL', '')
-    FANATICS_PASSWORD: str = os.getenv('FANATICS_PASSWORD', '')
-
-    # Search settings
-    SEARCH_TERM: str = os.getenv('SEARCH_TERM', '1996 no rarity')
-
-    # Pokemon filter - only alert for listings containing these Pokemon names
-    # Includes both English and Japanese names for Mercari Japan support
-    TARGET_POKEMON: list[str] = [
-        # Holos (English + Japanese)
-        'alakazam', 'フーディン',
-        'gyarados', 'ギャラドス',
-        'charizard', 'リザードン',
-        'blastoise', 'カメックス',
-        'venusaur', 'フシギバナ',
-        'chansey', 'ラッキー',
-        'clefairy', 'ピッピ',
-        'hitmonchan', 'エビワラー',
-        'machamp', 'カイリキー',
-        'magneton', 'レアコイル',
-        'mewtwo', 'ミュウツー',
-        'nidoking', 'ニドキング',
-        'ninetales', 'キュウコン',
-        'poliwrath', 'ニョロボン',
-        'raichu', 'ライチュウ',
-        'zapdos', 'サンダー',
-        # Starters (all evolutions)
-        'bulbasaur', 'フシギダネ',
-        'ivysaur', 'フシギソウ',
-        'charmander', 'ヒトカゲ',
-        'charmeleon', 'リザード',
-        'squirtle', 'ゼニガメ',
-        'wartortle', 'カメール',
-        # Special
-        'pikachu', 'ピカチュウ',
-        'jigglypuff', 'プリン',
-        'magikarp', 'コイキング',
-        'electrode', 'マルマイン',
-        'electabuzz', 'エレブー',
-        'pidgeotto', 'ピジョン',
-        'arcanine', 'ウインディ',
-        # Ghost line
-        'haunter', 'ゴースト',
-        # Dragon line
-        'dratini', 'ミニリュウ',
-        'dragonair', 'ハクリュー',
-    ]
-
-    # SNKRDUNK search keywords (Japanese marketplace)
-    SNKRDUNK_NR_KEYWORDS: list[str] = [
-        '旧裏初版psa',
-    ]
-
-    # Custom search monitors - alert on ALL new listings (no Pokemon name filter)
-    CUSTOM_SEARCHES: list[dict] = [
+    # Monitored searches — each has a keyword, platform, and title validators
+    # validators: list of lists — each inner list = alternatives (OR), all outer lists must pass (AND)
+    MONITORED_SEARCHES: list[dict] = [
         {
-            'name': 'CoroCoro Ivy',
-            'platform': 'ebay',
-            'search_term': 'corocoro ivy',
-            'state_category': 'ebay_corocoro_ivy',
+            'name': 'Naruto Vol 1 First Edition',
+            'platform': 'mercari',
+            'keyword': 'naruto 1巻 初版',
+            'state_category': 'mercari_naruto_v1',
+            'validators': [['ナルト', 'naruto'], ['1巻']],
         },
         {
-            'name': 'CoroCoro Ivy Pikachu Promo',
+            'name': 'CoroCoro Comic Nov 1996',
             'platform': 'mercari',
-            'keyword': 'ピカチュウ 旧裏 プロモ ivy コロコロ 光沢あり',
-            'state_category': 'mercari_corocoro_ivy',
+            'keyword': 'コロコロコミック 1996年 11月号',
+            'state_category': 'mercari_corocoro_nov96',
+            'validators': [['コロコロ', 'corocoro'], ['1996'], ['11']],
+        },
+        {
+            'name': 'WSJ 1996 #41 Romance Dawn',
+            'platform': 'mercari',
+            'keyword': '週刊少年ジャンプ 1996 41 ロマンスドーン',
+            'state_category': 'mercari_wsj_41_romancedawn',
+            'validators': [['ジャンプ', 'jump'], ['1996'], ['41']],
+        },
+        {
+            'name': 'WSJ 1996 No 41',
+            'platform': 'ebay',
+            'keyword': 'weekly shonen jump 1996 no 41',
+            'state_category': 'ebay_wsj_1996_41',
+            'validators': [['jump'], ['1996'], ['41']],
+        },
+        {
+            'name': 'WSJ 1997 Vol 34',
+            'platform': 'ebay',
+            'keyword': 'weekly shonen jump 1997 vol 34',
+            'state_category': 'ebay_wsj_1997_34',
+            'validators': [['jump'], ['1997'], ['34']],
+        },
+        {
+            'name': 'Pokemon Red 22 (eBay)',
+            'platform': 'ebay',
+            'keyword': 'pokemon red gameboy 22',
+            'state_category': 'ebay_pokemon_red_1st',
+            'bot': 'wsj',
+            'validators': [
+                ['pokemon', 'ポケモン', 'ポケットモンスター', 'pocket monster'],
+                ['red', '赤', 'レッド'],
+                ['gameboy', 'game boy'],
+                ['22'],
+            ],
+        },
+        {
+            'name': 'Pokemon Green 00 (eBay)',
+            'platform': 'ebay',
+            'keyword': 'pokemon green gameboy 00',
+            'state_category': 'ebay_pokemon_green_1st',
+            'bot': 'wsj',
+            'validators': [
+                ['pokemon', 'ポケモン', 'ポケットモンスター', 'pocket monster'],
+                ['green', '緑', 'グリーン'],
+                ['gameboy', 'game boy'],
+                ['00'],
+            ],
+        },
+        {
+            'name': 'Pokemon Green 1996 初版 (Mercari)',
+            'platform': 'mercari',
+            'keyword': 'ポケットモンスター 初版 00',
+            'state_category': 'mercari_pokemon_green_1st',
+            'bot': 'wsj',
+            'validators': [
+                ['ポケモン', 'ポケットモンスター', 'pokemon', 'pocket monster'],
+                ['初版', 'first edition', '1st'],
+                ['00', '緑', 'グリーン', 'green'],
+            ],
+        },
+        {
+            'name': 'Pokemon Red 1996 初版 (Mercari)',
+            'platform': 'mercari',
+            'keyword': 'ポケットモンスター 初版 22',
+            'state_category': 'mercari_pokemon_red_1st',
+            'bot': 'wsj',
+            'validators': [
+                ['ポケモン', 'ポケットモンスター', 'pokemon', 'pocket monster'],
+                ['初版', 'first edition', '1st'],
+                ['22', '赤', 'レッド', 'red'],
+            ],
         },
     ]
 
@@ -113,11 +135,6 @@ class Config:
     def is_telegram_configured(cls) -> bool:
         """Check if Telegram is properly configured."""
         return bool(cls.TELEGRAM_BOT_TOKEN and cls.TELEGRAM_CHAT_ID)
-
-    @classmethod
-    def is_fanatics_configured(cls) -> bool:
-        """Check if Fanatics credentials are configured."""
-        return bool(cls.FANATICS_EMAIL and cls.FANATICS_PASSWORD)
 
 
 # Ensure data directory exists

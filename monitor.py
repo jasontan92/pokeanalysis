@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """
-Listing Monitor for Pokemon Cards.
-Checks eBay and Fanatics Collect for new "1996 no rarity" listings.
-Sends Telegram alerts for new items.
+Listing Monitor for Mercari Japan and eBay.
+Checks specific searches and sends Telegram alerts for new validated listings.
 
 Run via cron every 30 minutes:
 */30 * * * * cd /path/to/pokeanalysis && python3 monitor.py >> /var/log/pokeanalysis.log 2>&1
@@ -17,9 +16,7 @@ from typing import Optional
 
 from config import Config
 from scraper import EbayScraper
-from fanatics_scraper import FanaticsScraper
 from mercari_scraper import MercariScraper
-from snkrdunk_scraper import SnkrdunkScraper
 from notifier import TelegramNotifier
 
 
@@ -53,21 +50,12 @@ class StateManager:
                 logger.warning(f"Failed to load state: {e}. Starting fresh.")
 
         state = {
-            'ebay_active': {},
-            'ebay_sold': {},
-            'fanatics_active': {},
-            'fanatics_sold': {},
-            'mercari_active': {},
-            'snkrdunk_active': {},
-            'ending_soon_alerted': {},  # Track auctions we've sent ending-soon alerts for
             'last_check': None,
-            'last_heartbeat': None  # Track daily heartbeat
+            'last_heartbeat': None,
         }
-        # Add state categories for custom searches
-        for search in Config.CUSTOM_SEARCHES:
-            cat = search['state_category']
-            if cat not in state:
-                state[cat] = {}
+        # Add state categories for each monitored search
+        for search in Config.MONITORED_SEARCHES:
+            state[search['state_category']] = {}
         return state
 
     def save_state(self):
@@ -86,9 +74,8 @@ class StateManager:
         cutoff = datetime.now() - timedelta(days=days)
         cutoff_str = cutoff.isoformat()
 
-        cleanup_categories = ['ebay_active', 'ebay_sold', 'fanatics_active', 'fanatics_sold', 'mercari_active', 'snkrdunk_active', 'ending_soon_alerted']
-        cleanup_categories.extend(s['state_category'] for s in Config.CUSTOM_SEARCHES)
-        for category in cleanup_categories:
+        for search in Config.MONITORED_SEARCHES:
+            category = search['state_category']
             if category in self.state and isinstance(self.state[category], dict):
                 self.state[category] = {
                     k: v for k, v in self.state[category].items()
@@ -98,7 +85,7 @@ class StateManager:
     def is_new(self, category: str, listing_id: str) -> bool:
         """Check if a listing is new (not seen before)."""
         if not listing_id:
-            return True  # Can't track without ID, treat as new
+            return True
         return listing_id not in self.state.get(category, {})
 
     def mark_seen(self, category: str, listing_id: str):
@@ -113,82 +100,31 @@ class StateManager:
 class ListingMonitor:
     """Main monitoring orchestrator."""
 
+    FIRST_RUN_ALERT_LIMIT = 20
+
     def __init__(self):
         self.state = StateManager()
         self.notifier = TelegramNotifier()
+        self.wsj_notifier = TelegramNotifier(
+            bot_token=Config.WSJ_TELEGRAM_BOT_TOKEN,
+            chat_id=Config.WSJ_TELEGRAM_CHAT_ID,
+        )
         self.ebay_scraper = EbayScraper()
-        self.fanatics_scraper = FanaticsScraper()
         self.mercari_scraper = MercariScraper()
-        self.snkrdunk_scraper = SnkrdunkScraper()
-        self.search_term = Config.SEARCH_TERM
-        self.target_pokemon = Config.TARGET_POKEMON
 
-        # Build Japanese -> English Pokemon name mapping from the pairs in TARGET_POKEMON
-        self.jp_to_en = {}
-        names = Config.TARGET_POKEMON
-        for i in range(0, len(names) - 1, 2):
-            en_name = names[i]
-            jp_name = names[i + 1]
-            self.jp_to_en[jp_name] = en_name.capitalize()
+    def _validate_listing(self, title: str, validators: list[list[str]]) -> bool:
+        """Check title against validation rules.
 
-    def _get_english_pokemon_name(self, title: str) -> str:
-        """Find the matching English Pokemon name for a Japanese title."""
-        if not title:
-            return ''
-        for jp_name, en_name in self.jp_to_en.items():
-            if jp_name in title:
-                return en_name
-        return ''
-
-    def _matches_target_pokemon(self, title: str) -> bool:
-        """Check if listing title contains any target Pokemon name."""
+        Each validator is a list of alternatives (OR).
+        All validators must pass (AND).
+        """
         if not title:
             return False
         title_lower = title.lower()
-        return any(pokemon in title_lower for pokemon in self.target_pokemon)
-
-    def _parse_time_left_minutes(self, time_left: str) -> Optional[int]:
-        """
-        Parse time_left string and return total minutes remaining.
-        Handles formats like: "30m", "1h 30m", "2d 5h", "5h 23m 15s"
-        Returns None if can't parse.
-        """
-        if not time_left:
-            return None
-
-        import re
-        time_left = time_left.lower().strip()
-
-        # Extract days, hours, minutes
-        days = 0
-        hours = 0
-        minutes = 0
-
-        day_match = re.search(r'(\d+)\s*d', time_left)
-        hour_match = re.search(r'(\d+)\s*h', time_left)
-        min_match = re.search(r'(\d+)\s*m', time_left)
-
-        if day_match:
-            days = int(day_match.group(1))
-        if hour_match:
-            hours = int(hour_match.group(1))
-        if min_match:
-            minutes = int(min_match.group(1))
-
-        total_minutes = days * 24 * 60 + hours * 60 + minutes
-
-        # If we couldn't parse anything meaningful, return None
-        if total_minutes == 0 and not any([day_match, hour_match, min_match]):
-            return None
-
-        return total_minutes
-
-    def _is_ending_soon(self, time_left: str, threshold_minutes: int = 30) -> bool:
-        """Check if auction is ending within threshold minutes."""
-        minutes = self._parse_time_left_minutes(time_left)
-        if minutes is None:
-            return False
-        return minutes <= threshold_minutes and minutes > 0
+        return all(
+            any(alt.lower() in title_lower for alt in alternatives)
+            for alternatives in validators
+        )
 
     def _should_send_heartbeat(self) -> bool:
         """Check if we should send a daily heartbeat (once per 24 hours)."""
@@ -208,66 +144,21 @@ class ListingMonitor:
         if not self._should_send_heartbeat():
             return
 
+        search_names = ', '.join(s['name'] for s in Config.MONITORED_SEARCHES)
         message = (
             "💚 <b>Monitor Active</b>\n\n"
             f"Daily check-in at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
-            "Watching for: 1996 No Rarity Pokemon"
+            f"Watching: {search_names}"
         )
 
         if self.notifier.send_message(message):
             self.state.state['last_heartbeat'] = datetime.now().isoformat()
             logger.info("Daily heartbeat sent")
 
-    def _check_ending_soon_auctions(self, listings: list[dict]):
-        """
-        Check listings for auctions ending soon and send alerts.
-        Only alerts once per auction (tracked in ending_soon_alerted state).
-        """
-        for listing in listings:
-            # Only check auctions
-            if listing.get('listing_type') != 'auction':
-                continue
-
-            listing_id = listing.get('item_id') or listing.get('listing_id')
-            if not listing_id:
-                continue
-
-            # Check if matches target pokemon filter
-            title = listing.get('title', '')
-            if not self._matches_target_pokemon(title):
-                continue
-
-            # Check if ending soon
-            time_left = listing.get('time_left', '')
-            if not self._is_ending_soon(time_left):
-                continue
-
-            # Check if we already sent an ending-soon alert for this auction
-            if not self.state.is_new('ending_soon_alerted', listing_id):
-                continue
-
-            # Send ending-soon alert
-            logger.info(f"Auction ending soon: {title[:50]} ({time_left})")
-
-            success = self.notifier.send_listing_alert(
-                platform='eBay',
-                title=title,
-                price=listing.get('price'),
-                link=listing.get('link', ''),
-                listing_type='ENDING',
-                time_left=time_left
-            )
-
-            if success:
-                # Mark as alerted so we don't alert again
-                self.state.mark_seen('ending_soon_alerted', listing_id)
-                logger.info(f"Ending soon alert sent for {listing_id}")
-
     def run(self):
         """Run the full monitoring cycle."""
         logger.info("=" * 50)
         logger.info(f"Starting monitor run at {datetime.now()}")
-        logger.info(f"Search term: {self.search_term}")
 
         # Validate configuration
         missing = Config.validate()
@@ -275,7 +166,7 @@ class ListingMonitor:
             logger.warning(f"Missing configuration: {', '.join(missing)}")
             logger.warning("Telegram notifications will be disabled.")
 
-        # Send daily heartbeat (once per 24 hours)
+        # Send daily heartbeat
         self._send_heartbeat()
 
         # First run notification
@@ -287,118 +178,77 @@ class ListingMonitor:
                 "Future runs will only alert on NEW listings."
             )
 
-        new_listings = []
-        sold_listings = []
+        all_new = []
 
         try:
-            # 1. Scrape eBay active listings
-            logger.info("Checking eBay active listings...")
-            ebay_active = self.ebay_scraper.scrape_active_listings(
-                self.search_term, max_pages=2
-            )
-            new_ebay_active = self._process_listings(
-                ebay_active, 'ebay_active', 'eBay', 'NEW'
-            )
-            new_listings.extend(new_ebay_active)
-
-            # 1b. Check for auctions ending soon (within 30 minutes)
-            # Scrape separately sorted by ending soonest, since active listings
-            # are sorted by newly listed and miss auctions about to end
-            logger.info("Checking eBay auctions ending soon...")
-            ebay_ending_soon = self.ebay_scraper.scrape_ending_soon(
-                self.search_term, max_pages=1
-            )
-            self._check_ending_soon_auctions(ebay_ending_soon)
-
-            # 2. Scrape eBay sold listings
-            logger.info("Checking eBay sold listings...")
-            ebay_sold = self.ebay_scraper.scrape_all_pages(
-                self.search_term, max_pages=1
-            )
-            new_ebay_sold = self._process_listings(
-                ebay_sold, 'ebay_sold', 'eBay', 'SOLD'
-            )
-            sold_listings.extend(new_ebay_sold)
-
-            # 3. Scrape Fanatics Collect active listings
-            logger.info("Checking Fanatics Collect marketplace...")
-            fanatics_active = self.fanatics_scraper.search_listings(
-                self.search_term, max_pages=5
-            )
-            new_fanatics_active = self._process_listings(
-                fanatics_active, 'fanatics_active', 'Fanatics', 'NEW'
-            )
-            new_listings.extend(new_fanatics_active)
-
-            # 4. Scrape Fanatics sales history
-            logger.info("Checking Fanatics sales history...")
-            fanatics_sold = self.fanatics_scraper.get_sales_history(
-                self.search_term, max_pages=1
-            )
-            new_fanatics_sold = self._process_listings(
-                fanatics_sold, 'fanatics_sold', 'Fanatics', 'SOLD'
-            )
-            sold_listings.extend(new_fanatics_sold)
-
-            # 5. Scrape Mercari Japan listings (旧裏初版psa = no rarity PSA cards)
-            logger.info("Checking Mercari Japan marketplace...")
-            mercari_active = self.mercari_scraper.search_listings()
-
-            # Debug: Log sample Mercari titles and filter matches
-            if mercari_active:
-                logger.info(f"Mercari debug - checking {len(mercari_active)} listings against filter")
-                for i, listing in enumerate(mercari_active[:5]):
-                    title = listing.get('title', '')
-                    # Safely encode title for logging
-                    safe_title = title.encode('ascii', 'replace').decode('ascii')[:60]
-                    matches = self._matches_target_pokemon(title)
-                    logger.info(f"Mercari [{i}]: '{safe_title}' -> matches={matches}")
-
-            new_mercari_active = self._process_listings(
-                mercari_active, 'mercari_active', 'Mercari', 'NEW'
-            )
-            new_listings.extend(new_mercari_active)
-
-            # ----------------------------------------------------------
-            # 6. SNKRDUNK (Japanese marketplace)
-            # ----------------------------------------------------------
-
-            # 6. SNKRDUNK - NR search
-            for keyword in Config.SNKRDUNK_NR_KEYWORDS:
-                safe_kw = keyword.encode('ascii', 'replace').decode('ascii')
-                logger.info(f"Checking SNKRDUNK NR: '{safe_kw}'...")
-                snkr_listings = self.snkrdunk_scraper.search_listings(keyword)
-                new_snkr = self._process_listings(
-                    snkr_listings, 'snkrdunk_active', 'SNKRDUNK', 'NEW'
-                )
-                new_listings.extend(new_snkr)
-
-            # ----------------------------------------------------------
-            # 7. Custom searches (no Pokemon filter - alert on everything)
-            # ----------------------------------------------------------
-            for search in Config.CUSTOM_SEARCHES:
+            for search in Config.MONITORED_SEARCHES:
                 name = search['name']
                 platform = search['platform']
+                keyword = search['keyword']
                 category = search['state_category']
-                logger.info(f"Checking custom search: {name} ({platform})...")
+                validators = search['validators']
 
-                custom_listings = []
-                if platform == 'ebay':
-                    custom_listings = self.ebay_scraper.scrape_active_listings(
-                        search['search_term'], max_pages=1
-                    )
-                elif platform == 'mercari':
-                    custom_listings = self.mercari_scraper.search_listings(
-                        keyword=search['keyword']
+                safe_name = name.encode('ascii', 'replace').decode('ascii')
+                logger.info(f"Checking: {safe_name} ({platform})...")
+
+                # Scrape listings
+                listings = []
+                if platform == 'mercari':
+                    listings = self.mercari_scraper.search_listings(keyword=keyword)
+                elif platform == 'ebay':
+                    listings = self.ebay_scraper.scrape_active_listings(keyword, max_pages=1)
+
+                logger.info(f"  Found {len(listings)} raw listings")
+
+                # Process: validate, dedup, alert
+                alerts_sent = 0
+                for listing in listings:
+                    listing_id = listing.get('item_id') or listing.get('listing_id')
+                    title = listing.get('title', '')
+
+                    # Validate title matches expected content
+                    if not self._validate_listing(title, validators):
+                        self.state.mark_seen(category, listing_id)
+                        continue
+
+                    if not self.state.is_new(category, listing_id):
+                        continue
+
+                    # Mark as seen
+                    self.state.mark_seen(category, listing_id)
+
+                    # On first run, limit alerts
+                    if self.state.is_first_run and alerts_sent >= self.FIRST_RUN_ALERT_LIMIT:
+                        continue
+
+                    safe_title = title.encode('ascii', 'replace').decode('ascii')[:60]
+                    logger.info(f"  New listing: {safe_title}")
+
+                    # Send alert - pick the right bot
+                    is_mercari = platform == 'mercari'
+                    currency = '¥' if is_mercari else '$'
+                    platform_label = f"Mercari ({name})" if is_mercari else f"eBay ({name})"
+                    notifier = self.wsj_notifier if search.get('bot') == 'wsj' else self.notifier
+
+                    success = notifier.send_listing_alert(
+                        platform=platform_label,
+                        title=title,
+                        price=listing.get('price'),
+                        link=listing.get('link', ''),
+                        listing_type='NEW',
+                        currency=currency,
+                        image_url=listing.get('image_url')
                     )
 
-                platform_label = f"eBay ({name})" if platform == 'ebay' else f"Mercari ({name})"
-                currency = '¥' if platform == 'mercari' else '$'
-                new_custom = self._process_listings(
-                    custom_listings, category, platform_label, 'NEW',
-                    skip_pokemon_filter=True
-                )
-                new_listings.extend(new_custom)
+                    if success:
+                        alerts_sent += 1
+                        logger.info(f"  Alert sent for {listing_id}")
+                    else:
+                        logger.warning(f"  Failed to send alert for {listing_id}")
+
+                    all_new.append(listing)
+
+                logger.info(f"  {alerts_sent} new alerts sent for {safe_name}")
 
         except Exception as e:
             logger.error(f"Error during scraping: {e}")
@@ -407,102 +257,18 @@ class ListingMonitor:
         # Save updated state
         self.state.save_state()
 
-        # Log summary
-        logger.info(f"Run complete. New: {len(new_listings)}, Sold: {len(sold_listings)}")
+        logger.info(f"Run complete. Total new alerts: {len(all_new)}")
         logger.info("=" * 50)
 
-        return new_listings, sold_listings
-
-    # Max alerts to send on first run (most recent listings only)
-    FIRST_RUN_ALERT_LIMIT = 20
-
-    def _process_listings(
-        self,
-        listings: list[dict],
-        category: str,
-        platform: str,
-        listing_type: str,
-        skip_pokemon_filter: bool = False
-    ) -> list[dict]:
-        """
-        Process listings: filter new ones and send alerts.
-
-        Args:
-            listings: List of scraped listings
-            category: State category (ebay_active, ebay_sold, etc.)
-            platform: Platform name for alerts
-            listing_type: 'NEW' or 'SOLD'
-            skip_pokemon_filter: If True, alert on all listings (for custom searches)
-
-        Returns:
-            List of new listings that were alerted
-        """
-        new_listings = []
-        alerts_sent = 0
-
-        for listing in listings:
-            # Get the unique ID
-            listing_id = listing.get('item_id') or listing.get('listing_id')
-
-            # Filter: only process listings that match target Pokemon (unless skipped)
-            title = listing.get('title', '')
-            if not skip_pokemon_filter and not self._matches_target_pokemon(title):
-                # Still mark as seen to avoid reprocessing, but don't alert
-                self.state.mark_seen(category, listing_id)
-                continue
-
-            if self.state.is_new(category, listing_id):
-                # Mark as seen first (always, for deduplication)
-                self.state.mark_seen(category, listing_id)
-
-                # On first run, only alert for first N listings (most recent)
-                if self.state.is_first_run:
-                    if alerts_sent >= self.FIRST_RUN_ALERT_LIMIT:
-                        continue  # Skip alert but still mark as seen
-
-                # This is a new listing!
-                logger.info(f"New {listing_type} listing: {listing.get('title', 'Unknown')[:50]}")
-
-                # For Japanese platforms, prepend the English Pokemon name
-                alert_title = title
-                is_jp_platform = platform.startswith('Mercari') or platform.startswith('SNKRDUNK')
-                if is_jp_platform:
-                    en_name = self._get_english_pokemon_name(title)
-                    if en_name:
-                        alert_title = f"[{en_name}] {title}"
-
-                # Send Telegram alert
-                currency = '¥' if is_jp_platform else '$'
-                success = self.notifier.send_listing_alert(
-                    platform=platform,
-                    title=alert_title,
-                    price=listing.get('price'),
-                    link=listing.get('link', ''),
-                    listing_type=listing_type,
-                    currency=currency,
-                    image_url=listing.get('image_url')
-                )
-
-                if success:
-                    logger.info(f"Alert sent for {listing_id}")
-                    alerts_sent += 1
-                else:
-                    logger.warning(f"Failed to send alert for {listing_id}")
-
-                new_listings.append(listing)
-
-        return new_listings
+        return all_new
 
 
 def main():
     """Main entry point."""
     try:
         monitor = ListingMonitor()
-        new_listings, sold_listings = monitor.run()
-
-        # Exit with success
+        new_listings = monitor.run()
         return 0
-
     except Exception as e:
         logger.error(f"Monitor failed: {e}", exc_info=True)
         return 1
