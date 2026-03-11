@@ -10,8 +10,8 @@ Monitors eBay, Mercari JP, and Yahoo Auctions JP for new listings of:
 
 Sends alerts to a SEPARATE Telegram bot/chat from the Pokemon card monitor.
 
-Run via cron every 30 minutes:
-*/30 * * * * cd /path/to/pokeanalysis && python3 wsj_monitor.py >> data/wsj_monitor.log 2>&1
+Run via cron every 15 minutes:
+*/15 * * * * cd /path/to/pokeanalysis && python3 wsj_monitor.py >> data/wsj_monitor.log 2>&1
 """
 
 import json

@@ -1,6 +1,6 @@
 """
 Google Cloud Function entry point for the listing monitor.
-Triggered by Cloud Scheduler every 30 minutes.
+Triggered by Cloud Scheduler every 15 minutes.
 """
 
 import functions_framework

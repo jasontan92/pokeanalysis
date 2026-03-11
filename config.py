@@ -134,9 +134,21 @@ class Config:
             'bot': 'wsj',
             'validators': [
                 ['ポケモン', 'ポケットモンスター', 'pocket monster'],
-                ['初版'],
-                ['ゲームボーイ', 'gameboy', 'game boy', 'gb'],
+                ['初版', '初期版', '初期'],
+                ['ゲームボーイ', 'gameboy', 'game boy', 'gb', '刻印'],
                 ['00', '緑', 'グリーン', 'green', 'midori'],
+            ],
+        },
+        {
+            'name': 'Pokemon Green 刻印 (Mercari)',
+            'platform': 'mercari',
+            'keyword': 'ポケットモンスター 緑 刻印 00',
+            'state_category': 'mercari_pokemon_green_1st',
+            'bot': 'wsj',
+            'validators': [
+                ['ポケモン', 'ポケットモンスター', 'pocket monster'],
+                ['緑', 'グリーン', 'green'],
+                ['00'],
             ],
         },
         {
@@ -147,9 +159,21 @@ class Config:
             'bot': 'wsj',
             'validators': [
                 ['ポケモン', 'ポケットモンスター', 'pocket monster'],
-                ['初版'],
-                ['ゲームボーイ', 'gameboy', 'game boy', 'gb'],
+                ['初版', '初期版', '初期'],
+                ['ゲームボーイ', 'gameboy', 'game boy', 'gb', '刻印'],
                 ['22', '赤', 'レッド', 'red', 'aka'],
+            ],
+        },
+        {
+            'name': 'Pokemon Red 刻印 (Mercari)',
+            'platform': 'mercari',
+            'keyword': 'ポケットモンスター 赤 刻印 22',
+            'state_category': 'mercari_pokemon_red_1st',
+            'bot': 'wsj',
+            'validators': [
+                ['ポケモン', 'ポケットモンスター', 'pocket monster'],
+                ['赤', 'レッド', 'red'],
+                ['22'],
             ],
         },
         {
