@@ -152,6 +152,28 @@ class Config:
                 ['22', '赤', 'レッド', 'red', 'aka'],
             ],
         },
+        {
+            'name': 'Yu-Gi-Oh Vol 1 初版 (Mercari)',
+            'platform': 'mercari',
+            'keyword': '遊戯王 1巻 初版',
+            'state_category': 'mercari_yugioh_v1_1st',
+            'validators': [
+                ['遊戯王', 'yugioh', 'yu-gi-oh'],
+                ['1巻'],
+                ['初版', '第1刷', '第一刷'],
+            ],
+        },
+        {
+            'name': 'One Piece Vol 1 初版 (Mercari)',
+            'platform': 'mercari',
+            'keyword': 'ワンピース 1巻 初版 第1刷',
+            'state_category': 'mercari_onepiece_v1_1st',
+            'validators': [
+                ['ワンピース', 'onepiece', 'one piece'],
+                ['1巻'],
+                ['初版', '第1刷', '第一刷'],
+            ],
+        },
     ]
 
     # File paths
