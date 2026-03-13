@@ -177,6 +177,13 @@ class Config:
             ],
         },
         {
+            'name': 'WSJ 1996 #42 Yu-Gi-Oh',
+            'platform': 'mercari',
+            'keyword': '週刊少年ジャンプ 1996年42号',
+            'state_category': 'mercari_wsj_yugioh',
+            'validators': [['ジャンプ', 'jump'], ['1996'], ['42']],
+        },
+        {
             'name': 'Yu-Gi-Oh Vol 1 初版 (Mercari)',
             'platform': 'mercari',
             'keyword': '遊戯王 1巻 初版',
