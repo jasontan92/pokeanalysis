@@ -1,4 +1,4 @@
-name: Pokemon Listing Monitor
+name: Listing Monitor
 
 on:
   schedule:
@@ -8,7 +8,7 @@ on:
 jobs:
   monitor:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
 
@@ -22,23 +22,28 @@ jobs:
           playwright install chromium
           playwright install-deps chromium
 
-      - name: Install xvfb for Mercari scraping
+      - name: Install xvfb for headless browser
         run: sudo apt-get install -y xvfb
 
       - name: Create env file
         run: |
           echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}" >> .env
           echo "TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }}" >> .env
+          echo "WSJ_TELEGRAM_BOT_TOKEN=${{ secrets.WSJ_TELEGRAM_BOT_TOKEN }}" >> .env
+          echo "WSJ_TELEGRAM_CHAT_ID=${{ secrets.WSJ_TELEGRAM_CHAT_ID }}" >> .env
           echo "SEARCH_TERM=1996 no rarity" >> .env
 
-      - name: Run monitor
+      - name: Run main monitor
         run: xvfb-run --auto-servernum python monitor.py
+
+      - name: Run WSJ monitor
+        run: xvfb-run --auto-servernum python wsj_monitor.py
 
       - name: Save state
         run: |
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
-          git add data/seen_listings.json || true
+          git add data/seen_listings.json data/wsj_seen_listings.json || true
           git diff --staged --quiet || git commit -m "Update state"
           git pull --rebase || true
           git push || true

@@ -49,20 +49,7 @@ class Config:
             'state_category': 'mercari_corocoro_nov96',
             'validators': [['コロコロ', 'corocoro'], ['1996'], ['11']],
         },
-        {
-            'name': 'WSJ 1996 #41 Romance Dawn',
-            'platform': 'mercari',
-            'keyword': '週刊少年ジャンプ 1996 41 ロマンスドーン',
-            'state_category': 'mercari_wsj_41_romancedawn',
-            'validators': [['ジャンプ', 'jump'], ['1996'], ['41']],
-        },
-        {
-            'name': 'WSJ 1996 No 41',
-            'platform': 'ebay',
-            'keyword': 'weekly shonen jump 1996 no 41',
-            'state_category': 'ebay_wsj_1996_41',
-            'validators': [['jump'], ['1996'], ['41']],
-        },
+        # WSJ 1996 #41 Romance Dawn — covered by wsj_monitor.py (multi-query + reprint detection)
         {
             'name': 'WSJ 1997 Vol 34',
             'platform': 'ebay',
@@ -85,21 +72,7 @@ class Config:
             'state_category': 'ebay_wsj_jojo',
             'validators': [['jump'], ['1987'], ['jojo']],
         },
-        # Hunter x Hunter - WSJ 1998 #14
-        {
-            'name': 'WSJ 1998 #14 HxH',
-            'platform': 'mercari',
-            'keyword': '週刊少年ジャンプ 1998 14 ハンターハンター',
-            'state_category': 'mercari_wsj_hxh',
-            'validators': [['ジャンプ', 'jump'], ['1998'], ['14']],
-        },
-        {
-            'name': 'WSJ 1998 No 14 HxH',
-            'platform': 'ebay',
-            'keyword': 'weekly shonen jump 1998 no 14 hunter',
-            'state_category': 'ebay_wsj_hxh',
-            'validators': [['jump'], ['1998'], ['14']],
-        },
+        # WSJ 1998 #14 HxH — covered by wsj_monitor.py (multi-query + reprint detection)
         {
             'name': 'Pokemon Red 22 (eBay)',
             'platform': 'ebay',
@@ -176,20 +149,7 @@ class Config:
                 ['22'],
             ],
         },
-        {
-            'name': 'WSJ 1996 #42 Yu-Gi-Oh',
-            'platform': 'mercari',
-            'keyword': '週刊少年ジャンプ 1996年42号',
-            'state_category': 'mercari_wsj_yugioh',
-            'validators': [['ジャンプ', 'jump'], ['1996'], ['42']],
-        },
-        {
-            'name': 'WSJ 1996 #42 Yu-Gi-Oh (Yahoo)',
-            'platform': 'yahoo_auctions',
-            'keyword': '週刊少年ジャンプ 1996年42号',
-            'state_category': 'yahoo_wsj_yugioh_42',
-            'validators': [['ジャンプ', 'jump'], ['1996'], ['42']],
-        },
+        # WSJ 1996 #42 Yu-Gi-Oh — covered by wsj_monitor.py (multi-query + spinoff detection)
         {
             'name': 'Yu-Gi-Oh Vol 1 初版 (Mercari)',
             'platform': 'mercari',
@@ -250,25 +210,11 @@ class Config:
             'validators': [['コロコロ', 'corocoro'], ['1996'], ['11']],
         },
         {
-            'name': 'WSJ 1996 #41 Romance Dawn (Yahoo)',
-            'platform': 'yahoo_auctions',
-            'keyword': '週刊少年ジャンプ 1996 41 ロマンスドーン',
-            'state_category': 'yahoo_wsj_41_romancedawn',
-            'validators': [['ジャンプ', 'jump'], ['1996'], ['41']],
-        },
-        {
             'name': 'WSJ 1987 #1-2 JoJo (Yahoo)',
             'platform': 'yahoo_auctions',
             'keyword': '週刊少年ジャンプ 1987 1・2 ジョジョ',
             'state_category': 'yahoo_wsj_jojo',
             'validators': [['ジャンプ', 'jump'], ['1987'], ['ジョジョ', 'jojo']],
-        },
-        {
-            'name': 'WSJ 1998 #14 HxH (Yahoo)',
-            'platform': 'yahoo_auctions',
-            'keyword': '週刊少年ジャンプ 1998 14 ハンターハンター',
-            'state_category': 'yahoo_wsj_hxh',
-            'validators': [['ジャンプ', 'jump'], ['1998'], ['14']],
         },
         {
             'name': 'One Piece Vol 1 初版 (Yahoo)',
