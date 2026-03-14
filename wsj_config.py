@@ -136,6 +136,9 @@ class WSJConfig:
                 'card game', 'figure', 'figurine', 'dvd', 'blu-ray',
                 'フィギュア', 'カードゲーム', 'トレーディングカード',
             ],
+            'mercari_urls': [
+                'https://jp.mercari.com/search?keyword=%E9%81%8A%E6%88%AF%E7%8E%8B%201%E5%B7%BB%20%E5%88%9D%E7%89%88&sort=created_time&order=desc',
+            ],
         },
 
         'dragonball': {

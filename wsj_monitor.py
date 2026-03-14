@@ -428,7 +428,125 @@ def search_mercari(page, series_key: str, series: dict) -> list[dict]:
 
         time.sleep(2)
 
+    # --- Raw Mercari URLs (broader searches with their own filtering) ---
+    for raw_url in series.get('mercari_urls', []):
+        try:
+            page.goto(raw_url, timeout=60000)
+            wait_for_page_load(page)
+            page.wait_for_timeout(3000)
+
+            links = page.query_selector_all('a[href*="/item/"]')
+            logger.info(f"    Raw URL: found {len(links)} raw links on page")
+
+            for link in links:
+                try:
+                    href = link.get_attribute('href')
+                    if not href:
+                        continue
+                    item_match = re.search(r'/item/([a-zA-Z0-9]+)', href)
+                    if not item_match:
+                        continue
+
+                    item_id = item_match.group(1)
+                    if item_id in seen_ids:
+                        continue
+                    seen_ids.add(item_id)
+
+                    text = link.inner_text().strip()
+                    lines = [l.strip() for l in text.split('\n') if l.strip()]
+
+                    title_lines = [
+                        l for l in lines
+                        if not l.startswith('SG') and not l.startswith('US$')
+                        and not l.startswith('$') and not l.startswith('¥')
+                        and not l.startswith('￥') and not re.match(r'^[\d,\.]+$', l.replace(',', ''))
+                        and '¥' not in l and '￥' not in l
+                        and not l.startswith('現在')
+                        and len(l) > 3
+                    ]
+                    title = title_lines[0][:120] if title_lines else item_id
+
+                    if should_exclude(title, series['exclude_keywords']):
+                        logger.debug(f"    Excluded (keyword): {title[:60]}")
+                        continue
+
+                    # For raw URLs, use series-specific validation instead of
+                    # is_relevant_listing() (which requires year+issue+jump).
+                    if not _is_relevant_raw_url_listing(title, series_key):
+                        logger.debug(f"    Excluded (raw-url relevance): {title[:60]}")
+                        continue
+
+                    logger.info(f"    MATCH (raw URL): {title[:80]}")
+                    price_raw = None
+                    for line in lines:
+                        m = re.search(r'[¥￥]([\d,]+)', line)
+                        if m:
+                            try:
+                                price_raw = float(m.group(1).replace(',', ''))
+                            except ValueError:
+                                pass
+                            break
+                        if re.match(r'^[\d,]+$', line.strip()) and len(line.strip()) >= 3:
+                            try:
+                                price_raw = float(line.strip().replace(',', ''))
+                            except ValueError:
+                                pass
+                            break
+
+                    full_link = f"https://jp.mercari.com{href}" if not href.startswith('http') else href
+
+                    results.append({
+                        'platform': 'Mercari JP',
+                        'series': series_key,
+                        'title': title,
+                        'price': price_raw,
+                        'currency': 'JPY',
+                        'link': full_link,
+                        'listing_id': f"mercari_{item_id}",
+                        'image_url': None,
+                    })
+
+                except Exception:
+                    continue
+
+        except Exception as e:
+            logger.error(f"Mercari raw URL error: {e}")
+
+        time.sleep(2)
+
     return results
+
+
+# Spinoff titles to exclude from raw URL results (original series only)
+_YUGIOH_SPINOFFS = re.compile(
+    r'(?:ファイブディーズ|5D|ゼアル|ZEXAL|アーク・ファイブ|ARC-V|'
+    r'セブンス|SEVENS|ゴーラッシュ|GO\s*RUSH|遊戯王R\b|遊戯王ＧＸ|遊戯王GX|'
+    r'OCG|デュエルモンスターズカード|VRAINS)',
+    re.IGNORECASE,
+)
+
+
+def _is_relevant_raw_url_listing(title: str, series_key: str) -> bool:
+    """Relevance check for listings found via raw Mercari URLs.
+
+    These URLs already have keyword + category + price filters baked in,
+    so we only need to confirm the title is actually about the target series
+    (not a spinoff or unrelated item that Mercari's search matched loosely).
+    """
+    if _is_reprint(title):
+        return False
+
+    if series_key == 'yugioh':
+        # Must mention 遊戯王 or 遊☆戯☆王
+        if '遊戯王' not in title and '遊☆戯☆王' not in title:
+            return False
+        # Reject spinoff titles
+        if _YUGIOH_SPINOFFS.search(title):
+            return False
+        return True
+
+    # For other series, fall back to the standard check
+    return True
 
 
 # ---------------------------------------------------------------------------
