@@ -1,13 +1,13 @@
 """
-Mercari Japan Marketplace Scraper using Playwright.
-Searches for 旧裏初版 (no rarity/first edition) Pokemon cards.
+Yahoo Auctions Japan (ヤフオク) Scraper using Playwright.
+Searches for listings on auctions.yahoo.co.jp.
 Note: Requires xvfb on Linux (headless=False needed to bypass bot detection).
 """
 
 import logging
 import re
 from datetime import datetime
-from typing import Optional
+from urllib.parse import quote
 
 logger = logging.getLogger(__name__)
 
@@ -18,42 +18,33 @@ except ImportError:
     PLAYWRIGHT_AVAILABLE = False
 
 
-class MercariScraper:
-    """Scraper for Mercari Japan marketplace using Playwright."""
+class YahooAuctionsScraper:
+    """Scraper for Yahoo Auctions Japan using Playwright."""
 
-    BASE_URL = "https://jp.mercari.com"
-    # Direct search URL for 旧裏初版psa (no rarity PSA cards), sorted by newest, on sale only
-    SEARCH_URL = "https://jp.mercari.com/search?keyword=%E6%97%A7%E8%A3%8F%E5%88%9D%E7%89%88psa&order=desc&sort=created_time&status=on_sale"
+    BASE_URL = "https://auctions.yahoo.co.jp"
 
     def __init__(self):
         if not PLAYWRIGHT_AVAILABLE:
-            logger.warning("Playwright not installed. Mercari scraping disabled.")
+            logger.warning("Playwright not installed. Yahoo Auctions scraping disabled.")
 
-    def search_listings(self, max_pages: int = 1, keyword: str = None) -> list[dict]:
-        """Search for Pokemon cards on Mercari Japan.
+    def search_listings(self, keyword: str, max_pages: int = 1) -> list[dict]:
+        """Search for listings on Yahoo Auctions Japan.
 
         Args:
+            keyword: Search keyword (Japanese or English)
             max_pages: Maximum pages to fetch
-            keyword: Custom search keyword. If None, uses the default NR search URL.
         """
         if not PLAYWRIGHT_AVAILABLE:
-            logger.warning("Playwright not available. Skipping Mercari.")
+            logger.warning("Playwright not available. Skipping Yahoo Auctions.")
             return []
 
         all_listings = []
-
-        # Build the search URL
-        if keyword:
-            from urllib.parse import quote
-            encoded = quote(keyword)
-            search_url = f"{self.BASE_URL}/search?keyword={encoded}&order=desc&sort=created_time&status=on_sale"
-        else:
-            search_url = self.SEARCH_URL
+        encoded = quote(keyword)
+        # Sort by newest, 50 per page
+        search_url = f"{self.BASE_URL}/search/search?p={encoded}&va={encoded}&exflg=1&b=1&n=50&s1=new&o1=d"
 
         try:
             with sync_playwright() as p:
-                # Use headless=False - Mercari detects headless browsers
-                # Requires xvfb on Linux for GitHub Actions
                 browser = p.chromium.launch(
                     headless=False,
                     args=[
@@ -68,7 +59,6 @@ class MercariScraper:
                     locale='ja-JP',
                 )
 
-                # Stealth scripts
                 context.add_init_script("""
                     Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
                     Object.defineProperty(navigator, 'plugins', {get: () => [1,2,3,4,5]});
@@ -76,14 +66,12 @@ class MercariScraper:
                 """)
 
                 page = context.new_page()
-
-                logger.info(f"Fetching Mercari Japan{f' ({keyword})' if keyword else ''}...")
+                logger.info(f"Fetching Yahoo Auctions ({keyword})...")
 
                 try:
-                    # Go directly to search URL
                     page.goto(search_url, timeout=60000)
 
-                    # Wait for any challenge to complete
+                    # Wait for any challenge/redirect
                     for _ in range(6):
                         page.wait_for_timeout(5000)
                         title = page.title().lower()
@@ -92,35 +80,33 @@ class MercariScraper:
 
                     page.wait_for_timeout(3000)
 
-                    # Extract listings
                     listings = self._extract_listings(page)
                     if listings:
                         all_listings.extend(listings)
-                        logger.info(f"Found {len(listings)} Mercari Japan listings")
+                        logger.info(f"Found {len(listings)} Yahoo Auctions listings")
                     else:
-                        print("No Mercari Japan listings found")
+                        logger.info("No Yahoo Auctions listings found")
 
                 except PlaywrightTimeout:
-                    print("Timeout loading Mercari Japan")
+                    logger.warning("Timeout loading Yahoo Auctions")
                 except Exception as e:
-                    # Handle encoding errors in exception messages
                     error_msg = str(e).encode('ascii', 'replace').decode('ascii')
-                    print(f"Error loading Mercari Japan: {error_msg}")
+                    logger.error(f"Error loading Yahoo Auctions: {error_msg}")
 
                 browser.close()
 
         except Exception as e:
-            print(f"Mercari scraper error: {e}")
+            logger.error(f"Yahoo Auctions scraper error: {e}")
 
         return all_listings
 
     def _extract_listings(self, page) -> list[dict]:
-        """Extract listings from Mercari Japan search results page."""
+        """Extract listings from Yahoo Auctions search results page."""
         listings = []
         seen_ids = set()
 
         try:
-            # Find all item links
+            # Yahoo Auctions item links contain /item/ or auction ID patterns
             links = page.query_selector_all('a[href*="/item/"]')
 
             for link in links:
@@ -129,16 +115,17 @@ class MercariScraper:
                     if not href:
                         continue
 
+                    # Extract auction ID from URL (e.g., /item/x1234567890)
                     item_match = re.search(r'/item/([a-zA-Z0-9]+)', href)
                     if not item_match:
                         continue
 
-                    item_id = f'mercari-{item_match.group(1)}'
+                    item_id = f'yahoo-{item_match.group(1)}'
                     if item_id in seen_ids:
                         continue
                     seen_ids.add(item_id)
 
-                    # Parse text content - handle encoding issues
+                    # Parse text content
                     try:
                         text = link.inner_text().strip()
                     except:
@@ -146,42 +133,40 @@ class MercariScraper:
 
                     lines = [l.strip() for l in text.split('\n') if l.strip()]
 
-                    # Filter out price lines (SG$, US$, yen, numbers, etc.) to find the actual title
+                    # Filter out price/bid lines to find title
                     title_lines = [
                         l for l in lines
-                        if not l.startswith('SG')
-                        and not l.startswith('US$')
-                        and not l.startswith('$')
-                        and not l.startswith('¥')
-                        and not l.startswith('￥')
+                        if not re.match(r'^[\d,\.]+円?$', l)
                         and '¥' not in l and '￥' not in l
                         and not l.startswith('現在')
-                        and not re.match(r'^[\d,\.]+$', l.replace(',', ''))
+                        and not l.startswith('即決')
+                        and not l.startswith('入札')
+                        and not l.endswith('件')
+                        and not l.endswith('時間')
+                        and not l.endswith('日')
+                        and not re.match(r'^残り', l)
                     ]
                     title = title_lines[0][:100] if title_lines else item_id
 
-                    # Find price and detect currency from page text
+                    # Find price - Yahoo Auctions JP uses yen
                     price = None
-                    currency = '$'
+                    currency = '¥'
                     for line in lines:
-                        if '¥' in line or '￥' in line:
-                            yen_match = re.search(r'[¥￥]([\d,]+)', line)
-                            if yen_match:
-                                try:
-                                    price = float(yen_match.group(1).replace(',', ''))
-                                    currency = '¥'
-                                except:
-                                    pass
-                                break
-                        elif line.startswith('US$') or line.startswith('SG$') or line.startswith('$') or (line and line[0].isdigit()):
-                            price_match = re.search(r'(?:US\$|SG\$|\$)?([\d,]+(?:\.\d{2})?)', line)
-                            if price_match:
-                                try:
-                                    price = float(price_match.group(1).replace(',', ''))
-                                    currency = '$'
-                                except:
-                                    pass
-                                break
+                        # Current price: 現在1,234円 or ¥1,234 or just 1,234円
+                        yen_match = re.search(r'(?:現在|即決)?[¥￥]?([\d,]+)円?', line)
+                        if yen_match and ('円' in line or '¥' in line or '￥' in line or line.startswith('現在') or line.startswith('即決')):
+                            try:
+                                price = float(yen_match.group(1).replace(',', ''))
+                            except:
+                                pass
+                            break
+                        # Bare number that looks like a price
+                        elif re.match(r'^[\d,]+$', line):
+                            try:
+                                price = float(line.replace(',', ''))
+                            except:
+                                pass
+                            break
 
                     full_link = href if href.startswith('http') else f"{self.BASE_URL}{href}"
 
@@ -191,9 +176,9 @@ class MercariScraper:
                         'title': title,
                         'price': price,
                         'currency': currency,
-                        'listing_type': 'buy_now',
+                        'listing_type': 'auction',
                         'link': full_link,
-                        'platform': 'mercari_jp',
+                        'platform': 'yahoo_auctions_jp',
                         'scraped_at': datetime.now().isoformat()
                     })
 
@@ -201,17 +186,17 @@ class MercariScraper:
                     continue
 
         except Exception as e:
-            print(f"Error extracting Mercari listings: {e}")
+            logger.error(f"Error extracting Yahoo Auctions listings: {e}")
 
         return listings
 
 
 if __name__ == '__main__':
-    scraper = MercariScraper()
-    print("Testing Mercari Japan search...")
-    listings = scraper.search_listings(max_pages=1)
+    scraper = YahooAuctionsScraper()
+    print("Testing Yahoo Auctions Japan search...")
+    listings = scraper.search_listings(keyword='週刊少年ジャンプ 1996年42号')
     print(f"Total listings found: {len(listings)}")
     for listing in listings[:5]:
         title = listing.get('title', '?')[:40]
         price = listing.get('price', '?')
-        print(f"  - {title} - {price} yen")
+        print(f"  - {title} - ¥{price}")
