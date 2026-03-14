@@ -3,8 +3,8 @@
 Listing Monitor for Mercari Japan and eBay.
 Checks specific searches and sends Telegram alerts for new validated listings.
 
-Run via cron every 15 minutes:
-*/15 * * * * cd /path/to/pokeanalysis && python3 monitor.py >> /var/log/pokeanalysis.log 2>&1
+Run via cron every 5 minutes:
+*/5 * * * * cd /path/to/pokeanalysis && python3 monitor.py >> /var/log/pokeanalysis.log 2>&1
 """
 
 import json

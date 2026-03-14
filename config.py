@@ -292,6 +292,20 @@ class Config:
                 ['初版', '第1刷', '第一刷'],
             ],
         },
+        {
+            'name': 'Comic News 195 (Mercari)',
+            'platform': 'mercari',
+            'keyword': 'コミックニュース195',
+            'state_category': 'mercari_comic_news_195',
+            'validators': [['コミックニュース', 'comic news'], ['195']],
+        },
+        {
+            'name': 'Comic News 195 (Yahoo)',
+            'platform': 'yahoo_auctions',
+            'keyword': 'コミックニュース195',
+            'state_category': 'yahoo_comic_news_195',
+            'validators': [['コミックニュース', 'comic news'], ['195']],
+        },
     ]
 
     # File paths
