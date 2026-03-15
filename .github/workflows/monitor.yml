@@ -33,10 +33,10 @@ jobs:
           echo "WSJ_TELEGRAM_CHAT_ID=${{ secrets.WSJ_TELEGRAM_CHAT_ID }}" >> .env
           echo "SEARCH_TERM=1996 no rarity" >> .env
 
-      - name: Run main monitor
+      - name: Run norarityscanner (Pokemon games)
         run: xvfb-run --auto-servernum python monitor.py
 
-      - name: Run WSJ monitor
+      - name: Run mangascanner (WSJ issues + Vol 1 + collectibles)
         run: xvfb-run --auto-servernum python wsj_monitor.py
 
       - name: Save state

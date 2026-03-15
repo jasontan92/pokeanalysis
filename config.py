@@ -1,5 +1,5 @@
 """
-Configuration management for the listing monitor.
+Configuration for the No-Rarity Scanner (Pokemon game cartridge monitor).
 Loads settings from environment variables or .env file.
 """
 
@@ -19,7 +19,7 @@ except ImportError:
 class Config:
     """Application configuration loaded from environment variables."""
 
-    # Telegram settings
+    # Telegram settings (main bot for Pokemon scanner)
     TELEGRAM_BOT_TOKEN: str = os.getenv('TELEGRAM_BOT_TOKEN', '')
     TELEGRAM_CHAT_ID: str = os.getenv('TELEGRAM_CHAT_ID', '')
     WSJ_TELEGRAM_BOT_TOKEN: str = os.getenv('WSJ_TELEGRAM_BOT_TOKEN', '')
@@ -31,54 +31,15 @@ class Config:
         '再版', '重版', '復刻', '復刻版', '再刷', '複製',
     ]
 
-    # Monitored searches — each has a keyword, platform, and title validators
+    # Monitored searches — Pokemon game cartridges only
     # validators: list of lists — each inner list = alternatives (OR), all outer lists must pass (AND)
     # optional 'exclude': per-search extra exclude terms (on top of GLOBAL_EXCLUDE)
     MONITORED_SEARCHES: list[dict] = [
-        {
-            'name': 'Naruto Vol 1 First Edition',
-            'platform': 'mercari',
-            'keyword': 'naruto 1巻 初版',
-            'state_category': 'mercari_naruto_v1',
-            'validators': [['ナルト', 'naruto'], ['1巻']],
-        },
-        {
-            'name': 'CoroCoro Comic Nov 1996',
-            'platform': 'mercari',
-            'keyword': 'コロコロコミック 1996年 11月号',
-            'state_category': 'mercari_corocoro_nov96',
-            'validators': [['コロコロ', 'corocoro'], ['1996'], ['11']],
-        },
-        # WSJ 1996 #41 Romance Dawn — covered by wsj_monitor.py (multi-query + reprint detection)
-        {
-            'name': 'WSJ 1997 Vol 34',
-            'platform': 'ebay',
-            'keyword': 'weekly shonen jump 1997 vol 34',
-            'state_category': 'ebay_wsj_1997_34',
-            'validators': [['jump'], ['1997'], ['34']],
-        },
-        # JoJo's Bizarre Adventure - WSJ 1987 #1-2
-        {
-            'name': 'WSJ 1987 #1-2 JoJo',
-            'platform': 'mercari',
-            'keyword': '週刊少年ジャンプ 1987 1・2 ジョジョ',
-            'state_category': 'mercari_wsj_jojo',
-            'validators': [['ジャンプ', 'jump'], ['1987'], ['ジョジョ', 'jojo']],
-        },
-        {
-            'name': 'WSJ 1987 JoJo',
-            'platform': 'ebay',
-            'keyword': 'weekly shonen jump 1987 jojo',
-            'state_category': 'ebay_wsj_jojo',
-            'validators': [['jump'], ['1987'], ['jojo']],
-        },
-        # WSJ 1998 #14 HxH — covered by wsj_monitor.py (multi-query + reprint detection)
         {
             'name': 'Pokemon Red 22 (eBay)',
             'platform': 'ebay',
             'keyword': 'pokemon red gameboy 22',
             'state_category': 'ebay_pokemon_red_1st',
-            'bot': 'wsj',
             'validators': [
                 ['pokemon', 'ポケモン', 'ポケットモンスター', 'pocket monster'],
                 ['red', '赤', 'レッド'],
@@ -91,7 +52,6 @@ class Config:
             'platform': 'ebay',
             'keyword': 'pokemon green gameboy 00',
             'state_category': 'ebay_pokemon_green_1st',
-            'bot': 'wsj',
             'validators': [
                 ['pokemon', 'ポケモン', 'ポケットモンスター', 'pocket monster'],
                 ['green', '緑', 'グリーン'],
@@ -104,7 +64,6 @@ class Config:
             'platform': 'mercari',
             'keyword': 'ポケットモンスター 緑 初版 ゲームボーイ',
             'state_category': 'mercari_pokemon_green_1st',
-            'bot': 'wsj',
             'validators': [
                 ['ポケモン', 'ポケットモンスター', 'pocket monster'],
                 ['初版', '初期版', '初期'],
@@ -117,7 +76,6 @@ class Config:
             'platform': 'mercari',
             'keyword': 'ポケットモンスター 緑 刻印 00',
             'state_category': 'mercari_pokemon_green_1st',
-            'bot': 'wsj',
             'validators': [
                 ['ポケモン', 'ポケットモンスター', 'pocket monster'],
                 ['緑', 'グリーン', 'green'],
@@ -129,7 +87,6 @@ class Config:
             'platform': 'mercari',
             'keyword': 'ポケットモンスター 赤 初版 ゲームボーイ',
             'state_category': 'mercari_pokemon_red_1st',
-            'bot': 'wsj',
             'validators': [
                 ['ポケモン', 'ポケットモンスター', 'pocket monster'],
                 ['初版', '初期版', '初期'],
@@ -142,115 +99,11 @@ class Config:
             'platform': 'mercari',
             'keyword': 'ポケットモンスター 赤 刻印 22',
             'state_category': 'mercari_pokemon_red_1st',
-            'bot': 'wsj',
             'validators': [
                 ['ポケモン', 'ポケットモンスター', 'pocket monster'],
                 ['赤', 'レッド', 'red'],
                 ['22'],
             ],
-        },
-        # WSJ 1996 #42 Yu-Gi-Oh — covered by wsj_monitor.py (multi-query + spinoff detection)
-        {
-            'name': 'Yu-Gi-Oh Vol 1 初版 (Mercari)',
-            'platform': 'mercari',
-            'keyword': '遊戯王 1巻 初版',
-            'state_category': 'mercari_yugioh_v1_1st',
-            'validators': [
-                ['遊戯王', 'yugioh', 'yu-gi-oh'],
-                ['1巻'],
-                ['初版', '第1刷', '第一刷'],
-            ],
-        },
-        {
-            'name': 'Yu-Gi-Oh Vol 1 初版 (Yahoo)',
-            'platform': 'yahoo_auctions',
-            'keyword': '遊戯王 1巻 初版',
-            'state_category': 'yahoo_yugioh_v1_1st',
-            'validators': [
-                ['遊戯王', 'yugioh', 'yu-gi-oh'],
-                ['1巻'],
-                ['初版', '第1刷', '第一刷'],
-            ],
-        },
-        {
-            'name': 'One Piece Vol 1 初版 (Mercari)',
-            'platform': 'mercari',
-            'keyword': 'ワンピース 1巻 初版 第1刷',
-            'state_category': 'mercari_onepiece_v1_1st',
-            'validators': [
-                ['ワンピース', 'onepiece', 'one piece'],
-                ['1巻'],
-                ['初版', '第1刷', '第一刷'],
-            ],
-        },
-        {
-            'name': 'BLEACH Vol 1 初版 (Mercari)',
-            'platform': 'mercari',
-            'keyword': 'BLEACH 初版1巻',
-            'state_category': 'mercari_bleach_v1_1st',
-            'validators': [
-                ['bleach', 'ブリーチ'],
-                ['1巻'],
-                ['初版', '第1刷', '第一刷'],
-            ],
-        },
-        # --- Yahoo Auctions mirrors ---
-        {
-            'name': 'Naruto Vol 1 初版 (Yahoo)',
-            'platform': 'yahoo_auctions',
-            'keyword': 'naruto 1巻 初版',
-            'state_category': 'yahoo_naruto_v1',
-            'validators': [['ナルト', 'naruto'], ['1巻']],
-        },
-        {
-            'name': 'CoroCoro Comic Nov 1996 (Yahoo)',
-            'platform': 'yahoo_auctions',
-            'keyword': 'コロコロコミック 1996年 11月号',
-            'state_category': 'yahoo_corocoro_nov96',
-            'validators': [['コロコロ', 'corocoro'], ['1996'], ['11']],
-        },
-        {
-            'name': 'WSJ 1987 #1-2 JoJo (Yahoo)',
-            'platform': 'yahoo_auctions',
-            'keyword': '週刊少年ジャンプ 1987 1・2 ジョジョ',
-            'state_category': 'yahoo_wsj_jojo',
-            'validators': [['ジャンプ', 'jump'], ['1987'], ['ジョジョ', 'jojo']],
-        },
-        {
-            'name': 'One Piece Vol 1 初版 (Yahoo)',
-            'platform': 'yahoo_auctions',
-            'keyword': 'ワンピース 1巻 初版 第1刷',
-            'state_category': 'yahoo_onepiece_v1_1st',
-            'validators': [
-                ['ワンピース', 'onepiece', 'one piece'],
-                ['1巻'],
-                ['初版', '第1刷', '第一刷'],
-            ],
-        },
-        {
-            'name': 'BLEACH Vol 1 初版 (Yahoo)',
-            'platform': 'yahoo_auctions',
-            'keyword': 'BLEACH 初版1巻',
-            'state_category': 'yahoo_bleach_v1_1st',
-            'validators': [
-                ['bleach', 'ブリーチ'],
-                ['1巻'],
-                ['初版', '第1刷', '第一刷'],
-            ],
-        },
-        {
-            'name': 'Comic News 195 (Mercari)',
-            'platform': 'mercari',
-            'keyword': 'コミックニュース195',
-            'state_category': 'mercari_comic_news_195',
-            'validators': [['コミックニュース', 'comic news'], ['195']],
-        },
-        {
-            'name': 'Comic News 195 (Yahoo)',
-            'platform': 'yahoo_auctions',
-            'keyword': 'コミックニュース195',
-            'state_category': 'yahoo_comic_news_195',
-            'validators': [['コミックニュース', 'comic news'], ['195']],
         },
     ]
 

@@ -1,7 +1,7 @@
 """
-Configuration for the WSJ Manga First Appearance Monitor.
-Separate Telegram bot/chat from the Pokemon card monitor.
-WSJ issues ONLY — no Vol 1 / tankobon.
+Configuration for the Manga Scanner.
+Monitors WSJ first appearance issues, Vol 1 first editions, and other collectible manga.
+Uses separate Telegram bot/chat from the Pokemon (no-rarity) scanner.
 """
 
 import os
@@ -19,7 +19,7 @@ except ImportError:
 class WSJConfig:
     """WSJ manga monitor configuration."""
 
-    # Separate Telegram bot for WSJ alerts
+    # Separate Telegram bot for manga alerts
     TELEGRAM_BOT_TOKEN: str = os.getenv('WSJ_TELEGRAM_BOT_TOKEN', '')
     TELEGRAM_CHAT_ID: str = os.getenv('WSJ_TELEGRAM_CHAT_ID', '')
 
@@ -29,8 +29,14 @@ class WSJConfig:
     STATE_FILE: Path = DATA_DIR / 'wsj_seen_listings.json'
     LOG_FILE: Path = DATA_DIR / 'wsj_monitor.log'
 
+    # Global exclude terms for simple searches
+    GLOBAL_EXCLUDE: list[str] = [
+        'reprint', 'reproduction',
+        '再版', '重版', '復刻', '復刻版', '再刷', '複製',
+    ]
+
     # -----------------------------------------------------------------------
-    # Series definitions — WSJ first appearance issues ONLY
+    # WSJ SERIES — first appearance issues (use is_relevant_listing filtering)
     # -----------------------------------------------------------------------
 
     SERIES = {
@@ -247,7 +253,133 @@ class WSJConfig:
                 'dvd', 'blu-ray', 'フィギュア', 'カードゲーム',
             ],
         },
+
+        'jojo': {
+            'name': "JoJo's Bizarre Adventure",
+            'author': '荒木飛呂彦',
+            'author_en': 'Araki Hirohiko',
+            'wsj_issue': 'WSJ 1987 #1-2',
+            'wsj_year': '1987',
+            'wsj_number': '1',
+            'wsj_desc': "JoJo's Bizarre Adventure Chapter 1 - 週刊少年ジャンプ 1987年1・2合併号",
+            'ebay_queries': [
+                'weekly shonen jump 1987 jojo',
+                'shonen jump 1987 1 jojo bizarre',
+                '週刊少年ジャンプ 1987 ジョジョ',
+            ],
+            'mercari_queries': [
+                '週刊少年ジャンプ 1987 1・2 ジョジョ',
+                '少年ジャンプ 1987 ジョジョ 新連載',
+                'ジョジョ 新連載号 ジャンプ 1987',
+                'ジャンプ 1987 1号 ジョジョ',
+            ],
+            'yahoo_queries': [
+                '週刊少年ジャンプ 1987 1・2 ジョジョ',
+                '少年ジャンプ 1987 ジョジョ',
+                'ジョジョ 新連載 ジャンプ 1987',
+            ],
+            'exclude_keywords': [
+                'trading card', 'tcg', 'card game', 'figure', 'figurine',
+                'dvd', 'blu-ray', 'フィギュア', 'カードゲーム',
+                'jojolion', 'jojolands', 'stone ocean', 'steel ball',
+            ],
+        },
+
+        'onepiece_ch1': {
+            'name': 'ONE PIECE Ch.1 (WSJ 1997 #34)',
+            'author': '尾田栄一郎',
+            'author_en': 'Oda Eiichiro',
+            'wsj_issue': 'WSJ 1997 #34',
+            'wsj_year': '1997',
+            'wsj_number': '34',
+            'wsj_desc': 'One Piece Chapter 1 - 週刊少年ジャンプ 1997年34号',
+            'ebay_queries': [
+                'weekly shonen jump 1997 34',
+                'weekly shonen jump 1997 vol 34',
+                'shonen jump 1997 #34 one piece',
+                '週刊少年ジャンプ 1997 34 ワンピース',
+            ],
+            'mercari_queries': [
+                '週刊少年ジャンプ 1997年34号',
+                '少年ジャンプ 1997 34号 ワンピース',
+                'ONE PIECE 新連載号 ジャンプ 1997',
+                'ジャンプ 1997 34号',
+            ],
+            'yahoo_queries': [
+                '週刊少年ジャンプ 1997年 34号',
+                '少年ジャンプ 1997 34号',
+                'ONE PIECE 新連載 ジャンプ 1997',
+                '週刊少年ジャンプ 1997 34',
+            ],
+            'exclude_keywords': [
+                'trading card', 'tcg', 'card game', 'figure', 'figurine',
+                'dvd', 'blu-ray', 'フィギュア', 'カードゲーム',
+            ],
+        },
     }
+
+    # -----------------------------------------------------------------------
+    # SIMPLE SEARCHES — Vol 1 first editions, CoroCoro, Comic News, etc.
+    # These use basic AND/OR validator matching (not WSJ issue regex).
+    # Searched via Mercari keyword, Yahoo Auctions keyword, or raw Mercari URL.
+    # -----------------------------------------------------------------------
+
+    SIMPLE_SEARCHES: list[dict] = [
+        {
+            'name': 'Naruto Vol 1 First Edition',
+            'mercari_keyword': 'naruto 1巻 初版',
+            'yahoo_keyword': 'naruto 1巻 初版',
+            'state_category': 'simple_naruto_v1',
+            'validators': [['ナルト', 'naruto'], ['1巻']],
+        },
+        {
+            'name': 'CoroCoro Comic Nov 1996',
+            'mercari_keyword': 'コロコロコミック 1996年 11月号',
+            'yahoo_keyword': 'コロコロコミック 1996年 11月号',
+            'state_category': 'simple_corocoro_nov96',
+            'validators': [['コロコロ', 'corocoro'], ['1996'], ['11']],
+        },
+        {
+            'name': 'Yu-Gi-Oh Vol 1 初版',
+            'mercari_keyword': '遊戯王 1巻 初版',
+            'yahoo_keyword': '遊戯王 1巻 初版',
+            'state_category': 'simple_yugioh_v1',
+            'validators': [
+                ['遊戯王', 'yugioh', 'yu-gi-oh'],
+                ['1巻'],
+                ['初版', '第1刷', '第一刷'],
+            ],
+        },
+        {
+            'name': 'One Piece Vol 1 初版',
+            'mercari_keyword': 'ワンピース 1巻 初版 第1刷',
+            'yahoo_keyword': 'ワンピース 1巻 初版 第1刷',
+            'state_category': 'simple_onepiece_v1',
+            'validators': [
+                ['ワンピース', 'onepiece', 'one piece'],
+                ['1巻'],
+                ['初版', '第1刷', '第一刷'],
+            ],
+        },
+        {
+            'name': 'BLEACH Vol 1 初版',
+            'mercari_keyword': 'BLEACH 初版1巻',
+            'yahoo_keyword': 'BLEACH 初版1巻',
+            'state_category': 'simple_bleach_v1',
+            'validators': [
+                ['bleach', 'ブリーチ'],
+                ['1巻'],
+                ['初版', '第1刷', '第一刷'],
+            ],
+        },
+        {
+            'name': 'Comic News 195',
+            'mercari_keyword': 'コミックニュース195',
+            'yahoo_keyword': 'コミックニュース195',
+            'state_category': 'simple_comic_news_195',
+            'validators': [['コミックニュース', 'comic news'], ['195']],
+        },
+    ]
 
     @classmethod
     def validate(cls) -> list[str]:

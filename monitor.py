@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 """
-Listing Monitor for Mercari Japan and eBay.
-Checks specific searches and sends Telegram alerts for new validated listings.
-
-Run via cron every 5 minutes:
-*/5 * * * * cd /path/to/pokeanalysis && python3 monitor.py >> /var/log/pokeanalysis.log 2>&1
+No-Rarity Scanner — monitors Mercari Japan and eBay for Pokemon game cartridges.
+Sends alerts to the main Telegram bot.
 """
 
 import json
@@ -17,7 +14,6 @@ from typing import Optional
 from config import Config
 from scraper import EbayScraper
 from mercari_scraper import MercariScraper
-from yahoo_auctions_scraper import YahooAuctionsScraper
 from notifier import TelegramNotifier
 
 
@@ -106,13 +102,8 @@ class ListingMonitor:
     def __init__(self):
         self.state = StateManager()
         self.notifier = TelegramNotifier()
-        self.wsj_notifier = TelegramNotifier(
-            bot_token=Config.WSJ_TELEGRAM_BOT_TOKEN,
-            chat_id=Config.WSJ_TELEGRAM_CHAT_ID,
-        )
         self.ebay_scraper = EbayScraper()
         self.mercari_scraper = MercariScraper()
-        self.yahoo_scraper = YahooAuctionsScraper()
 
     def _validate_listing(self, title: str, validators: list[list[str]], exclude: list[str] = None) -> bool:
         """Check title against validation rules.
@@ -206,8 +197,6 @@ class ListingMonitor:
                     listings = self.mercari_scraper.search_listings(keyword=keyword)
                 elif platform == 'ebay':
                     listings = self.ebay_scraper.scrape_active_listings(keyword, max_pages=1)
-                elif platform == 'yahoo_auctions':
-                    listings = self.yahoo_scraper.search_listings(keyword=keyword)
 
                 logger.info(f"  Found {len(listings)} raw listings")
 
@@ -235,18 +224,11 @@ class ListingMonitor:
                     safe_title = title.encode('ascii', 'replace').decode('ascii')[:60]
                     logger.info(f"  New listing: {safe_title}")
 
-                    # Send alert - pick the right bot
-                    is_jp = platform in ('mercari', 'yahoo_auctions')
-                    currency = listing.get('currency', '¥' if is_jp else '$')
-                    if platform == 'mercari':
-                        platform_label = f"Mercari ({name})"
-                    elif platform == 'yahoo_auctions':
-                        platform_label = f"Yahoo Auctions ({name})"
-                    else:
-                        platform_label = f"eBay ({name})"
-                    notifier = self.wsj_notifier if search.get('bot') == 'wsj' else self.notifier
+                    # Send alert
+                    currency = listing.get('currency', '¥' if platform == 'mercari' else '$')
+                    platform_label = f"Mercari ({name})" if platform == 'mercari' else f"eBay ({name})"
 
-                    success = notifier.send_listing_alert(
+                    success = self.notifier.send_listing_alert(
                         platform=platform_label,
                         title=title,
                         price=listing.get('price'),
