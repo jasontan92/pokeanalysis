@@ -37,6 +37,7 @@ class WSJConfig:
 
     # -----------------------------------------------------------------------
     # WSJ SERIES — first appearance issues (use is_relevant_listing filtering)
+    # Kept to 2-3 queries per platform — first query catches most listings.
     # -----------------------------------------------------------------------
 
     SERIES = {
@@ -51,22 +52,14 @@ class WSJConfig:
             'ebay_queries': [
                 'weekly shonen jump 1999 43 naruto',
                 'shonen jump naruto first appearance 1999',
-                '週刊少年ジャンプ 1999 43 NARUTO',
-                'shonen jump 1999 #43 naruto',
             ],
             'mercari_queries': [
                 '週刊少年ジャンプ 1999年43号',
-                '少年ジャンプ 1999 43号 NARUTO',
                 'NARUTO 新連載号 ジャンプ 1999',
-                '週刊少年ジャンプ 1999 43号',
-                'ジャンプ 1999 43号',
-                'ナルト 新連載 ジャンプ',
             ],
             'yahoo_queries': [
                 '週刊少年ジャンプ 1999年 43号',
-                '少年ジャンプ 1999 43号 ナルト',
                 'NARUTO 新連載 ジャンプ 1999',
-                '週刊少年ジャンプ 1999 43',
             ],
             'exclude_keywords': [
                 'trading card', 'tcg', 'card game', 'figure', 'figurine',
@@ -85,22 +78,14 @@ class WSJConfig:
             'ebay_queries': [
                 'weekly shonen jump 2001 36 bleach',
                 'shonen jump bleach first appearance 2001',
-                '週刊少年ジャンプ 2001 36 BLEACH',
-                'shonen jump 2001 #36 bleach',
             ],
             'mercari_queries': [
                 '週刊少年ジャンプ 2001年36号',
                 '少年ジャンプ 2001年36・37合併号',
-                '少年ジャンプ 2001 36号 BLEACH',
-                'BLEACH 新連載号 ジャンプ 2001',
-                'ジャンプ 2001 36号',
-                'BLEACH 新連載 ジャンプ',
             ],
             'yahoo_queries': [
                 '週刊少年ジャンプ 2001年 36号',
-                '少年ジャンプ 2001 36・37 BLEACH',
                 'BLEACH 新連載 ジャンプ 2001',
-                '週刊少年ジャンプ 2001 36',
             ],
             'exclude_keywords': [
                 'trading card', 'tcg', 'card game', 'figure', 'figurine',
@@ -118,24 +103,16 @@ class WSJConfig:
             'wsj_number': '42',
             'wsj_desc': 'Yu-Gi-Oh! Chapter 1 - 週刊少年ジャンプ 1996年42号',
             'ebay_queries': [
-                'weekly shonen jump 1996 42 yugioh',
                 'weekly shonen jump 1996 42 yu-gi-oh',
                 'shonen jump yu-gi-oh first appearance 1996',
-                '週刊少年ジャンプ 1996 42 遊戯王',
             ],
             'mercari_queries': [
                 '週刊少年ジャンプ 1996年42号',
-                '少年ジャンプ 1996 42号 遊戯王',
                 '遊戯王 新連載号 ジャンプ 1996',
-                '遊☆戯☆王 新連載 ジャンプ 1996',
-                'ジャンプ 1996 42号',
-                '遊戯王 ジャンプ 掲載号',
             ],
             'yahoo_queries': [
                 '週刊少年ジャンプ 1996年 42号',
-                '少年ジャンプ 1996 42号 遊戯王',
                 '遊戯王 新連載 ジャンプ 1996',
-                '週刊少年ジャンプ 1996 42',
             ],
             'exclude_keywords': [
                 'ocg', 'duel monsters card', 'trading card', 'tcg',
@@ -156,22 +133,14 @@ class WSJConfig:
             'ebay_queries': [
                 'weekly shonen jump 1984 51 dragon ball',
                 'shonen jump dragon ball first appearance 1984',
-                '週刊少年ジャンプ 1984 51 ドラゴンボール',
-                'shonen jump 1984 51 toriyama',
             ],
             'mercari_queries': [
                 '週刊少年ジャンプ 1984年51号',
-                '少年ジャンプ 1984 51号 ドラゴンボール',
                 'ドラゴンボール 新連載号 ジャンプ 1984',
-                '鳥山明 ジャンプ 1984 51',
-                'ジャンプ 1984 51号',
-                'ドラゴンボール 新連載 ジャンプ',
             ],
             'yahoo_queries': [
                 '週刊少年ジャンプ 1984年 51号',
-                '少年ジャンプ 1984 51号 ドラゴンボール',
                 'ドラゴンボール 新連載 ジャンプ 1984',
-                '鳥山明 ジャンプ 1984 51',
             ],
             'exclude_keywords': [
                 'trading card', 'tcg', 'card game', 'figure', 'figurine',
@@ -192,22 +161,14 @@ class WSJConfig:
             'ebay_queries': [
                 'weekly shonen jump 1998 14 hunter',
                 'shonen jump hunter x hunter first appearance 1998',
-                '週刊少年ジャンプ 1998 14 HUNTER',
-                'shonen jump 1998 #14 hunter',
             ],
             'mercari_queries': [
                 '週刊少年ジャンプ 1998年14号',
-                '少年ジャンプ 1998 14号 HUNTER',
                 'HUNTER×HUNTER 新連載号 ジャンプ 1998',
-                'ハンターハンター 新連載 ジャンプ 1998',
-                'ジャンプ 1998 14号',
-                'ハンターハンター ジャンプ 掲載号',
             ],
             'yahoo_queries': [
                 '週刊少年ジャンプ 1998年 14号',
-                '少年ジャンプ 1998 14号 HUNTER',
                 'HUNTER×HUNTER 新連載 ジャンプ 1998',
-                '週刊少年ジャンプ 1998 14',
             ],
             'exclude_keywords': [
                 'trading card', 'tcg', 'card game', 'figure', 'figurine',
@@ -225,26 +186,15 @@ class WSJConfig:
             'wsj_desc': 'Romance Dawn one-shot - 週刊少年ジャンプ 1996年41号 (Sexy Commando Gaiden cover)',
             'ebay_queries': [
                 'weekly shonen jump 1996 41',
-                'shonen jump 1996 #41 romance dawn',
-                '週刊少年ジャンプ 1996 41',
-                'shonen jump 1996 41 one piece romance dawn',
-                'weekly shonen jump 1996 no 41',
+                'shonen jump 1996 romance dawn',
             ],
             'mercari_queries': [
                 '週刊少年ジャンプ 1996年41号',
-                '少年ジャンプ 1996 41号',
-                'ROMANCE DAWN ジャンプ 1996',
                 'ロマンスドーン ジャンプ 1996',
-                'ジャンプ 1996 41号',
-                'ロマンスドーン 掲載号',
-                'ロマンスドーン ジャンプ',
-                '週刊少年ジャンプ 41号 ロマンスドーン',
             ],
             'yahoo_queries': [
                 '週刊少年ジャンプ 1996年 41号',
-                '少年ジャンプ 1996 41号',
                 'ROMANCE DAWN ジャンプ 1996',
-                '週刊少年ジャンプ 1996 41',
             ],
             'exclude_keywords': [
                 'trading card', 'tcg', 'card game', 'figure', 'figurine',
@@ -262,18 +212,13 @@ class WSJConfig:
             'wsj_desc': "JoJo's Bizarre Adventure Chapter 1 - 週刊少年ジャンプ 1987年1・2合併号",
             'ebay_queries': [
                 'weekly shonen jump 1987 jojo',
-                'shonen jump 1987 1 jojo bizarre',
-                '週刊少年ジャンプ 1987 ジョジョ',
             ],
             'mercari_queries': [
                 '週刊少年ジャンプ 1987 1・2 ジョジョ',
-                '少年ジャンプ 1987 ジョジョ 新連載',
                 'ジョジョ 新連載号 ジャンプ 1987',
-                'ジャンプ 1987 1号 ジョジョ',
             ],
             'yahoo_queries': [
                 '週刊少年ジャンプ 1987 1・2 ジョジョ',
-                '少年ジャンプ 1987 ジョジョ',
                 'ジョジョ 新連載 ジャンプ 1987',
             ],
             'exclude_keywords': [
@@ -293,21 +238,15 @@ class WSJConfig:
             'wsj_desc': 'One Piece Chapter 1 - 週刊少年ジャンプ 1997年34号',
             'ebay_queries': [
                 'weekly shonen jump 1997 34',
-                'weekly shonen jump 1997 vol 34',
-                'shonen jump 1997 #34 one piece',
-                '週刊少年ジャンプ 1997 34 ワンピース',
+                'shonen jump 1997 one piece first appearance',
             ],
             'mercari_queries': [
                 '週刊少年ジャンプ 1997年34号',
-                '少年ジャンプ 1997 34号 ワンピース',
                 'ONE PIECE 新連載号 ジャンプ 1997',
-                'ジャンプ 1997 34号',
             ],
             'yahoo_queries': [
                 '週刊少年ジャンプ 1997年 34号',
-                '少年ジャンプ 1997 34号',
                 'ONE PIECE 新連載 ジャンプ 1997',
-                '週刊少年ジャンプ 1997 34',
             ],
             'exclude_keywords': [
                 'trading card', 'tcg', 'card game', 'figure', 'figurine',
@@ -319,7 +258,6 @@ class WSJConfig:
     # -----------------------------------------------------------------------
     # SIMPLE SEARCHES — Vol 1 first editions, CoroCoro, Comic News, etc.
     # These use basic AND/OR validator matching (not WSJ issue regex).
-    # Searched via Mercari keyword, Yahoo Auctions keyword, or raw Mercari URL.
     # -----------------------------------------------------------------------
 
     SIMPLE_SEARCHES: list[dict] = [
