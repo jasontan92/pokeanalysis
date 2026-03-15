@@ -333,7 +333,7 @@ def search_ebay(series_key: str, series: dict) -> list[dict]:
         except Exception as e:
             logger.error(f"eBay error for '{query}': {e}")
 
-        time.sleep(2)
+        time.sleep(1)
 
     return results
 
@@ -354,7 +354,7 @@ def search_mercari(page, series_key: str, series: dict) -> list[dict]:
 
             page.goto(url, timeout=60000)
             wait_for_page_load(page)
-            page.wait_for_timeout(3000)
+            page.wait_for_timeout(1500)
 
             links = page.query_selector_all('a[href*="/item/"]')
             logger.info(f"    Query '{query}': found {len(links)} raw links on page")
@@ -431,14 +431,14 @@ def search_mercari(page, series_key: str, series: dict) -> list[dict]:
         except Exception as e:
             logger.error(f"Mercari error for '{query}': {e}")
 
-        time.sleep(2)
+        time.sleep(1)
 
     # --- Raw Mercari URLs (broader searches with their own filtering) ---
     for raw_url in series.get('mercari_urls', []):
         try:
             page.goto(raw_url, timeout=60000)
             wait_for_page_load(page)
-            page.wait_for_timeout(3000)
+            page.wait_for_timeout(1500)
 
             links = page.query_selector_all('a[href*="/item/"]')
             logger.info(f"    Raw URL: found {len(links)} raw links on page")
@@ -517,7 +517,7 @@ def search_mercari(page, series_key: str, series: dict) -> list[dict]:
         except Exception as e:
             logger.error(f"Mercari raw URL error: {e}")
 
-        time.sleep(2)
+        time.sleep(1)
 
     return results
 
@@ -570,7 +570,7 @@ def search_yahoo_auctions(page, series_key: str, series: dict) -> list[dict]:
 
             page.goto(url, timeout=60000)
             wait_for_page_load(page)
-            page.wait_for_timeout(3000)
+            page.wait_for_timeout(1500)
 
             items = page.query_selector_all('.Product, .cf, [data-auction-id], .Product__titleLink')
             logger.info(f"    Query '{query}': found {len(items)} raw items on page")
@@ -626,7 +626,7 @@ def search_yahoo_auctions(page, series_key: str, series: dict) -> list[dict]:
         except Exception as e:
             logger.error(f"Yahoo error for '{query}': {e}")
 
-        time.sleep(2)
+        time.sleep(1)
 
     return results
 
@@ -811,7 +811,7 @@ class WSJMonitor:
                                 url = f"https://jp.mercari.com/search?keyword={encoded}&order=desc&sort=created_time&status=on_sale"
                                 page.goto(url, timeout=60000)
                                 wait_for_page_load(page)
-                                page.wait_for_timeout(3000)
+                                page.wait_for_timeout(1500)
 
                                 links = page.query_selector_all('a[href*="/item/"]')
                                 logger.info(f"  Mercari '{sname}': {len(links)} raw links")
@@ -868,7 +868,7 @@ class WSJMonitor:
                                         continue
                             except Exception as e:
                                 logger.error(f"  Mercari simple search error for '{sname}': {e}")
-                            time.sleep(2)
+                            time.sleep(1)
 
                         # Yahoo Auctions keyword search
                         yahoo_kw = search.get('yahoo_keyword')
@@ -878,7 +878,7 @@ class WSJMonitor:
                                 url = f"https://auctions.yahoo.co.jp/search/search?p={encoded}&va={encoded}&exflg=1&b=1&n=50"
                                 page.goto(url, timeout=60000)
                                 wait_for_page_load(page)
-                                page.wait_for_timeout(3000)
+                                page.wait_for_timeout(1500)
 
                                 items = page.query_selector_all('.Product, .cf, [data-auction-id], .Product__titleLink')
                                 logger.info(f"  Yahoo '{sname}': {len(items)} raw items")
@@ -922,7 +922,7 @@ class WSJMonitor:
                                         continue
                             except Exception as e:
                                 logger.error(f"  Yahoo simple search error for '{sname}': {e}")
-                            time.sleep(2)
+                            time.sleep(1)
 
                     browser.close()
             except Exception as e:
