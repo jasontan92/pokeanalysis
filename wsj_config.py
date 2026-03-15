@@ -142,9 +142,7 @@ class WSJConfig:
                 'card game', 'figure', 'figurine', 'dvd', 'blu-ray',
                 'フィギュア', 'カードゲーム', 'トレーディングカード',
             ],
-            'mercari_urls': [
-                'https://jp.mercari.com/search?keyword=%E9%81%8A%E6%88%AF%E7%8E%8B%201%E5%B7%BB%20%E5%88%9D%E7%89%88&sort=created_time&order=desc',
-            ],
+            # Yu-Gi-Oh Vol 1 初版 is handled by SIMPLE_SEARCHES below
         },
 
         'dragonball': {
@@ -260,7 +258,7 @@ class WSJConfig:
             'author_en': 'Araki Hirohiko',
             'wsj_issue': 'WSJ 1987 #1-2',
             'wsj_year': '1987',
-            'wsj_number': '1',
+            'wsj_number': '1・2',  # Combined issue — matched via custom regex in is_relevant_listing
             'wsj_desc': "JoJo's Bizarre Adventure Chapter 1 - 週刊少年ジャンプ 1987年1・2合併号",
             'ebay_queries': [
                 'weekly shonen jump 1987 jojo',

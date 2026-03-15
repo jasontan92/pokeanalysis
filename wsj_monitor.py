@@ -263,12 +263,23 @@ def is_relevant_listing(title: str, series: dict) -> bool:
 
     # Match exact issue number with word boundaries
     num = wsj_number
-    has_number = bool(
-        re.search(rf'(?<!\d){num}号', t_orig)                        # 43号
-        or re.search(rf'#{num}(?!\d)', t)                             # #43
-        or re.search(rf'no\.?\s*{num}(?!\d)', t)                      # No.43, No 43
-        or re.search(rf'(?:^|[\s#＃])0*{num}(?:[号\s,.\-]|$)', t_orig)  # standalone
-    )
+
+    # Handle combined issues like "1・2" (match 1・2, 1-2, 1/2, #1-2, etc.)
+    if '・' in num or '-' in num:
+        parts = re.split(r'[・\-]', num)
+        if len(parts) == 2:
+            a, b = parts
+            combined_pattern = rf'(?<!\d){a}\s*[・\-/]\s*{b}(?:\s*合併)?'
+            has_number = bool(re.search(combined_pattern, t_orig) or re.search(combined_pattern, t))
+        else:
+            has_number = False
+    else:
+        has_number = bool(
+            re.search(rf'(?<!\d){num}号', t_orig)                        # 43号
+            or re.search(rf'#{num}(?!\d)', t)                             # #43
+            or re.search(rf'no\.?\s*{num}(?!\d)', t)                      # No.43, No 43
+            or re.search(rf'(?:^|[\s#＃])0*{num}(?:[号\s,.\-]|$)', t_orig)  # standalone
+        )
 
     # Must reference jump magazine
     has_jump = any(kw in t or kw in t_orig for kw in [
