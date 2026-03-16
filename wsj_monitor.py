@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Manga Scanner — monitors eBay, Mercari JP, and Yahoo Auctions JP for:
+Manga Scanner — monitors Mercari JP and Yahoo Auctions JP for:
 - WSJ first appearance issues (Naruto, Bleach, Yu-Gi-Oh, Dragon Ball, HxH, Romance Dawn, JoJo, One Piece Ch1)
 - Vol 1 first editions (Naruto, Bleach, Yu-Gi-Oh, One Piece)
 - Other collectible manga (CoroCoro Nov 1996, Comic News 195)
@@ -288,54 +288,6 @@ def is_relevant_listing(title: str, series: dict) -> bool:
 
     return has_year and has_number and has_jump
 
-
-# ---------------------------------------------------------------------------
-# eBay scraper (reuse existing EbayScraper)
-# ---------------------------------------------------------------------------
-
-def search_ebay(series_key: str, series: dict) -> list[dict]:
-    """Search eBay for a series' WSJ issue and Vol 1."""
-    try:
-        from scraper import EbayScraper
-        scraper = EbayScraper()
-    except ImportError:
-        logger.warning("Could not import EbayScraper, skipping eBay")
-        return []
-
-    results = []
-    seen_ids = set()
-
-    for query in series['ebay_queries']:
-        try:
-            listings = scraper.scrape_active_listings(query, max_pages=1, items_per_page=60)
-            for listing in listings:
-                item_id = listing.get('item_id')
-                if not item_id or item_id in seen_ids:
-                    continue
-                seen_ids.add(item_id)
-
-                title = listing.get('title', '')
-                if should_exclude(title, series['exclude_keywords']):
-                    continue
-                if not is_relevant_listing(title, series):
-                    continue
-
-                results.append({
-                    'platform': 'eBay',
-                    'series': series_key,
-                    'title': title,
-                    'price': listing.get('price'),
-                    'currency': 'USD',
-                    'link': listing.get('link', ''),
-                    'listing_id': f"ebay_{item_id}",
-                    'image_url': listing.get('image_url'),
-                })
-        except Exception as e:
-            logger.error(f"eBay error for '{query}': {e}")
-
-        time.sleep(1)
-
-    return results
 
 
 # ---------------------------------------------------------------------------
@@ -659,13 +611,16 @@ class WSJMonitor:
             return
         series_list = ', '.join(s['name'] for s in WSJConfig.SERIES.values())
         simple_list = ', '.join(s['name'] for s in WSJConfig.SIMPLE_SEARCHES)
+        unfiltered_list = ', '.join(s['name'] for s in WSJConfig.UNFILTERED_MERCARI_URLS)
         msg = (
             "💚 <b>Manga Scanner Active</b>\n\n"
             f"Daily check-in at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
             f"WSJ Issues: {series_list}\n"
             f"Other: {simple_list}\n"
-            "Platforms: eBay, Mercari JP, Yahoo Auctions JP"
         )
+        if unfiltered_list:
+            msg += f"Unfiltered: {unfiltered_list}\n"
+        msg += "Platforms: Mercari JP, Yahoo Auctions JP"
         if self.notifier.send_message(msg):
             self.state.state['last_heartbeat'] = datetime.now().isoformat()
             logger.info("Heartbeat sent")
@@ -757,20 +712,10 @@ class WSJMonitor:
             self.notifier.send_message(
                 f"🔄 <b>WSJ Monitor Started</b>\n\n"
                 f"Watching for WSJ first appearances:\n{series_lines}\n\n"
-                f"Platforms: eBay, Mercari JP, Yahoo Auctions JP"
+                f"Platforms: Mercari JP, Yahoo Auctions JP"
             )
 
         all_results = []
-
-        # --- eBay (uses its own browser internally) ---
-        for series_key, series in WSJConfig.SERIES.items():
-            logger.info(f"eBay search: {series['name']}")
-            try:
-                ebay_results = search_ebay(series_key, series)
-                all_results.extend(ebay_results)
-                logger.info(f"  eBay {series['name']}: {len(ebay_results)} results")
-            except Exception as e:
-                logger.error(f"  eBay {series['name']} failed: {e}")
 
         # --- Japanese marketplaces (shared Playwright browser) ---
         if PLAYWRIGHT_AVAILABLE:
@@ -923,6 +868,79 @@ class WSJMonitor:
                             except Exception as e:
                                 logger.error(f"  Yahoo simple search error for '{sname}': {e}")
                             time.sleep(1)
+
+                    # --- Unfiltered Mercari URL searches (no filtering, alert on everything) ---
+                    for search in WSJConfig.UNFILTERED_MERCARI_URLS:
+                        sname = search['name']
+                        logger.info(f"Unfiltered Mercari search: {sname}")
+                        try:
+                            page.goto(search['url'], timeout=60000)
+                            wait_for_page_load(page)
+                            page.wait_for_timeout(1500)
+
+                            links = page.query_selector_all('a[href*="/item/"]')
+                            logger.info(f"  Unfiltered '{sname}': {len(links)} raw links")
+
+                            seen_ids = set()
+                            for link in links:
+                                try:
+                                    href = link.get_attribute('href')
+                                    if not href:
+                                        continue
+                                    item_match = re.search(r'/item/([a-zA-Z0-9]+)', href)
+                                    if not item_match:
+                                        continue
+                                    item_id = item_match.group(1)
+                                    if item_id in seen_ids:
+                                        continue
+                                    seen_ids.add(item_id)
+
+                                    text = link.inner_text().strip()
+                                    lines = [l.strip() for l in text.split('\n') if l.strip()]
+                                    title_lines = [
+                                        l for l in lines
+                                        if not l.startswith('SG') and not l.startswith('US$')
+                                        and not l.startswith('$') and not l.startswith('¥')
+                                        and not l.startswith('￥') and not re.match(r'^[\d,\.]+$', l.replace(',', ''))
+                                        and '¥' not in l and '￥' not in l
+                                        and not l.startswith('現在')
+                                        and len(l) > 3
+                                    ]
+                                    title = title_lines[0][:120] if title_lines else item_id
+
+                                    price_raw = None
+                                    for line in lines:
+                                        m = re.search(r'[¥￥]([\d,]+)', line)
+                                        if m:
+                                            try:
+                                                price_raw = float(m.group(1).replace(',', ''))
+                                            except ValueError:
+                                                pass
+                                            break
+                                        if re.match(r'^[\d,]+$', line.strip()) and len(line.strip()) >= 3:
+                                            try:
+                                                price_raw = float(line.strip().replace(',', ''))
+                                            except ValueError:
+                                                pass
+                                            break
+
+                                    full_link = f"https://jp.mercari.com{href}" if not href.startswith('http') else href
+                                    all_results.append({
+                                        'platform': 'Mercari JP',
+                                        'series': search['state_category'],
+                                        'series_name': sname,
+                                        'title': title,
+                                        'price': price_raw,
+                                        'currency': 'JPY',
+                                        'link': full_link,
+                                        'listing_id': f"mercari_{item_id}",
+                                        'image_url': None,
+                                    })
+                                except Exception:
+                                    continue
+                        except Exception as e:
+                            logger.error(f"  Unfiltered Mercari search error for '{sname}': {e}")
+                        time.sleep(1)
 
                     browser.close()
             except Exception as e:

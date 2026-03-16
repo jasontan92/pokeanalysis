@@ -1,6 +1,6 @@
 """
 Configuration for the Manga Scanner.
-Monitors WSJ first appearance issues, Vol 1 first editions, and other collectible manga.
+Monitors WSJ first appearance issues, Vol 1 first editions, and other collectible manga on Japanese sites.
 Uses separate Telegram bot/chat from the Pokemon (no-rarity) scanner.
 """
 
@@ -37,7 +37,6 @@ class WSJConfig:
 
     # -----------------------------------------------------------------------
     # WSJ SERIES — first appearance issues (use is_relevant_listing filtering)
-    # Kept to 2-3 queries per platform — first query catches most listings.
     # -----------------------------------------------------------------------
 
     SERIES = {
@@ -49,10 +48,6 @@ class WSJConfig:
             'wsj_year': '1999',
             'wsj_number': '43',
             'wsj_desc': 'NARUTO Chapter 1 - 週刊少年ジャンプ 1999年43号',
-            'ebay_queries': [
-                'weekly shonen jump 1999 43 naruto',
-                'shonen jump naruto first appearance 1999',
-            ],
             'mercari_queries': [
                 '週刊少年ジャンプ 1999年43号',
                 'NARUTO 新連載号 ジャンプ 1999',
@@ -75,10 +70,6 @@ class WSJConfig:
             'wsj_year': '2001',
             'wsj_number': '36',
             'wsj_desc': 'BLEACH Chapter 1 - 週刊少年ジャンプ 2001年36・37合併号',
-            'ebay_queries': [
-                'weekly shonen jump 2001 36 bleach',
-                'shonen jump bleach first appearance 2001',
-            ],
             'mercari_queries': [
                 '週刊少年ジャンプ 2001年36号',
                 '少年ジャンプ 2001年36・37合併号',
@@ -102,10 +93,6 @@ class WSJConfig:
             'wsj_year': '1996',
             'wsj_number': '42',
             'wsj_desc': 'Yu-Gi-Oh! Chapter 1 - 週刊少年ジャンプ 1996年42号',
-            'ebay_queries': [
-                'weekly shonen jump 1996 42 yu-gi-oh',
-                'shonen jump yu-gi-oh first appearance 1996',
-            ],
             'mercari_queries': [
                 '週刊少年ジャンプ 1996年42号',
                 '遊戯王 新連載号 ジャンプ 1996',
@@ -130,10 +117,6 @@ class WSJConfig:
             'wsj_year': '1984',
             'wsj_number': '51',
             'wsj_desc': 'Dragon Ball Chapter 1 - 週刊少年ジャンプ 1984年51号',
-            'ebay_queries': [
-                'weekly shonen jump 1984 51 dragon ball',
-                'shonen jump dragon ball first appearance 1984',
-            ],
             'mercari_queries': [
                 '週刊少年ジャンプ 1984年51号',
                 'ドラゴンボール 新連載号 ジャンプ 1984',
@@ -158,10 +141,6 @@ class WSJConfig:
             'wsj_year': '1998',
             'wsj_number': '14',
             'wsj_desc': 'Hunter×Hunter Chapter 1 - 週刊少年ジャンプ 1998年14号',
-            'ebay_queries': [
-                'weekly shonen jump 1998 14 hunter',
-                'shonen jump hunter x hunter first appearance 1998',
-            ],
             'mercari_queries': [
                 '週刊少年ジャンプ 1998年14号',
                 'HUNTER×HUNTER 新連載号 ジャンプ 1998',
@@ -184,10 +163,6 @@ class WSJConfig:
             'wsj_year': '1996',
             'wsj_number': '41',
             'wsj_desc': 'Romance Dawn one-shot - 週刊少年ジャンプ 1996年41号 (Sexy Commando Gaiden cover)',
-            'ebay_queries': [
-                'weekly shonen jump 1996 41',
-                'shonen jump 1996 romance dawn',
-            ],
             'mercari_queries': [
                 '週刊少年ジャンプ 1996年41号',
                 'ロマンスドーン ジャンプ 1996',
@@ -210,9 +185,6 @@ class WSJConfig:
             'wsj_year': '1987',
             'wsj_number': '1・2',  # Combined issue — matched via custom regex in is_relevant_listing
             'wsj_desc': "JoJo's Bizarre Adventure Chapter 1 - 週刊少年ジャンプ 1987年1・2合併号",
-            'ebay_queries': [
-                'weekly shonen jump 1987 jojo',
-            ],
             'mercari_queries': [
                 '週刊少年ジャンプ 1987 1・2 ジョジョ',
                 'ジョジョ 新連載号 ジャンプ 1987',
@@ -236,10 +208,6 @@ class WSJConfig:
             'wsj_year': '1997',
             'wsj_number': '34',
             'wsj_desc': 'One Piece Chapter 1 - 週刊少年ジャンプ 1997年34号',
-            'ebay_queries': [
-                'weekly shonen jump 1997 34',
-                'shonen jump 1997 one piece first appearance',
-            ],
             'mercari_queries': [
                 '週刊少年ジャンプ 1997年34号',
                 'ONE PIECE 新連載号 ジャンプ 1997',
@@ -314,6 +282,18 @@ class WSJConfig:
             'yahoo_keyword': 'コミックニュース195',
             'state_category': 'simple_comic_news_195',
             'validators': [['コミックニュース', 'comic news'], ['195']],
+        },
+    ]
+
+    # -----------------------------------------------------------------------
+    # UNFILTERED MERCARI URLS — ping on ANY new result, no filtering at all
+    # -----------------------------------------------------------------------
+
+    UNFILTERED_MERCARI_URLS: list[dict] = [
+        {
+            'name': 'Romance Dawn WSJ 1996 (unfiltered)',
+            'url': 'https://jp.mercari.com/search?keyword=%E9%80%B1%E5%88%8A%E5%B0%91%E5%B9%B4%E3%82%B8%E3%83%A3%E3%83%B3%E3%83%97%201996%20%20%E3%83%AD%E3%83%9E%E3%83%B3%E3%82%B9%E3%83%89%E3%83%BC%E3%83%B3&sort=created_time&order=desc',
+            'state_category': 'unfiltered_romancedawn_1996',
         },
     ]
 
