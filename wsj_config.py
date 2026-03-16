@@ -244,6 +244,13 @@ class WSJConfig:
             'validators': [['コロコロ', 'corocoro'], ['1996'], ['11']],
         },
         {
+            'name': 'CoroCoro Comic Feb 1996',
+            'mercari_keyword': 'コロコロコミック 1996年 2月号',
+            'yahoo_keyword': 'コロコロコミック 1996年 2月号',
+            'state_category': 'simple_corocoro_feb96',
+            'validators': [['コロコロ', 'corocoro'], ['1996'], ['2']],
+        },
+        {
             'name': 'Yu-Gi-Oh Vol 1 初版',
             'mercari_keyword': '遊戯王 1巻 初版',
             'yahoo_keyword': '遊戯王 1巻 初版',
