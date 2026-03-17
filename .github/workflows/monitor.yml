@@ -6,15 +6,22 @@ on:
   workflow_dispatch:
 
 jobs:
-  monitor:
+  pokemon:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-chromium
 
       - name: Install dependencies
         run: |
@@ -29,12 +36,50 @@ jobs:
         run: |
           echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}" >> .env
           echo "TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }}" >> .env
-          echo "WSJ_TELEGRAM_BOT_TOKEN=${{ secrets.WSJ_TELEGRAM_BOT_TOKEN }}" >> .env
-          echo "WSJ_TELEGRAM_CHAT_ID=${{ secrets.WSJ_TELEGRAM_CHAT_ID }}" >> .env
           echo "SEARCH_TERM=1996 no rarity" >> .env
 
       - name: Run norarityscanner (Pokemon games)
         run: xvfb-run --auto-servernum python monitor.py
+
+      - name: Save state
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+          git add data/seen_listings.json || true
+          git diff --staged --quiet || git commit -m "Update state (pokemon)"
+          git pull --rebase || true
+          git push || true
+
+  manga:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-chromium
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          playwright install chromium
+          playwright install-deps chromium
+
+      - name: Install xvfb for headless browser
+        run: sudo apt-get install -y xvfb
+
+      - name: Create env file
+        run: |
+          echo "WSJ_TELEGRAM_BOT_TOKEN=${{ secrets.WSJ_TELEGRAM_BOT_TOKEN }}" >> .env
+          echo "WSJ_TELEGRAM_CHAT_ID=${{ secrets.WSJ_TELEGRAM_CHAT_ID }}" >> .env
 
       - name: Run mangascanner (WSJ issues + Vol 1 + collectibles)
         run: xvfb-run --auto-servernum python wsj_monitor.py
@@ -43,7 +88,7 @@ jobs:
         run: |
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
-          git add data/seen_listings.json data/wsj_seen_listings.json || true
-          git diff --staged --quiet || git commit -m "Update state"
+          git add data/wsj_seen_listings.json || true
+          git diff --staged --quiet || git commit -m "Update state (manga)"
           git pull --rebase || true
           git push || true
