@@ -185,13 +185,6 @@ class WSJConfig:
                 ['初版', '第1刷', '第一刷'],
             ],
         },
-        {
-            'name': 'Comic News 195',
-            'mercari_keyword': 'コミックニュース195',
-            'yahoo_keyword': 'コミックニュース195',
-            'state_category': 'simple_comic_news_195',
-            'validators': [['コミックニュース', 'comic news'], ['195']],
-        },
     ]
 
     # -----------------------------------------------------------------------
