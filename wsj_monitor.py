@@ -748,12 +748,12 @@ class WSJMonitor:
                         sname = search['name']
                         logger.info(f"Simple search: {sname}")
 
-                        # Mercari keyword search
+                        # Mercari keyword search (use mercari_url if provided, else build from keyword)
+                        mercari_url = search.get('mercari_url')
                         mercari_kw = search.get('mercari_keyword')
-                        if mercari_kw:
+                        if mercari_url or mercari_kw:
                             try:
-                                encoded = quote(mercari_kw)
-                                url = f"https://jp.mercari.com/search?keyword={encoded}&order=desc&sort=created_time&status=on_sale"
+                                url = mercari_url or f"https://jp.mercari.com/search?keyword={quote(mercari_kw)}&order=desc&sort=created_time&status=on_sale"
                                 page.goto(url, timeout=60000)
                                 wait_for_page_load(page)
                                 page.wait_for_timeout(1500)
