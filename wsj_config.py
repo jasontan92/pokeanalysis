@@ -62,29 +62,6 @@ class WSJConfig:
             ],
         },
 
-        'bleach': {
-            'name': 'BLEACH',
-            'author': '久保帯人',
-            'author_en': 'Kubo Tite',
-            'wsj_issue': 'WSJ 2001 #36-37',
-            'wsj_year': '2001',
-            'wsj_number': '36',
-            'wsj_desc': 'BLEACH Chapter 1 - 週刊少年ジャンプ 2001年36・37合併号',
-            'mercari_queries': [
-                '週刊少年ジャンプ 2001年36号',
-                '少年ジャンプ 2001年36・37合併号',
-            ],
-            'yahoo_queries': [
-                '週刊少年ジャンプ 2001年 36号',
-                'BLEACH 新連載 ジャンプ 2001',
-            ],
-            'exclude_keywords': [
-                'trading card', 'tcg', 'card game', 'figure', 'figurine',
-                'dvd', 'blu-ray', 'フィギュア', 'カードゲーム',
-                'cleaning', 'laundry', 'disinfect', '漂白',
-            ],
-        },
-
         'yugioh': {
             'name': '遊☆戯☆王 / Yu-Gi-Oh!',
             'author': '高橋和希',
@@ -109,52 +86,6 @@ class WSJConfig:
             # Yu-Gi-Oh Vol 1 初版 is handled by SIMPLE_SEARCHES below
         },
 
-        'dragonball': {
-            'name': 'ドラゴンボール / Dragon Ball',
-            'author': '鳥山明',
-            'author_en': 'Toriyama Akira',
-            'wsj_issue': 'WSJ 1984 #51',
-            'wsj_year': '1984',
-            'wsj_number': '51',
-            'wsj_desc': 'Dragon Ball Chapter 1 - 週刊少年ジャンプ 1984年51号',
-            'mercari_queries': [
-                '週刊少年ジャンプ 1984年51号',
-                'ドラゴンボール 新連載号 ジャンプ 1984',
-            ],
-            'yahoo_queries': [
-                '週刊少年ジャンプ 1984年 51号',
-                'ドラゴンボール 新連載 ジャンプ 1984',
-            ],
-            'exclude_keywords': [
-                'trading card', 'tcg', 'card game', 'figure', 'figurine',
-                'dvd', 'blu-ray', 'super', 'gt', 'フィギュア',
-                'カードゲーム', 'トレーディングカード',
-                'cushion', 'クッション', 'complete set', 'full color',
-            ],
-        },
-
-        'hxh': {
-            'name': 'HUNTER×HUNTER',
-            'author': '冨樫義博',
-            'author_en': 'Togashi Yoshihiro',
-            'wsj_issue': 'WSJ 1998 #14',
-            'wsj_year': '1998',
-            'wsj_number': '14',
-            'wsj_desc': 'Hunter×Hunter Chapter 1 - 週刊少年ジャンプ 1998年14号',
-            'mercari_queries': [
-                '週刊少年ジャンプ 1998年14号',
-                'HUNTER×HUNTER 新連載号 ジャンプ 1998',
-            ],
-            'yahoo_queries': [
-                '週刊少年ジャンプ 1998年 14号',
-                'HUNTER×HUNTER 新連載 ジャンプ 1998',
-            ],
-            'exclude_keywords': [
-                'trading card', 'tcg', 'card game', 'figure', 'figurine',
-                'dvd', 'blu-ray', 'フィギュア', 'カードゲーム',
-            ],
-        },
-
         'romance_dawn': {
             'name': 'ROMANCE DAWN (One Piece prototype)',
             'author': '尾田栄一郎',
@@ -174,29 +105,6 @@ class WSJConfig:
             'exclude_keywords': [
                 'trading card', 'tcg', 'card game', 'figure', 'figurine',
                 'dvd', 'blu-ray', 'フィギュア', 'カードゲーム',
-            ],
-        },
-
-        'jojo': {
-            'name': "JoJo's Bizarre Adventure",
-            'author': '荒木飛呂彦',
-            'author_en': 'Araki Hirohiko',
-            'wsj_issue': 'WSJ 1987 #1-2',
-            'wsj_year': '1987',
-            'wsj_number': '1・2',  # Combined issue — matched via custom regex in is_relevant_listing
-            'wsj_desc': "JoJo's Bizarre Adventure Chapter 1 - 週刊少年ジャンプ 1987年1・2合併号",
-            'mercari_queries': [
-                '週刊少年ジャンプ 1987 1・2 ジョジョ',
-                'ジョジョ 新連載号 ジャンプ 1987',
-            ],
-            'yahoo_queries': [
-                '週刊少年ジャンプ 1987 1・2 ジョジョ',
-                'ジョジョ 新連載 ジャンプ 1987',
-            ],
-            'exclude_keywords': [
-                'trading card', 'tcg', 'card game', 'figure', 'figurine',
-                'dvd', 'blu-ray', 'フィギュア', 'カードゲーム',
-                'jojolion', 'jojolands', 'stone ocean', 'steel ball',
             ],
         },
 
