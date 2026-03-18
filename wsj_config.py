@@ -145,12 +145,12 @@ class WSJConfig:
             'validators': [['ナルト', 'naruto'], ['1巻']],
         },
         {
-            'name': 'CoroCoro Comic 1996 (Feb/Apr/Nov)',
+            'name': 'CoroCoro Comic 1996 (Feb/Apr/Aug-Dec)',
             'mercari_keyword': 'コロコロコミック 1996年',
             'mercari_url': 'https://jp.mercari.com/search?keyword=%E3%82%B3%E3%83%AD%E3%82%B3%E3%83%AD%E3%82%B3%E3%83%9F%E3%83%83%E3%82%AF%201996&category_id=5&sort=created_time&order=desc',
             'yahoo_keyword': 'コロコロコミック 1996年',
             'state_category': 'simple_corocoro_1996',
-            'validators': [['コロコロ', 'corocoro'], ['1996'], ['2', '4', '11']],
+            'validators': [['コロコロ', 'corocoro'], ['1996'], ['2', '4', '8', '9', '10', '11', '12']],
         },
         {
             'name': 'Yu-Gi-Oh Vol 1 初版',
