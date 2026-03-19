@@ -153,6 +153,14 @@ class WSJConfig:
             'validators': [['コロコロ', 'corocoro'], ['1996']],
         },
         {
+            'name': 'Bessatsu CoroCoro Comic 1996',
+            'mercari_keyword': '別冊コロコロコロ 1996',
+            'mercari_url': 'https://jp.mercari.com/search?keyword=%E5%88%A5%E5%86%8A%E3%82%B3%E3%83%AD%E3%82%B3%E3%83%AD%E3%82%B3%201996&sort=created_time&order=desc',
+            'yahoo_keyword': '別冊コロコロコミック 1996年',
+            'state_category': 'simple_bessatsu_corocoro_1996',
+            'validators': [['別冊'], ['コロコロ'], ['1996']],
+        },
+        {
             'name': 'Yu-Gi-Oh Vol 1 初版',
             'mercari_keyword': '遊戯王 1巻 初版',
             'yahoo_keyword': '遊戯王 1巻 初版',
