@@ -510,6 +510,120 @@ def _is_relevant_raw_url_listing(title: str, series_key: str) -> bool:
 # Yahoo Auctions Japan scraper (Playwright)
 # ---------------------------------------------------------------------------
 
+def _extract_yahoo_listings(page, url: str) -> list[dict]:
+    """Extract listings from a Yahoo Auctions search results page.
+
+    Uses the resilient a[href*="/item/"] selector approach instead of
+    fragile class-based selectors that break when Yahoo updates their DOM.
+    """
+    listings = []
+    seen_ids = set()
+
+    links = page.query_selector_all('a[href*="/item/"]')
+    logger.info(f"    Yahoo page: {len(links)} item links found")
+
+    if len(links) == 0:
+        # Dump page title + snippet for debugging
+        try:
+            title = page.title()
+            snippet = page.inner_text('body')[:300] if page.query_selector('body') else '(no body)'
+            logger.warning(f"    Yahoo 0 results — page title: {title}")
+            logger.warning(f"    Yahoo page snippet: {snippet[:200]}")
+            # Save screenshot for later diagnosis
+            debug_path = Path(WSJConfig.DATA_DIR) / 'yahoo_debug.png'
+            page.screenshot(path=str(debug_path))
+            logger.info(f"    Yahoo debug screenshot saved to {debug_path}")
+        except Exception as dbg_err:
+            logger.warning(f"    Yahoo debug capture failed: {dbg_err}")
+
+    for link in links:
+        try:
+            href = link.get_attribute('href')
+            if not href:
+                continue
+
+            item_match = re.search(r'/item/([a-zA-Z0-9]+)', href)
+            if not item_match:
+                continue
+
+            item_id = item_match.group(1)
+            if item_id in seen_ids:
+                continue
+            seen_ids.add(item_id)
+
+            # Parse text content from the link element
+            try:
+                text = link.inner_text().strip()
+            except Exception:
+                text = ""
+
+            lines = [l.strip() for l in text.split('\n') if l.strip()]
+
+            # Filter out price/bid/time lines to find the title
+            title_lines = [
+                l for l in lines
+                if not re.match(r'^[\d,\.]+円?$', l)
+                and '¥' not in l and '￥' not in l
+                and not l.startswith('現在')
+                and not l.startswith('即決')
+                and not l.startswith('入札')
+                and not l.endswith('件')
+                and not l.endswith('時間')
+                and not l.endswith('日')
+                and not re.match(r'^残り', l)
+                and len(l) > 3
+            ]
+            title = title_lines[0][:120] if title_lines else item_id
+
+            # Extract price (yen)
+            price_raw = None
+            for line in lines:
+                yen_match = re.search(r'(?:現在|即決)?[¥￥]?([\d,]+)円?', line)
+                if yen_match and ('円' in line or '¥' in line or '￥' in line
+                                  or line.startswith('現在') or line.startswith('即決')):
+                    try:
+                        price_raw = float(yen_match.group(1).replace(',', ''))
+                    except ValueError:
+                        pass
+                    break
+                elif re.match(r'^[\d,]+$', line):
+                    try:
+                        price_raw = float(line.replace(',', ''))
+                    except ValueError:
+                        pass
+                    break
+
+            full_link = href if href.startswith('http') else f"https://auctions.yahoo.co.jp{href}"
+            listing_id = f"yahoo_{item_id}"
+
+            listings.append({
+                'item_id': item_id,
+                'listing_id': listing_id,
+                'title': title,
+                'price': price_raw,
+                'currency': 'JPY',
+                'link': full_link,
+                'image_url': None,
+            })
+
+        except Exception:
+            continue
+
+    return listings
+
+
+def _wait_for_yahoo_page(page):
+    """Wait for Yahoo Auctions page to load, handling bot challenges."""
+    # Yahoo sometimes shows interstitial challenges — wait longer than Mercari
+    for _ in range(6):
+        page.wait_for_timeout(3000)
+        title = page.title().lower()
+        if 'just a moment' not in title and 'checking' not in title and 'verify' not in title:
+            return True
+    logger.warning("    Yahoo page may be stuck on a challenge page")
+    return False
+
+
 def search_yahoo_auctions(page, series_key: str, series: dict) -> list[dict]:
     """Search Yahoo Auctions JP for a series' WSJ issue and Vol 1."""
     results = []
@@ -521,59 +635,34 @@ def search_yahoo_auctions(page, series_key: str, series: dict) -> list[dict]:
             url = f"https://auctions.yahoo.co.jp/search/search?p={encoded}&va={encoded}&exflg=1&b=1&n=50"
 
             page.goto(url, timeout=60000)
-            wait_for_page_load(page)
-            page.wait_for_timeout(1500)
+            _wait_for_yahoo_page(page)
 
-            items = page.query_selector_all('.Product, .cf, [data-auction-id], .Product__titleLink')
-            logger.info(f"    Query '{query}': found {len(items)} raw items on page")
+            raw_listings = _extract_yahoo_listings(page, url)
+            logger.info(f"    Query '{query}': {len(raw_listings)} listings extracted")
 
-            for item in items[:30]:
-                try:
-                    title_el = item.query_selector('.Product__titleLink, .Product__title a, a')
-                    if not title_el:
-                        continue
+            for listing in raw_listings:
+                title = listing['title']
 
-                    title = title_el.inner_text().strip()[:120]
-                    href = title_el.get_attribute('href')
-
-                    if should_exclude(title, series['exclude_keywords']):
-                        continue
-                    if not is_relevant_listing(title, series):
-                        continue
-
-                    title_key = title[:50]
-                    if title_key in seen_titles:
-                        continue
-                    seen_titles.add(title_key)
-
-                    price_el = item.query_selector('.Product__priceValue, .Product__price')
-                    price_text = price_el.inner_text().strip() if price_el else ''
-
-                    price_raw = None
-                    m = re.search(r'([\d,]+)', price_text)
-                    if m:
-                        try:
-                            price_raw = float(m.group(1).replace(',', ''))
-                        except ValueError:
-                            pass
-
-                    # Extract auction ID from href for dedup
-                    aid_match = re.search(r'/([a-zA-Z]\d{8,})', href or '')
-                    listing_id = f"yahoo_{aid_match.group(1)}" if aid_match else f"yahoo_{hash(title_key)}"
-
-                    results.append({
-                        'platform': 'Yahoo Auctions JP',
-                        'series': series_key,
-                        'title': title,
-                        'price': price_raw,
-                        'currency': 'JPY',
-                        'link': href or url,
-                        'listing_id': listing_id,
-                        'image_url': None,
-                    })
-
-                except Exception:
+                if should_exclude(title, series['exclude_keywords']):
                     continue
+                if not is_relevant_listing(title, series):
+                    continue
+
+                title_key = title[:50]
+                if title_key in seen_titles:
+                    continue
+                seen_titles.add(title_key)
+
+                results.append({
+                    'platform': 'Yahoo Auctions JP',
+                    'series': series_key,
+                    'title': title,
+                    'price': listing['price'],
+                    'currency': 'JPY',
+                    'link': listing['link'],
+                    'listing_id': listing['listing_id'],
+                    'image_url': listing['image_url'],
+                })
 
         except Exception as e:
             logger.error(f"Yahoo error for '{query}': {e}")
@@ -822,49 +911,28 @@ class WSJMonitor:
                                 encoded = quote(yahoo_kw)
                                 url = f"https://auctions.yahoo.co.jp/search/search?p={encoded}&va={encoded}&exflg=1&b=1&n=50"
                                 page.goto(url, timeout=60000)
-                                wait_for_page_load(page)
-                                page.wait_for_timeout(1500)
+                                _wait_for_yahoo_page(page)
 
-                                items = page.query_selector_all('.Product, .cf, [data-auction-id], .Product__titleLink')
-                                logger.info(f"  Yahoo '{sname}': {len(items)} raw items")
+                                raw_listings = _extract_yahoo_listings(page, url)
+                                logger.info(f"  Yahoo '{sname}': {len(raw_listings)} listings extracted")
 
-                                for item in items[:30]:
-                                    try:
-                                        title_el = item.query_selector('.Product__titleLink, .Product__title a, a')
-                                        if not title_el:
-                                            continue
-                                        title = title_el.inner_text().strip()[:120]
-                                        href = title_el.get_attribute('href')
+                                for listing in raw_listings:
+                                    title = listing['title']
 
-                                        if not self._validate_simple(title, search['validators']):
-                                            continue
-
-                                        price_el = item.query_selector('.Product__priceValue, .Product__price')
-                                        price_text = price_el.inner_text().strip() if price_el else ''
-                                        price_raw = None
-                                        m = re.search(r'([\d,]+)', price_text)
-                                        if m:
-                                            try:
-                                                price_raw = float(m.group(1).replace(',', ''))
-                                            except ValueError:
-                                                pass
-
-                                        aid_match = re.search(r'/([a-zA-Z]\d{8,})', href or '')
-                                        listing_id = f"yahoo_{aid_match.group(1)}" if aid_match else f"yahoo_{hash(title[:50])}"
-
-                                        all_results.append({
-                                            'platform': 'Yahoo Auctions JP',
-                                            'series': search['state_category'],
-                                            'series_name': sname,
-                                            'title': title,
-                                            'price': price_raw,
-                                            'currency': 'JPY',
-                                            'link': href or url,
-                                            'listing_id': listing_id,
-                                            'image_url': None,
-                                        })
-                                    except Exception:
+                                    if not self._validate_simple(title, search['validators']):
                                         continue
+
+                                    all_results.append({
+                                        'platform': 'Yahoo Auctions JP',
+                                        'series': search['state_category'],
+                                        'series_name': sname,
+                                        'title': title,
+                                        'price': listing['price'],
+                                        'currency': 'JPY',
+                                        'link': listing['link'],
+                                        'listing_id': listing['listing_id'],
+                                        'image_url': listing['image_url'],
+                                    })
                             except Exception as e:
                                 logger.error(f"  Yahoo simple search error for '{sname}': {e}")
                             time.sleep(1)
