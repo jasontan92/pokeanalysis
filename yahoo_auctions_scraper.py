@@ -101,81 +101,43 @@ class YahooAuctionsScraper:
         return all_listings
 
     def _extract_listings(self, page) -> list[dict]:
-        """Extract listings from Yahoo Auctions search results page."""
+        """Extract listings from Yahoo Auctions search results page.
+
+        Uses data-attributes on Product__imageLink anchors for reliable extraction.
+        """
         listings = []
         seen_ids = set()
 
         try:
-            # Yahoo Auctions item links contain /item/ or auction ID patterns
-            links = page.query_selector_all('a[href*="/jp/auction/"]')
+            links = page.query_selector_all('a[data-auction-id]')
 
             for link in links:
                 try:
-                    href = link.get_attribute('href')
-                    if not href:
-                        continue
-
-                    # Extract auction ID from URL (e.g., /item/x1234567890)
-                    item_match = re.search(r'/jp/auction/([a-zA-Z0-9]+)', href)
-                    if not item_match:
-                        continue
-
-                    item_id = f'yahoo-{item_match.group(1)}'
-                    if item_id in seen_ids:
+                    item_id = link.get_attribute('data-auction-id')
+                    if not item_id or item_id in seen_ids:
                         continue
                     seen_ids.add(item_id)
 
-                    # Parse text content
-                    try:
-                        text = link.inner_text().strip()
-                    except:
-                        text = ""
+                    title = link.get_attribute('data-auction-title') or item_id
+                    title = title[:100]
 
-                    lines = [l.strip() for l in text.split('\n') if l.strip()]
-
-                    # Filter out price/bid lines to find title
-                    title_lines = [
-                        l for l in lines
-                        if not re.match(r'^[\d,\.]+円?$', l)
-                        and '¥' not in l and '￥' not in l
-                        and not l.startswith('現在')
-                        and not l.startswith('即決')
-                        and not l.startswith('入札')
-                        and not l.endswith('件')
-                        and not l.endswith('時間')
-                        and not l.endswith('日')
-                        and not re.match(r'^残り', l)
-                    ]
-                    title = title_lines[0][:100] if title_lines else item_id
-
-                    # Find price - Yahoo Auctions JP uses yen
                     price = None
-                    currency = '¥'
-                    for line in lines:
-                        # Current price: 現在1,234円 or ¥1,234 or just 1,234円
-                        yen_match = re.search(r'(?:現在|即決)?[¥￥]?([\d,]+)円?', line)
-                        if yen_match and ('円' in line or '¥' in line or '￥' in line or line.startswith('現在') or line.startswith('即決')):
-                            try:
-                                price = float(yen_match.group(1).replace(',', ''))
-                            except:
-                                pass
-                            break
-                        # Bare number that looks like a price
-                        elif re.match(r'^[\d,]+$', line):
-                            try:
-                                price = float(line.replace(',', ''))
-                            except:
-                                pass
-                            break
+                    price_str = link.get_attribute('data-auction-price')
+                    if price_str:
+                        try:
+                            price = float(price_str.replace(',', ''))
+                        except ValueError:
+                            pass
 
-                    full_link = href if href.startswith('http') else f"{self.BASE_URL}{href}"
+                    href = link.get_attribute('href') or ''
+                    full_link = href if href.startswith('http') else f"{self.BASE_URL}/jp/auction/{item_id}"
 
                     listings.append({
-                        'listing_id': item_id,
-                        'item_id': item_id,
+                        'listing_id': f'yahoo-{item_id}',
+                        'item_id': f'yahoo-{item_id}',
                         'title': title,
                         'price': price,
-                        'currency': currency,
+                        'currency': '¥',
                         'listing_type': 'auction',
                         'link': full_link,
                         'platform': 'yahoo_auctions_jp',

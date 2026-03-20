@@ -513,23 +513,22 @@ def _is_relevant_raw_url_listing(title: str, series_key: str) -> bool:
 def _extract_yahoo_listings(page, url: str) -> list[dict]:
     """Extract listings from a Yahoo Auctions search results page.
 
-    Uses a[href*="/jp/auction/"] to match Yahoo's current URL structure
-    (items link to /jp/auction/{id}, not /item/{id}).
+    Yahoo embeds title/price/image in data-attributes on the Product__imageLink
+    anchor tags (data-auction-id, data-auction-title, data-auction-price, etc.).
     """
     listings = []
     seen_ids = set()
 
-    links = page.query_selector_all('a[href*="/jp/auction/"]')
+    # Product__imageLink anchors carry all item data in data-attributes
+    links = page.query_selector_all('a[data-auction-id]')
     logger.info(f"    Yahoo page: {len(links)} auction links found")
 
     if len(links) == 0:
-        # Dump page title + snippet for debugging
         try:
             title = page.title()
             snippet = page.inner_text('body')[:300] if page.query_selector('body') else '(no body)'
             logger.warning(f"    Yahoo 0 results — page title: {title}")
             logger.warning(f"    Yahoo page snippet: {snippet[:200]}")
-            # Save screenshot for later diagnosis
             debug_path = Path(WSJConfig.DATA_DIR) / 'yahoo_debug.png'
             page.screenshot(path=str(debug_path))
             logger.info(f"    Yahoo debug screenshot saved to {debug_path}")
@@ -538,62 +537,26 @@ def _extract_yahoo_listings(page, url: str) -> list[dict]:
 
     for link in links:
         try:
-            href = link.get_attribute('href')
-            if not href:
-                continue
-
-            item_match = re.search(r'/jp/auction/([a-zA-Z0-9]+)', href)
-            if not item_match:
-                continue
-
-            item_id = item_match.group(1)
-            if item_id in seen_ids:
+            item_id = link.get_attribute('data-auction-id')
+            if not item_id or item_id in seen_ids:
                 continue
             seen_ids.add(item_id)
 
-            # Parse text content from the link element
-            try:
-                text = link.inner_text().strip()
-            except Exception:
-                text = ""
+            title = link.get_attribute('data-auction-title') or item_id
+            title = title[:120]
 
-            lines = [l.strip() for l in text.split('\n') if l.strip()]
-
-            # Filter out price/bid/time lines to find the title
-            title_lines = [
-                l for l in lines
-                if not re.match(r'^[\d,\.]+円?$', l)
-                and '¥' not in l and '￥' not in l
-                and not l.startswith('現在')
-                and not l.startswith('即決')
-                and not l.startswith('入札')
-                and not l.endswith('件')
-                and not l.endswith('時間')
-                and not l.endswith('日')
-                and not re.match(r'^残り', l)
-                and len(l) > 3
-            ]
-            title = title_lines[0][:120] if title_lines else item_id
-
-            # Extract price (yen)
             price_raw = None
-            for line in lines:
-                yen_match = re.search(r'(?:現在|即決)?[¥￥]?([\d,]+)円?', line)
-                if yen_match and ('円' in line or '¥' in line or '￥' in line
-                                  or line.startswith('現在') or line.startswith('即決')):
-                    try:
-                        price_raw = float(yen_match.group(1).replace(',', ''))
-                    except ValueError:
-                        pass
-                    break
-                elif re.match(r'^[\d,]+$', line):
-                    try:
-                        price_raw = float(line.replace(',', ''))
-                    except ValueError:
-                        pass
-                    break
+            price_str = link.get_attribute('data-auction-price')
+            if price_str:
+                try:
+                    price_raw = float(price_str.replace(',', ''))
+                except ValueError:
+                    pass
 
-            full_link = href if href.startswith('http') else f"https://auctions.yahoo.co.jp{href}"
+            img_url = link.get_attribute('data-auction-img')
+
+            href = link.get_attribute('href') or ''
+            full_link = href if href.startswith('http') else f"https://auctions.yahoo.co.jp/jp/auction/{item_id}"
             listing_id = f"yahoo_{item_id}"
 
             listings.append({
@@ -603,7 +566,7 @@ def _extract_yahoo_listings(page, url: str) -> list[dict]:
                 'price': price_raw,
                 'currency': 'JPY',
                 'link': full_link,
-                'image_url': None,
+                'image_url': img_url,
             })
 
         except Exception:
