@@ -94,8 +94,11 @@ class WSJTelegramNotifier:
         }
         try:
             resp = requests.post(url, json=payload, timeout=10)
+            if resp.status_code != 200:
+                logger.warning(f"send_photo failed ({resp.status_code}): {resp.text[:200]}")
             return resp.status_code == 200
-        except requests.RequestException:
+        except requests.RequestException as e:
+            logger.warning(f"send_photo exception: {e}")
             return False
 
     def send_listing_alert(self, series_name, platform, title, price, link,
@@ -553,8 +556,6 @@ def _extract_yahoo_listings(page, url: str) -> list[dict]:
                 except ValueError:
                     pass
 
-            img_url = link.get_attribute('data-auction-img')
-
             href = link.get_attribute('href') or ''
             full_link = href if href.startswith('http') else f"https://auctions.yahoo.co.jp/jp/auction/{item_id}"
             listing_id = f"yahoo_{item_id}"
@@ -566,7 +567,7 @@ def _extract_yahoo_listings(page, url: str) -> list[dict]:
                 'price': price_raw,
                 'currency': 'JPY',
                 'link': full_link,
-                'image_url': img_url,
+                'image_url': None,  # Yahoo CDN images require auth, Telegram can't fetch them
             })
 
         except Exception:
