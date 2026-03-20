@@ -211,6 +211,11 @@ class WSJConfig:
             'url': 'https://jp.mercari.com/search?keyword=%E9%80%B1%E5%88%8A%E5%B0%91%E5%B9%B4%E3%82%B8%E3%83%A3%E3%83%B3%E3%83%97%201996%20%20%E3%83%AD%E3%83%9E%E3%83%B3%E3%82%B9%E3%83%89%E3%83%BC%E3%83%B3&sort=created_time&order=desc',
             'state_category': 'unfiltered_romancedawn_1996',
         },
+        {
+            'name': 'Fresh Jump 1983年8月号',
+            'url': 'https://jp.mercari.com/search?keyword=%E3%83%95%E3%83%AC%E3%83%83%E3%82%B7%E3%83%A5%E3%82%B8%E3%83%A3%E3%83%B3%E3%83%97%201983%E5%B9%B48%E6%9C%88%E5%8F%B7&sort=created_time&order=desc',
+            'state_category': 'unfiltered_fresh_jump_1983_08',
+        },
     ]
 
     @classmethod
