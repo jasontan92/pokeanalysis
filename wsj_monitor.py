@@ -513,14 +513,14 @@ def _is_relevant_raw_url_listing(title: str, series_key: str) -> bool:
 def _extract_yahoo_listings(page, url: str) -> list[dict]:
     """Extract listings from a Yahoo Auctions search results page.
 
-    Uses the resilient a[href*="/item/"] selector approach instead of
-    fragile class-based selectors that break when Yahoo updates their DOM.
+    Uses a[href*="/jp/auction/"] to match Yahoo's current URL structure
+    (items link to /jp/auction/{id}, not /item/{id}).
     """
     listings = []
     seen_ids = set()
 
-    links = page.query_selector_all('a[href*="/item/"]')
-    logger.info(f"    Yahoo page: {len(links)} item links found")
+    links = page.query_selector_all('a[href*="/jp/auction/"]')
+    logger.info(f"    Yahoo page: {len(links)} auction links found")
 
     if len(links) == 0:
         # Dump page title + snippet for debugging
@@ -542,7 +542,7 @@ def _extract_yahoo_listings(page, url: str) -> list[dict]:
             if not href:
                 continue
 
-            item_match = re.search(r'/item/([a-zA-Z0-9]+)', href)
+            item_match = re.search(r'/jp/auction/([a-zA-Z0-9]+)', href)
             if not item_match:
                 continue
 

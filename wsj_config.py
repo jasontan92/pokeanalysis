@@ -140,7 +140,6 @@ class WSJConfig:
         {
             'name': 'Naruto Vol 1 First Edition',
             'mercari_keyword': 'naruto 1巻 初版',
-            'yahoo_keyword': 'naruto 1巻 初版',
             'state_category': 'simple_naruto_v1',
             'validators': [['ナルト', 'naruto'], ['1巻']],
         },
@@ -163,7 +162,6 @@ class WSJConfig:
         {
             'name': 'Yu-Gi-Oh Vol 1 初版',
             'mercari_keyword': '遊戯王 1巻 初版',
-            'yahoo_keyword': '遊戯王 1巻 初版',
             'state_category': 'simple_yugioh_v1',
             'validators': [
                 ['遊戯王', 'yugioh', 'yu-gi-oh'],
@@ -174,7 +172,6 @@ class WSJConfig:
         {
             'name': 'One Piece Vol 1 初版',
             'mercari_keyword': 'ワンピース 1巻 初版 第1刷',
-            'yahoo_keyword': 'ワンピース 1巻 初版 第1刷',
             'state_category': 'simple_onepiece_v1',
             'validators': [
                 ['ワンピース', 'onepiece', 'one piece'],
@@ -185,7 +182,6 @@ class WSJConfig:
         {
             'name': 'BLEACH Vol 1 初版',
             'mercari_keyword': 'BLEACH 初版1巻',
-            'yahoo_keyword': 'BLEACH 初版1巻',
             'state_category': 'simple_bleach_v1',
             'validators': [
                 ['bleach', 'ブリーチ'],
@@ -197,7 +193,6 @@ class WSJConfig:
             'name': 'Pocket Monsters (Anakubo) Vol 1 初版',
             'mercari_keyword': '穴久保 ポケモン 1巻 初版',
             'mercari_url': 'https://jp.mercari.com/search?keyword=%E7%A9%B4%E4%B9%85%E4%BF%9D%20%E3%83%9D%E3%82%B1%E3%83%A2%E3%83%B3%201%E5%B7%BB%20%E5%88%9D%E7%89%88&sort=created_time&order=desc',
-            'yahoo_keyword': '穴久保 ポケモン 1巻 初版',
             'state_category': 'simple_anakubo_pokemon_v1',
             'validators': [
                 ['1'],

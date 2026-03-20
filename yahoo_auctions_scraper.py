@@ -107,7 +107,7 @@ class YahooAuctionsScraper:
 
         try:
             # Yahoo Auctions item links contain /item/ or auction ID patterns
-            links = page.query_selector_all('a[href*="/item/"]')
+            links = page.query_selector_all('a[href*="/jp/auction/"]')
 
             for link in links:
                 try:
@@ -116,7 +116,7 @@ class YahooAuctionsScraper:
                         continue
 
                     # Extract auction ID from URL (e.g., /item/x1234567890)
-                    item_match = re.search(r'/item/([a-zA-Z0-9]+)', href)
+                    item_match = re.search(r'/jp/auction/([a-zA-Z0-9]+)', href)
                     if not item_match:
                         continue
 
