@@ -678,7 +678,8 @@ class WSJMonitor:
             self.state.state['last_heartbeat'] = datetime.now().isoformat()
             logger.info("Heartbeat sent")
 
-    def _validate_simple(self, title: str, validators: list[list[str]]) -> bool:
+    def _validate_simple(self, title: str, validators: list[list[str]],
+                         exclude: list[str] | None = None) -> bool:
         """Check title against AND/OR validators (for SIMPLE_SEARCHES)."""
         if not title:
             return False
@@ -688,6 +689,12 @@ class WSJMonitor:
         for kw in WSJConfig.GLOBAL_EXCLUDE:
             if kw.lower() in t:
                 return False
+
+        # Check per-search exclude
+        if exclude:
+            for kw in exclude:
+                if kw.lower() in t:
+                    return False
 
         return all(
             any(alt.lower() in t for alt in alternatives)
@@ -837,7 +844,7 @@ class WSJMonitor:
                                         ]
                                         title = title_lines[0][:120] if title_lines else item_id
 
-                                        if not self._validate_simple(title, search['validators']):
+                                        if not self._validate_simple(title, search['validators'], search.get('exclude')):
                                             continue
 
                                         price_raw = None
@@ -883,7 +890,7 @@ class WSJMonitor:
                                 for listing in raw_listings:
                                     title = listing['title']
 
-                                    if not self._validate_simple(title, search['validators']):
+                                    if not self._validate_simple(title, search['validators'], search.get('exclude')):
                                         continue
 
                                     all_results.append({
