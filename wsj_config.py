@@ -180,13 +180,6 @@ class WSJConfig:
                 ['初版'],
             ],
         },
-        {
-            'name': 'アニメージュ 1982年2月号',
-            'mercari_url': 'https://jp.mercari.com/search?keyword=%E3%82%A2%E3%83%8B%E3%83%A1%E3%83%BC%E3%82%B8%E3%83%A5%201982%20%E5%B9%B4%202%E6%9C%88&sort=created_time&order=desc',
-            'yahoo_keyword': 'アニメージュ 1982年 2月',
-            'state_category': 'simple_animage_1982_02',
-            'validators': [['アニメージュ'], ['82'], ['2月']],
-        },
     ]
 
     # -----------------------------------------------------------------------
