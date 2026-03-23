@@ -138,12 +138,6 @@ class WSJConfig:
 
     SIMPLE_SEARCHES: list[dict] = [
         {
-            'name': 'Naruto Vol 1 First Edition',
-            'mercari_keyword': 'naruto 1巻 初版',
-            'state_category': 'simple_naruto_v1',
-            'validators': [['ナルト', 'naruto'], ['1巻']],
-        },
-        {
             'name': 'CoroCoro Comic 1996',
             'mercari_keyword': 'コロコロコミック 1996年',
             'mercari_url': 'https://jp.mercari.com/search?keyword=%E3%82%B3%E3%83%AD%E3%82%B3%E3%83%AD%E3%82%B3%E3%83%9F%E3%83%83%E3%82%AF%201996&category_id=5&sort=created_time&order=desc',
@@ -170,24 +164,11 @@ class WSJConfig:
             ],
         },
         {
-            'name': 'One Piece Vol 1 初版',
-            'mercari_keyword': 'ワンピース 1巻 初版 第1刷',
-            'state_category': 'simple_onepiece_v1',
-            'validators': [
-                ['ワンピース', 'onepiece', 'one piece'],
-                ['1巻'],
-                ['初版', '第1刷', '第一刷'],
-            ],
-        },
-        {
-            'name': 'BLEACH Vol 1 初版',
-            'mercari_keyword': 'BLEACH 初版1巻',
-            'state_category': 'simple_bleach_v1',
-            'validators': [
-                ['bleach', 'ブリーチ'],
-                ['1巻'],
-                ['初版', '第1刷', '第一刷'],
-            ],
+            'name': '電撃 RPG\'96',
+            'mercari_url': 'https://jp.mercari.com/search?keyword=%E9%9B%BB%E6%92%83%20RPG%E2%80%9996&srsltid=AfmBOooDJCEu2u_xL7jc9cCXVCmu9RaoPcWQ4tUagAxb_De80gdOw84U&sort=created_time&order=desc',
+            'yahoo_keyword': '電撃 RPG\'96',
+            'state_category': 'simple_dengeki_rpg_96',
+            'validators': [['rpg', 'RPG'], ['96']],
         },
         {
             'name': 'Pocket Monsters (Anakubo) Vol 1 初版',
