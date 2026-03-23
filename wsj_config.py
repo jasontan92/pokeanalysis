@@ -168,7 +168,7 @@ class WSJConfig:
             'mercari_url': 'https://jp.mercari.com/search?keyword=%E9%9B%BB%E6%92%83%20RPG%E2%80%9996&srsltid=AfmBOooDJCEu2u_xL7jc9cCXVCmu9RaoPcWQ4tUagAxb_De80gdOw84U&sort=created_time&order=desc',
             'yahoo_keyword': '電撃 RPG\'96',
             'state_category': 'simple_dengeki_rpg_96',
-            'validators': [['rpg', 'RPG'], ['96']],
+            'validators': [['電撃'], ['rpg', 'RPG'], ['96']],
         },
         {
             'name': 'Pocket Monsters (Anakubo) Vol 1 初版',
