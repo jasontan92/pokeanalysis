@@ -180,6 +180,14 @@ class WSJConfig:
                 ['初版'],
             ],
         },
+        {
+            'name': 'Pokemon Red/Green Flyer (チラシ)',
+            'mercari_url': 'https://jp.mercari.com/search?keyword=%E3%83%9D%E3%82%B1%E3%83%83%E3%83%88%E3%83%A2%E3%83%B3%E3%82%B9%E3%82%BF%E3%83%BC%E3%80%80%E8%B5%A4%E3%80%80%E7%B7%91%E3%80%80%E3%83%81%E3%83%A9%E3%82%B7%E3%80%80&sort=created_time&order=desc',
+            'state_category': 'simple_pokemon_rg_flyer',
+            'validators': [
+                ['チラシ'],
+            ],
+        },
     ]
 
     # -----------------------------------------------------------------------
