@@ -155,6 +155,31 @@ class WSJConfig:
             ],
         },
 
+        'dragonball': {
+            'name': 'DRAGON BALL',
+            'author': '鳥山明',
+            'author_en': 'Toriyama Akira',
+            'wsj_issue': 'WSJ 1984 #51',
+            'wsj_year': '1984',
+            'wsj_number': '51',
+            'wsj_desc': 'Dragon Ball Chapter 1 - 週刊少年ジャンプ 1984年51号',
+            'mercari_queries': [
+                '週刊少年ジャンプ 1984年51号',
+                'ドラゴンボール 新連載号 ジャンプ 1984',
+                'DRAGON BALL 新連載 ジャンプ 1984',
+            ],
+            'yahoo_queries': [
+                '週刊少年ジャンプ 1984年 51号',
+                'ドラゴンボール 新連載 ジャンプ 1984',
+                'DRAGON BALL ジャンプ 1984 51',
+            ],
+            'exclude_keywords': [
+                'trading card', 'tcg', 'card game', 'figure', 'figurine',
+                'dvd', 'blu-ray', 'フィギュア', 'カードゲーム',
+                'super', 'スーパー', 'daima',
+            ],
+        },
+
         'hxh': {
             'name': 'HUNTER×HUNTER',
             'author': '冨樫義博',
@@ -201,6 +226,16 @@ class WSJConfig:
             'yahoo_keyword': '別冊コロコロコミック 1996年',
             'state_category': 'simple_bessatsu_corocoro_1996',
             'validators': [['別冊'], ['コロコロ'], ['1996'], ['月刊', '特刊', '増刊', '号', '月号', 'comic', 'コミック']],
+        },
+        {
+            'name': 'Digimon Vジャンプ 1999年1月号',
+            'mercari_keyword': 'Vジャンプ 1999年1月号',
+            'yahoo_keyword': 'Vジャンプ 1999年 1月号',
+            'state_category': 'simple_digimon_vjump_1999_01',
+            'validators': [
+                ['Vジャンプ', 'V JUMP', 'ブイジャンプ', 'Ｖジャンプ', 'vジャンプ'],
+                ['1999年1月'],
+            ],
         },
         {
             'name': 'Yu-Gi-Oh Vol 1 初版',
