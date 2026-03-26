@@ -129,6 +129,55 @@ class WSJConfig:
                 'dvd', 'blu-ray', 'フィギュア', 'カードゲーム',
             ],
         },
+
+        'bleach': {
+            'name': 'BLEACH',
+            'author': '久保帯人',
+            'author_en': 'Kubo Tite',
+            'wsj_issue': 'WSJ 2001 #36-37',
+            'wsj_year': '2001',
+            'wsj_number': '36・37',
+            'wsj_desc': 'BLEACH Chapter 1 - 週刊少年ジャンプ 2001年36・37合併号',
+            'mercari_queries': [
+                '週刊少年ジャンプ 2001年36',
+                'BLEACH 新連載号 ジャンプ 2001',
+                'ブリーチ 新連載 ジャンプ 2001',
+            ],
+            'yahoo_queries': [
+                '週刊少年ジャンプ 2001年 36',
+                'BLEACH 新連載 ジャンプ 2001',
+                'ブリーチ 新連載 ジャンプ 2001',
+            ],
+            'exclude_keywords': [
+                'trading card', 'tcg', 'card game', 'figure', 'figurine',
+                'dvd', 'blu-ray', 'フィギュア', 'カードゲーム',
+                'thousand year', '千年血戦',
+            ],
+        },
+
+        'hxh': {
+            'name': 'HUNTER×HUNTER',
+            'author': '冨樫義博',
+            'author_en': 'Togashi Yoshihiro',
+            'wsj_issue': 'WSJ 1998 #14',
+            'wsj_year': '1998',
+            'wsj_number': '14',
+            'wsj_desc': 'HUNTER×HUNTER Chapter 1 - 週刊少年ジャンプ 1998年14号',
+            'mercari_queries': [
+                '週刊少年ジャンプ 1998年14号',
+                'ハンターハンター 新連載号 ジャンプ 1998',
+                'HUNTER HUNTER 新連載 ジャンプ 1998',
+            ],
+            'yahoo_queries': [
+                '週刊少年ジャンプ 1998年 14号',
+                'ハンターハンター 新連載 ジャンプ 1998',
+                'HUNTER HUNTER ジャンプ 1998 14',
+            ],
+            'exclude_keywords': [
+                'trading card', 'tcg', 'card game', 'figure', 'figurine',
+                'dvd', 'blu-ray', 'フィギュア', 'カードゲーム',
+            ],
+        },
     }
 
     # -----------------------------------------------------------------------
