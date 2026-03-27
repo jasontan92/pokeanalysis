@@ -236,6 +236,18 @@ class WSJConfig:
 
     SIMPLE_SEARCHES: list[dict] = [
         {
+            'name': '犬夜叉 週刊少年サンデー 1996年50号',
+            'mercari_keyword': '週刊少年サンデー 犬夜叉 1996年 50号',
+            'mercari_url': 'https://jp.mercari.com/search?keyword=%E9%80%B1%E5%88%8A%E5%B0%91%E5%B9%B4%E3%82%B5%E3%83%B3%E3%83%87%E3%83%BC%20%E7%8A%AC%E5%A4%9C%E5%8F%89%201996%E5%B9%B4%2050%E5%8F%B7&sort=created_time&order=desc',
+            'yahoo_keyword': '週刊少年サンデー 犬夜叉 1996年 50号',
+            'state_category': 'simple_inuyasha_sunday_1996_50',
+            'validators': [
+                ['サンデー', 'sunday'],
+                ['1996'],
+                ['50'],
+            ],
+        },
+        {
             'name': 'アニメージュ 1982年2月号',
             'mercari_keyword': 'アニメージュ 1982年2月号',
             'mercari_url': 'https://jp.mercari.com/search?keyword=%E3%82%A2%E3%83%8B%E3%83%A1%E3%83%BC%E3%82%B8%E3%83%A5%201982%E5%B9%B42%E6%9C%88%E5%8F%B7&sort=created_time&order=desc',
