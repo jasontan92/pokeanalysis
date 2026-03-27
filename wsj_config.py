@@ -244,7 +244,7 @@ class WSJConfig:
             'validators': [
                 ['アニメージュ', 'animage'],
                 ['1982'],
-                ['2月号', '2月'],
+                ['2'],
             ],
         },
         {
