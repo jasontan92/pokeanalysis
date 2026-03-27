@@ -236,6 +236,17 @@ class WSJConfig:
 
     SIMPLE_SEARCHES: list[dict] = [
         {
+            'name': 'アニメージュ 1982年2月号',
+            'mercari_keyword': 'アニメージュ 1982年2月号',
+            'mercari_url': 'https://jp.mercari.com/search?keyword=%E3%82%A2%E3%83%8B%E3%83%A1%E3%83%BC%E3%82%B8%E3%83%A5%201982%E5%B9%B42%E6%9C%88%E5%8F%B7&sort=created_time&order=desc',
+            'yahoo_keyword': 'アニメージュ 1982年 2月号',
+            'state_category': 'simple_animage_1982_02',
+            'validators': [
+                ['アニメージュ', 'animage'],
+                ['1982年2月'],
+            ],
+        },
+        {
             'name': 'CoroCoro Comic 1996',
             'mercari_keyword': 'コロコロコミック 1996年',
             'mercari_url': 'https://jp.mercari.com/search?keyword=%E3%82%B3%E3%83%AD%E3%82%B3%E3%83%AD%E3%82%B3%E3%83%9F%E3%83%83%E3%82%AF%201996&category_id=5&sort=created_time&order=desc',
