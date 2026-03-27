@@ -155,6 +155,30 @@ class WSJConfig:
             ],
         },
 
+        'jojo': {
+            'name': 'ジョジョの奇妙な冒険 / JoJo\'s Bizarre Adventure',
+            'author': '荒木飛呂彦',
+            'author_en': 'Araki Hirohiko',
+            'wsj_issue': 'WSJ 1987 #1-2',
+            'wsj_year': '1987',
+            'wsj_number': '1・2',
+            'wsj_desc': 'JoJo Chapter 1 - 週刊少年ジャンプ 1987年1・2合併号',
+            'mercari_queries': [
+                '週刊少年ジャンプ 1987 1-2',
+                'ジョジョ 新連載 ジャンプ 1987',
+            ],
+            'yahoo_queries': [
+                '週刊少年ジャンプ 1987 1-2',
+                'ジョジョ 新連載 ジャンプ 1987',
+            ],
+            'exclude_keywords': [
+                'trading card', 'tcg', 'card game', 'figure', 'figurine',
+                'dvd', 'blu-ray', 'フィギュア', 'カードゲーム',
+                'reprint', 'reproduction', '復刻', '復刻版', 'リプリント',
+                '再版', '再録', '愛蔵版', '完全版', '文庫版', '新装版',
+            ],
+        },
+
         'dragonball': {
             'name': 'DRAGON BALL',
             'author': '鳥山明',
