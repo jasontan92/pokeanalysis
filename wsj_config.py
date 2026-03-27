@@ -243,7 +243,8 @@ class WSJConfig:
             'state_category': 'simple_animage_1982_02',
             'validators': [
                 ['アニメージュ', 'animage'],
-                ['1982年2月'],
+                ['1982'],
+                ['2月号', '2月'],
             ],
         },
         {
