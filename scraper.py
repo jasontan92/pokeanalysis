@@ -43,34 +43,30 @@ class EbayScraper:
             'Connection': 'keep-alive',
         })
 
-    def fetch_page(self, url, max_retries=3):
-        """Fetch a page with retry logic and rate limiting."""
+    def fetch_page(self, url, max_retries=2):
+        """Fetch a page with retry logic. Designed to fail fast for monitors."""
         for attempt in range(max_retries):
             try:
-                # Random delay between requests (3-7 seconds)
-                delay = random.uniform(3, 7)
+                delay = random.uniform(1, 3)
                 time.sleep(delay)
 
-                # Rotate user agent occasionally
                 if random.random() < 0.3:
                     self._update_headers()
 
-                response = self.session.get(url, timeout=30)
+                response = self.session.get(url, timeout=15)
 
                 if response.status_code == 200:
                     return response.text
                 elif response.status_code == 429:
-                    # Rate limited - wait longer
-                    wait_time = 60 * (attempt + 1)
-                    print(f"Rate limited. Waiting {wait_time} seconds...")
-                    time.sleep(wait_time)
+                    print(f"Rate limited on attempt {attempt + 1}, skipping.")
+                    return None
                 else:
                     print(f"HTTP {response.status_code} on attempt {attempt + 1}")
 
             except requests.RequestException as e:
                 print(f"Request error on attempt {attempt + 1}: {e}")
                 if attempt < max_retries - 1:
-                    time.sleep(30)
+                    time.sleep(5)
 
         return None
 
@@ -83,12 +79,12 @@ class EbayScraper:
             with sync_playwright() as p:
                 browser = p.chromium.launch(headless=True)
                 context = browser.new_context(
-                    user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                    user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
                 )
                 page = context.new_page()
 
-                page.goto(url, timeout=60000)
-                page.wait_for_timeout(3000)  # Wait for content to load
+                page.goto(url, timeout=30000)
+                page.wait_for_timeout(2000)
 
                 html = page.content()
                 browser.close()

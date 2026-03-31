@@ -158,7 +158,7 @@ class MercariScraper:
                         and not l.startswith('現在')
                         and not re.match(r'^[\d,\.]+$', l.replace(',', ''))
                     ]
-                    title = title_lines[0][:100] if title_lines else item_id
+                    title = ' '.join(title_lines)[:100] if title_lines else item_id
 
                     # Find price and detect currency from page text
                     price = None

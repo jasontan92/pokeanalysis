@@ -7,6 +7,7 @@ Sends alerts to the main Telegram bot.
 import json
 import logging
 import sys
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeout
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
@@ -48,7 +49,6 @@ class StateManager:
 
         state = {
             'last_check': None,
-            'last_heartbeat': None,
         }
         # Add state categories for each monitored search
         for search in Config.MONITORED_SEARCHES:
@@ -126,35 +126,6 @@ class ListingMonitor:
             for alternatives in validators
         )
 
-    def _should_send_heartbeat(self) -> bool:
-        """Check if we should send a daily heartbeat (once per 24 hours)."""
-        last_heartbeat = self.state.state.get('last_heartbeat')
-        if not last_heartbeat:
-            return True
-
-        try:
-            last_dt = datetime.fromisoformat(last_heartbeat)
-            hours_since = (datetime.now() - last_dt).total_seconds() / 3600
-            return hours_since >= 24
-        except (ValueError, TypeError):
-            return True
-
-    def _send_heartbeat(self):
-        """Send daily heartbeat message to confirm bot is running."""
-        if not self._should_send_heartbeat():
-            return
-
-        search_names = ', '.join(s['name'] for s in Config.MONITORED_SEARCHES)
-        message = (
-            "💚 <b>Monitor Active</b>\n\n"
-            f"Daily check-in at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
-            f"Watching: {search_names}"
-        )
-
-        if self.notifier.send_message(message):
-            self.state.state['last_heartbeat'] = datetime.now().isoformat()
-            logger.info("Daily heartbeat sent")
-
     def run(self):
         """Run the full monitoring cycle."""
         logger.info("=" * 50)
@@ -165,9 +136,6 @@ class ListingMonitor:
         if missing:
             logger.warning(f"Missing configuration: {', '.join(missing)}")
             logger.warning("Telegram notifications will be disabled.")
-
-        # Send daily heartbeat
-        self._send_heartbeat()
 
         # First run notification
         if self.state.is_first_run:
@@ -191,12 +159,23 @@ class ListingMonitor:
                 safe_name = name.encode('ascii', 'replace').decode('ascii')
                 logger.info(f"Checking: {safe_name} ({platform})...")
 
-                # Scrape listings
+                # Scrape with a hard 2-minute timeout per search
                 listings = []
-                if platform == 'mercari':
-                    listings = self.mercari_scraper.search_listings(keyword=keyword)
-                elif platform == 'ebay':
-                    listings = self.ebay_scraper.scrape_active_listings(keyword, max_pages=1)
+                try:
+                    with ThreadPoolExecutor(max_workers=1) as executor:
+                        if platform == 'mercari':
+                            future = executor.submit(self.mercari_scraper.search_listings, keyword=keyword)
+                        elif platform == 'ebay':
+                            future = executor.submit(self.ebay_scraper.scrape_active_listings, keyword, max_pages=1)
+                        else:
+                            continue
+                        listings = future.result(timeout=120)
+                except FuturesTimeout:
+                    logger.warning(f"  Timeout after 2min for {safe_name}, skipping")
+                    continue
+                except Exception as e:
+                    logger.warning(f"  Search failed for {safe_name}: {e}")
+                    continue
 
                 logger.info(f"  Found {len(listings)} raw listings")
 

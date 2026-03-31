@@ -160,7 +160,6 @@ class StateManager:
         return {
             'seen': {},          # listing_id -> first_seen ISO timestamp
             'last_check': None,
-            'last_heartbeat': None,
         }
 
     def save(self):
@@ -245,13 +244,19 @@ def _is_reprint(title: str) -> bool:
     return any(kw in t or kw in t_orig for kw in reprint_keywords)
 
 
+def _normalize_fullwidth(text: str) -> str:
+    """Convert full-width digits and ASCII to half-width equivalents."""
+    import unicodedata
+    return unicodedata.normalize('NFKC', text)
+
+
 def is_relevant_listing(title: str, series: dict) -> bool:
     """Check if a listing is the target WSJ issue.
 
     Requires: correct year + exact issue number + jump/magazine reference, no reprints.
     """
-    t = title.lower()
-    t_orig = title
+    t = _normalize_fullwidth(title).lower()
+    t_orig = _normalize_fullwidth(title)
 
     if _is_reprint(title):
         return False
@@ -340,13 +345,13 @@ def search_mercari(page, series_key: str, series: dict) -> list[dict]:
                         and not l.startswith('現在')
                         and len(l) > 3
                     ]
-                    title = title_lines[0][:120] if title_lines else item_id
+                    title = ' '.join(title_lines)[:120] if title_lines else item_id
 
                     if should_exclude(title, series['exclude_keywords']):
-                        logger.debug(f"    Excluded (keyword): {title[:60]}")
+                        logger.info(f"    Excluded (keyword): {title[:80]}")
                         continue
                     if not is_relevant_listing(title, series):
-                        logger.debug(f"    Excluded (relevance): {title[:60]}")
+                        logger.info(f"    Excluded (relevance): {title[:80]}")
                         continue
 
                     logger.info(f"    MATCH: {title[:80]}")
@@ -424,16 +429,16 @@ def search_mercari(page, series_key: str, series: dict) -> list[dict]:
                         and not l.startswith('現在')
                         and len(l) > 3
                     ]
-                    title = title_lines[0][:120] if title_lines else item_id
+                    title = ' '.join(title_lines)[:120] if title_lines else item_id
 
                     if should_exclude(title, series['exclude_keywords']):
-                        logger.debug(f"    Excluded (keyword): {title[:60]}")
+                        logger.info(f"    Excluded (keyword): {title[:80]}")
                         continue
 
                     # For raw URLs, use series-specific validation instead of
                     # is_relevant_listing() (which requires year+issue+jump).
                     if not _is_relevant_raw_url_listing(title, series_key):
-                        logger.debug(f"    Excluded (raw-url relevance): {title[:60]}")
+                        logger.info(f"    Excluded (raw-url relevance): {title[:80]}")
                         continue
 
                     logger.info(f"    MATCH (raw URL): {title[:80]}")
@@ -649,35 +654,6 @@ class WSJMonitor:
         self.state = StateManager()
         self.notifier = WSJTelegramNotifier()
 
-    def _should_send_heartbeat(self) -> bool:
-        last = self.state.state.get('last_heartbeat')
-        if not last:
-            return True
-        try:
-            hours_since = (datetime.now() - datetime.fromisoformat(last)).total_seconds() / 3600
-            return hours_since >= 24
-        except (ValueError, TypeError):
-            return True
-
-    def _send_heartbeat(self):
-        if not self._should_send_heartbeat():
-            return
-        series_list = ', '.join(s['name'] for s in WSJConfig.SERIES.values())
-        simple_list = ', '.join(s['name'] for s in WSJConfig.SIMPLE_SEARCHES)
-        unfiltered_list = ', '.join(s['name'] for s in WSJConfig.UNFILTERED_MERCARI_URLS)
-        msg = (
-            "💚 <b>Manga Scanner Active</b>\n\n"
-            f"Daily check-in at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
-            f"WSJ Issues: {series_list}\n"
-            f"Other: {simple_list}\n"
-        )
-        if unfiltered_list:
-            msg += f"Unfiltered: {unfiltered_list}\n"
-        msg += "Platforms: Mercari JP, Yahoo Auctions JP"
-        if self.notifier.send_message(msg):
-            self.state.state['last_heartbeat'] = datetime.now().isoformat()
-            logger.info("Heartbeat sent")
-
     def _validate_simple(self, title: str, validators: list[list[str]],
                          exclude: list[str] | None = None) -> bool:
         """Check title against AND/OR validators (for SIMPLE_SEARCHES)."""
@@ -762,8 +738,6 @@ class WSJMonitor:
             logger.warning(f"Missing config: {', '.join(missing)}")
             logger.warning("Telegram alerts disabled.")
 
-        self._send_heartbeat()
-
         if self.state.is_first_run:
             logger.info("First run - will limit alerts to most recent listings")
             series_lines = '\n'.join(
@@ -842,7 +816,7 @@ class WSJMonitor:
                                             and not l.startswith('現在')
                                             and len(l) > 3
                                         ]
-                                        title = title_lines[0][:120] if title_lines else item_id
+                                        title = ' '.join(title_lines)[:120] if title_lines else item_id
 
                                         if not self._validate_simple(title, search['validators'], search.get('exclude')):
                                             continue
@@ -945,7 +919,7 @@ class WSJMonitor:
                                         and not l.startswith('現在')
                                         and len(l) > 3
                                     ]
-                                    title = title_lines[0][:120] if title_lines else item_id
+                                    title = ' '.join(title_lines)[:120] if title_lines else item_id
 
                                     price_raw = None
                                     for line in lines:
