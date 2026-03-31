@@ -350,6 +350,10 @@ class WSJConfig:
             'name': '週刊少年サンデー 2020年22・23号',
             'url': 'https://jp.mercari.com/search?keyword=%E9%80%B1%E5%88%8A%E5%B0%91%E5%B9%B4%E3%82%B5%E3%83%B3%E3%83%87%E3%83%BC%202020%E5%B9%B422&sort=created_time&order=desc',
             'state_category': 'unfiltered_sunday_2020_22',
+            'validators': [
+                ['2020'],
+                ['22', '23'],
+            ],
         },
     ]
 

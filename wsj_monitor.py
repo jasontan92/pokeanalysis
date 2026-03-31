@@ -921,6 +921,9 @@ class WSJMonitor:
                                     ]
                                     title = ' '.join(title_lines)[:120] if title_lines else item_id
 
+                                    if 'validators' in search and not self._validate_simple(title, search['validators'], search.get('exclude')):
+                                        continue
+
                                     price_raw = None
                                     for line in lines:
                                         m = re.search(r'[¥￥]([\d,]+)', line)
