@@ -643,8 +643,22 @@ def search_yahoo_auctions(page, series_key: str, series: dict) -> list[dict]:
 # Platform-specific scrape functions (run in parallel threads)
 # ---------------------------------------------------------------------------
 
-def _scrape_all_mercari(page, monitor) -> list[dict]:
+def _scrape_all_mercari(monitor) -> list[dict]:
     """Run all Mercari JP searches: series queries, simple searches, unfiltered URLs."""
+    results = []
+
+    with sync_playwright() as p:
+        browser, context = create_browser_context(p)
+        page = context.new_page()
+
+        try:
+            return _scrape_all_mercari_inner(page, monitor)
+        finally:
+            browser.close()
+
+
+def _scrape_all_mercari_inner(page, monitor) -> list[dict]:
+    """Inner function for Mercari scraping (has its own browser)."""
     results = []
 
     # --- Series keyword queries ---
@@ -805,8 +819,20 @@ def _scrape_all_mercari(page, monitor) -> list[dict]:
     return results
 
 
-def _scrape_all_yahoo(page, monitor) -> list[dict]:
+def _scrape_all_yahoo(monitor) -> list[dict]:
     """Run all Yahoo Auctions JP searches: series queries and simple searches."""
+    with sync_playwright() as p:
+        browser, context = create_browser_context(p)
+        page = context.new_page()
+
+        try:
+            return _scrape_all_yahoo_inner(page, monitor)
+        finally:
+            browser.close()
+
+
+def _scrape_all_yahoo_inner(page, monitor) -> list[dict]:
+    """Inner function for Yahoo scraping (has its own browser)."""
     results = []
 
     # --- Series keyword queries ---
@@ -969,32 +995,23 @@ class WSJMonitor:
 
         all_results = []
 
-        # --- Japanese marketplaces (parallel Mercari + Yahoo via two browser pages) ---
+        # --- Japanese marketplaces (parallel Mercari + Yahoo, each with own browser) ---
         if PLAYWRIGHT_AVAILABLE:
-            try:
-                with sync_playwright() as p:
-                    browser, context = create_browser_context(p)
-                    mercari_page = context.new_page()
-                    yahoo_page = context.new_page()
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                mercari_future = executor.submit(_scrape_all_mercari, self)
+                yahoo_future = executor.submit(_scrape_all_yahoo, self)
 
-                    with ThreadPoolExecutor(max_workers=2) as executor:
-                        mercari_future = executor.submit(_scrape_all_mercari, mercari_page, self)
-                        yahoo_future = executor.submit(_scrape_all_yahoo, yahoo_page, self)
+                try:
+                    all_results.extend(mercari_future.result(timeout=900))
+                except Exception as e:
+                    logger.error(f"Mercari thread failed: {e}")
+                    self.notifier.send_message(f"⚠️ <b>Manga Scanner Error</b>\n\nMercari: {str(e)[:200]}")
 
-                        try:
-                            all_results.extend(mercari_future.result(timeout=900))
-                        except Exception as e:
-                            logger.error(f"Mercari thread failed: {e}")
-
-                        try:
-                            all_results.extend(yahoo_future.result(timeout=900))
-                        except Exception as e:
-                            logger.error(f"Yahoo thread failed: {e}")
-
-                    browser.close()
-            except Exception as e:
-                logger.error(f"Playwright session failed: {e}")
-                self.notifier.send_message(f"⚠️ <b>Manga Scanner Error</b>\n\nPlaywright: {str(e)[:200]}")
+                try:
+                    all_results.extend(yahoo_future.result(timeout=900))
+                except Exception as e:
+                    logger.error(f"Yahoo thread failed: {e}")
+                    self.notifier.send_message(f"⚠️ <b>Manga Scanner Error</b>\n\nYahoo: {str(e)[:200]}")
         else:
             logger.warning("Playwright not available - skipping Mercari JP and Yahoo Auctions JP")
 
