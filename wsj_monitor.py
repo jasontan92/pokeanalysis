@@ -13,6 +13,7 @@ import logging
 import re
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.parse import quote
@@ -212,8 +213,8 @@ def create_browser_context(playwright):
 
 
 def wait_for_page_load(page, timeout_seconds=30):
-    for _ in range(timeout_seconds // 5):
-        page.wait_for_timeout(5000)
+    for _ in range(timeout_seconds):
+        page.wait_for_timeout(1000)
         title = page.title().lower()
         if 'just a moment' not in title and 'checking' not in title:
             return True
@@ -312,9 +313,8 @@ def search_mercari(page, series_key: str, series: dict) -> list[dict]:
             encoded = quote(query)
             url = f"https://jp.mercari.com/search?keyword={encoded}&order=desc&sort=created_time&status=on_sale"
 
-            page.goto(url, timeout=60000)
+            page.goto(url, timeout=30000)
             wait_for_page_load(page)
-            page.wait_for_timeout(1500)
 
             links = page.query_selector_all('a[href*="/item/"]')
             logger.info(f"    Query '{query}': found {len(links)} raw links on page")
@@ -391,14 +391,13 @@ def search_mercari(page, series_key: str, series: dict) -> list[dict]:
         except Exception as e:
             logger.error(f"Mercari error for '{query}': {e}")
 
-        time.sleep(1)
+        time.sleep(0.5)
 
     # --- Raw Mercari URLs (broader searches with their own filtering) ---
     for raw_url in series.get('mercari_urls', []):
         try:
-            page.goto(raw_url, timeout=60000)
+            page.goto(raw_url, timeout=30000)
             wait_for_page_load(page)
-            page.wait_for_timeout(1500)
 
             links = page.query_selector_all('a[href*="/item/"]')
             logger.info(f"    Raw URL: found {len(links)} raw links on page")
@@ -477,7 +476,7 @@ def search_mercari(page, series_key: str, series: dict) -> list[dict]:
         except Exception as e:
             logger.error(f"Mercari raw URL error: {e}")
 
-        time.sleep(1)
+        time.sleep(0.5)
 
     return results
 
@@ -583,9 +582,8 @@ def _extract_yahoo_listings(page, url: str) -> list[dict]:
 
 def _wait_for_yahoo_page(page):
     """Wait for Yahoo Auctions page to load, handling bot challenges."""
-    # Yahoo sometimes shows interstitial challenges — wait longer than Mercari
-    for _ in range(6):
-        page.wait_for_timeout(3000)
+    for _ in range(18):
+        page.wait_for_timeout(1000)
         title = page.title().lower()
         if 'just a moment' not in title and 'checking' not in title and 'verify' not in title:
             return True
@@ -603,7 +601,7 @@ def search_yahoo_auctions(page, series_key: str, series: dict) -> list[dict]:
             encoded = quote(query)
             url = f"https://auctions.yahoo.co.jp/search/search?p={encoded}&va={encoded}&exflg=1&b=1&n=50"
 
-            page.goto(url, timeout=60000)
+            page.goto(url, timeout=30000)
             _wait_for_yahoo_page(page)
 
             raw_listings = _extract_yahoo_listings(page, url)
@@ -636,7 +634,227 @@ def search_yahoo_auctions(page, series_key: str, series: dict) -> list[dict]:
         except Exception as e:
             logger.error(f"Yahoo error for '{query}': {e}")
 
-        time.sleep(1)
+        time.sleep(0.5)
+
+    return results
+
+
+# ---------------------------------------------------------------------------
+# Platform-specific scrape functions (run in parallel threads)
+# ---------------------------------------------------------------------------
+
+def _scrape_all_mercari(page, monitor) -> list[dict]:
+    """Run all Mercari JP searches: series queries, simple searches, unfiltered URLs."""
+    results = []
+
+    # --- Series keyword queries ---
+    for series_key, series in WSJConfig.SERIES.items():
+        logger.info(f"Mercari JP search: {series['name']}")
+        try:
+            mercari_results = search_mercari(page, series_key, series)
+            results.extend(mercari_results)
+            logger.info(f"  Mercari {series['name']}: {len(mercari_results)} results")
+        except Exception as e:
+            logger.error(f"  Mercari {series['name']} failed: {e}")
+
+    # --- Simple searches (Mercari portion) ---
+    for search in WSJConfig.SIMPLE_SEARCHES:
+        sname = search['name']
+        mercari_url = search.get('mercari_url')
+        mercari_kw = search.get('mercari_keyword')
+        if not (mercari_url or mercari_kw):
+            continue
+        logger.info(f"Simple search (Mercari): {sname}")
+        try:
+            url = mercari_url or f"https://jp.mercari.com/search?keyword={quote(mercari_kw)}&order=desc&sort=created_time&status=on_sale"
+            page.goto(url, timeout=30000)
+            wait_for_page_load(page)
+
+            links = page.query_selector_all('a[href*="/item/"]')
+            logger.info(f"  Mercari '{sname}': {len(links)} raw links")
+
+            for link in links:
+                try:
+                    href = link.get_attribute('href')
+                    if not href:
+                        continue
+                    item_match = re.search(r'/item/([a-zA-Z0-9]+)', href)
+                    if not item_match:
+                        continue
+                    item_id = item_match.group(1)
+
+                    text = link.inner_text().strip()
+                    lines = [l.strip() for l in text.split('\n') if l.strip()]
+                    title_lines = [
+                        l for l in lines
+                        if not l.startswith('SG') and not l.startswith('US$')
+                        and not l.startswith('$') and not l.startswith('¥')
+                        and not l.startswith('￥') and not re.match(r'^[\d,\.]+$', l.replace(',', ''))
+                        and '¥' not in l and '￥' not in l
+                        and not l.startswith('現在')
+                        and len(l) > 3
+                    ]
+                    title = ' '.join(title_lines)[:120] if title_lines else item_id
+
+                    if not monitor._validate_simple(title, search['validators'], search.get('exclude')):
+                        continue
+
+                    price_raw = None
+                    for line in lines:
+                        m = re.search(r'[¥￥]([\d,]+)', line)
+                        if m:
+                            try:
+                                price_raw = float(m.group(1).replace(',', ''))
+                            except ValueError:
+                                pass
+                            break
+
+                    full_link = f"https://jp.mercari.com{href}" if not href.startswith('http') else href
+                    results.append({
+                        'platform': 'Mercari JP',
+                        'series': search['state_category'],
+                        'series_name': sname,
+                        'title': title,
+                        'price': price_raw,
+                        'currency': 'JPY',
+                        'link': full_link,
+                        'listing_id': f"mercari_{item_id}",
+                        'image_url': None,
+                    })
+                except Exception:
+                    continue
+        except Exception as e:
+            logger.error(f"  Mercari simple search error for '{sname}': {e}")
+        time.sleep(0.5)
+
+    # --- Unfiltered Mercari URL searches ---
+    for search in WSJConfig.UNFILTERED_MERCARI_URLS:
+        sname = search['name']
+        logger.info(f"Unfiltered Mercari search: {sname}")
+        try:
+            page.goto(search['url'], timeout=30000)
+            wait_for_page_load(page)
+
+            links = page.query_selector_all('a[href*="/item/"]')
+            logger.info(f"  Unfiltered '{sname}': {len(links)} raw links")
+
+            seen_ids = set()
+            for link in links:
+                try:
+                    href = link.get_attribute('href')
+                    if not href:
+                        continue
+                    item_match = re.search(r'/item/([a-zA-Z0-9]+)', href)
+                    if not item_match:
+                        continue
+                    item_id = item_match.group(1)
+                    if item_id in seen_ids:
+                        continue
+                    seen_ids.add(item_id)
+
+                    text = link.inner_text().strip()
+                    lines = [l.strip() for l in text.split('\n') if l.strip()]
+                    title_lines = [
+                        l for l in lines
+                        if not l.startswith('SG') and not l.startswith('US$')
+                        and not l.startswith('$') and not l.startswith('¥')
+                        and not l.startswith('￥') and not re.match(r'^[\d,\.]+$', l.replace(',', ''))
+                        and '¥' not in l and '￥' not in l
+                        and not l.startswith('現在')
+                        and len(l) > 3
+                    ]
+                    title = ' '.join(title_lines)[:120] if title_lines else item_id
+
+                    if 'validators' in search and not monitor._validate_simple(title, search['validators'], search.get('exclude')):
+                        continue
+
+                    price_raw = None
+                    for line in lines:
+                        m = re.search(r'[¥￥]([\d,]+)', line)
+                        if m:
+                            try:
+                                price_raw = float(m.group(1).replace(',', ''))
+                            except ValueError:
+                                pass
+                            break
+                        if re.match(r'^[\d,]+$', line.strip()) and len(line.strip()) >= 3:
+                            try:
+                                price_raw = float(line.strip().replace(',', ''))
+                            except ValueError:
+                                pass
+                            break
+
+                    full_link = f"https://jp.mercari.com{href}" if not href.startswith('http') else href
+                    results.append({
+                        'platform': 'Mercari JP',
+                        'series': search['state_category'],
+                        'series_name': sname,
+                        'title': title,
+                        'price': price_raw,
+                        'currency': 'JPY',
+                        'link': full_link,
+                        'listing_id': f"mercari_{item_id}",
+                        'image_url': None,
+                    })
+                except Exception:
+                    continue
+        except Exception as e:
+            logger.error(f"  Unfiltered Mercari search error for '{sname}': {e}")
+        time.sleep(0.5)
+
+    return results
+
+
+def _scrape_all_yahoo(page, monitor) -> list[dict]:
+    """Run all Yahoo Auctions JP searches: series queries and simple searches."""
+    results = []
+
+    # --- Series keyword queries ---
+    for series_key, series in WSJConfig.SERIES.items():
+        logger.info(f"Yahoo Auctions search: {series['name']}")
+        try:
+            yahoo_results = search_yahoo_auctions(page, series_key, series)
+            results.extend(yahoo_results)
+            logger.info(f"  Yahoo {series['name']}: {len(yahoo_results)} results")
+        except Exception as e:
+            logger.error(f"  Yahoo {series['name']} failed: {e}")
+
+    # --- Simple searches (Yahoo portion) ---
+    for search in WSJConfig.SIMPLE_SEARCHES:
+        sname = search['name']
+        yahoo_kw = search.get('yahoo_keyword')
+        if not yahoo_kw:
+            continue
+        logger.info(f"Simple search (Yahoo): {sname}")
+        try:
+            encoded = quote(yahoo_kw)
+            url = f"https://auctions.yahoo.co.jp/search/search?p={encoded}&va={encoded}&exflg=1&b=1&n=50"
+            page.goto(url, timeout=30000)
+            _wait_for_yahoo_page(page)
+
+            raw_listings = _extract_yahoo_listings(page, url)
+            logger.info(f"  Yahoo '{sname}': {len(raw_listings)} listings extracted")
+
+            for listing in raw_listings:
+                title = listing['title']
+
+                if not monitor._validate_simple(title, search['validators'], search.get('exclude')):
+                    continue
+
+                results.append({
+                    'platform': 'Yahoo Auctions JP',
+                    'series': search['state_category'],
+                    'series_name': sname,
+                    'title': title,
+                    'price': listing['price'],
+                    'currency': 'JPY',
+                    'link': listing['link'],
+                    'listing_id': listing['listing_id'],
+                    'image_url': listing['image_url'],
+                })
+        except Exception as e:
+            logger.error(f"  Yahoo simple search error for '{sname}': {e}")
+        time.sleep(0.5)
 
     return results
 
@@ -751,212 +969,27 @@ class WSJMonitor:
 
         all_results = []
 
-        # --- Japanese marketplaces (shared Playwright browser) ---
+        # --- Japanese marketplaces (parallel Mercari + Yahoo via two browser pages) ---
         if PLAYWRIGHT_AVAILABLE:
             try:
                 with sync_playwright() as p:
                     browser, context = create_browser_context(p)
-                    page = context.new_page()
+                    mercari_page = context.new_page()
+                    yahoo_page = context.new_page()
 
-                    for series_key, series in WSJConfig.SERIES.items():
-                        # Mercari JP
-                        logger.info(f"Mercari JP search: {series['name']}")
+                    with ThreadPoolExecutor(max_workers=2) as executor:
+                        mercari_future = executor.submit(_scrape_all_mercari, mercari_page, self)
+                        yahoo_future = executor.submit(_scrape_all_yahoo, yahoo_page, self)
+
                         try:
-                            mercari_results = search_mercari(page, series_key, series)
-                            all_results.extend(mercari_results)
-                            logger.info(f"  Mercari {series['name']}: {len(mercari_results)} results")
+                            all_results.extend(mercari_future.result(timeout=900))
                         except Exception as e:
-                            logger.error(f"  Mercari {series['name']} failed: {e}")
+                            logger.error(f"Mercari thread failed: {e}")
 
-                        # Yahoo Auctions JP
-                        logger.info(f"Yahoo Auctions search: {series['name']}")
                         try:
-                            yahoo_results = search_yahoo_auctions(page, series_key, series)
-                            all_results.extend(yahoo_results)
-                            logger.info(f"  Yahoo {series['name']}: {len(yahoo_results)} results")
+                            all_results.extend(yahoo_future.result(timeout=900))
                         except Exception as e:
-                            logger.error(f"  Yahoo {series['name']} failed: {e}")
-
-                    # --- Simple searches (Vol 1, CoroCoro, Comic News, etc.) ---
-                    for search in WSJConfig.SIMPLE_SEARCHES:
-                        sname = search['name']
-                        logger.info(f"Simple search: {sname}")
-
-                        # Mercari keyword search (use mercari_url if provided, else build from keyword)
-                        mercari_url = search.get('mercari_url')
-                        mercari_kw = search.get('mercari_keyword')
-                        if mercari_url or mercari_kw:
-                            try:
-                                url = mercari_url or f"https://jp.mercari.com/search?keyword={quote(mercari_kw)}&order=desc&sort=created_time&status=on_sale"
-                                page.goto(url, timeout=60000)
-                                wait_for_page_load(page)
-                                page.wait_for_timeout(1500)
-
-                                links = page.query_selector_all('a[href*="/item/"]')
-                                logger.info(f"  Mercari '{sname}': {len(links)} raw links")
-
-                                for link in links:
-                                    try:
-                                        href = link.get_attribute('href')
-                                        if not href:
-                                            continue
-                                        item_match = re.search(r'/item/([a-zA-Z0-9]+)', href)
-                                        if not item_match:
-                                            continue
-                                        item_id = item_match.group(1)
-
-                                        text = link.inner_text().strip()
-                                        lines = [l.strip() for l in text.split('\n') if l.strip()]
-                                        title_lines = [
-                                            l for l in lines
-                                            if not l.startswith('SG') and not l.startswith('US$')
-                                            and not l.startswith('$') and not l.startswith('¥')
-                                            and not l.startswith('￥') and not re.match(r'^[\d,\.]+$', l.replace(',', ''))
-                                            and '¥' not in l and '￥' not in l
-                                            and not l.startswith('現在')
-                                            and len(l) > 3
-                                        ]
-                                        title = ' '.join(title_lines)[:120] if title_lines else item_id
-
-                                        if not self._validate_simple(title, search['validators'], search.get('exclude')):
-                                            continue
-
-                                        price_raw = None
-                                        for line in lines:
-                                            m = re.search(r'[¥￥]([\d,]+)', line)
-                                            if m:
-                                                try:
-                                                    price_raw = float(m.group(1).replace(',', ''))
-                                                except ValueError:
-                                                    pass
-                                                break
-
-                                        full_link = f"https://jp.mercari.com{href}" if not href.startswith('http') else href
-                                        all_results.append({
-                                            'platform': 'Mercari JP',
-                                            'series': search['state_category'],
-                                            'series_name': sname,
-                                            'title': title,
-                                            'price': price_raw,
-                                            'currency': 'JPY',
-                                            'link': full_link,
-                                            'listing_id': f"mercari_{item_id}",
-                                            'image_url': None,
-                                        })
-                                    except Exception:
-                                        continue
-                            except Exception as e:
-                                logger.error(f"  Mercari simple search error for '{sname}': {e}")
-                            time.sleep(1)
-
-                        # Yahoo Auctions keyword search
-                        yahoo_kw = search.get('yahoo_keyword')
-                        if yahoo_kw:
-                            try:
-                                encoded = quote(yahoo_kw)
-                                url = f"https://auctions.yahoo.co.jp/search/search?p={encoded}&va={encoded}&exflg=1&b=1&n=50"
-                                page.goto(url, timeout=60000)
-                                _wait_for_yahoo_page(page)
-
-                                raw_listings = _extract_yahoo_listings(page, url)
-                                logger.info(f"  Yahoo '{sname}': {len(raw_listings)} listings extracted")
-
-                                for listing in raw_listings:
-                                    title = listing['title']
-
-                                    if not self._validate_simple(title, search['validators'], search.get('exclude')):
-                                        continue
-
-                                    all_results.append({
-                                        'platform': 'Yahoo Auctions JP',
-                                        'series': search['state_category'],
-                                        'series_name': sname,
-                                        'title': title,
-                                        'price': listing['price'],
-                                        'currency': 'JPY',
-                                        'link': listing['link'],
-                                        'listing_id': listing['listing_id'],
-                                        'image_url': listing['image_url'],
-                                    })
-                            except Exception as e:
-                                logger.error(f"  Yahoo simple search error for '{sname}': {e}")
-                            time.sleep(1)
-
-                    # --- Unfiltered Mercari URL searches (no filtering, alert on everything) ---
-                    for search in WSJConfig.UNFILTERED_MERCARI_URLS:
-                        sname = search['name']
-                        logger.info(f"Unfiltered Mercari search: {sname}")
-                        try:
-                            page.goto(search['url'], timeout=60000)
-                            wait_for_page_load(page)
-                            page.wait_for_timeout(1500)
-
-                            links = page.query_selector_all('a[href*="/item/"]')
-                            logger.info(f"  Unfiltered '{sname}': {len(links)} raw links")
-
-                            seen_ids = set()
-                            for link in links:
-                                try:
-                                    href = link.get_attribute('href')
-                                    if not href:
-                                        continue
-                                    item_match = re.search(r'/item/([a-zA-Z0-9]+)', href)
-                                    if not item_match:
-                                        continue
-                                    item_id = item_match.group(1)
-                                    if item_id in seen_ids:
-                                        continue
-                                    seen_ids.add(item_id)
-
-                                    text = link.inner_text().strip()
-                                    lines = [l.strip() for l in text.split('\n') if l.strip()]
-                                    title_lines = [
-                                        l for l in lines
-                                        if not l.startswith('SG') and not l.startswith('US$')
-                                        and not l.startswith('$') and not l.startswith('¥')
-                                        and not l.startswith('￥') and not re.match(r'^[\d,\.]+$', l.replace(',', ''))
-                                        and '¥' not in l and '￥' not in l
-                                        and not l.startswith('現在')
-                                        and len(l) > 3
-                                    ]
-                                    title = ' '.join(title_lines)[:120] if title_lines else item_id
-
-                                    if 'validators' in search and not self._validate_simple(title, search['validators'], search.get('exclude')):
-                                        continue
-
-                                    price_raw = None
-                                    for line in lines:
-                                        m = re.search(r'[¥￥]([\d,]+)', line)
-                                        if m:
-                                            try:
-                                                price_raw = float(m.group(1).replace(',', ''))
-                                            except ValueError:
-                                                pass
-                                            break
-                                        if re.match(r'^[\d,]+$', line.strip()) and len(line.strip()) >= 3:
-                                            try:
-                                                price_raw = float(line.strip().replace(',', ''))
-                                            except ValueError:
-                                                pass
-                                            break
-
-                                    full_link = f"https://jp.mercari.com{href}" if not href.startswith('http') else href
-                                    all_results.append({
-                                        'platform': 'Mercari JP',
-                                        'series': search['state_category'],
-                                        'series_name': sname,
-                                        'title': title,
-                                        'price': price_raw,
-                                        'currency': 'JPY',
-                                        'link': full_link,
-                                        'listing_id': f"mercari_{item_id}",
-                                        'image_url': None,
-                                    })
-                                except Exception:
-                                    continue
-                        except Exception as e:
-                            logger.error(f"  Unfiltered Mercari search error for '{sname}': {e}")
-                        time.sleep(1)
+                            logger.error(f"Yahoo thread failed: {e}")
 
                     browser.close()
             except Exception as e:
