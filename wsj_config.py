@@ -362,6 +362,17 @@ class WSJConfig:
                 ['24'],
             ],
         },
+        {
+            'name': '週刊少年ジャンプ 2016年11号',
+            'mercari_keyword': '週刊少年ジャンプ 2016年11号',
+            'yahoo_keyword': '週刊少年ジャンプ 2016年 11号',
+            'state_category': 'simple_wsj_2016_11',
+            'validators': [
+                ['ジャンプ'],
+                ['2016'],
+                ['11'],
+            ],
+        },
     ]
 
     # -----------------------------------------------------------------------
@@ -396,6 +407,15 @@ class WSJConfig:
                 ['別冊'],
                 ['2009'],
                 ['10'],
+            ],
+        },
+        {
+            'name': '週刊少年ジャンプ 2016年11号 (unfiltered)',
+            'url': 'https://jp.mercari.com/search?keyword=%E9%80%B1%E5%88%8A%E5%B0%91%E5%B9%B4%E3%82%B8%E3%83%A3%E3%83%B3%E3%83%97%202016%E5%B9%B411%E5%8F%B7&sort=created_time&order=desc',
+            'state_category': 'unfiltered_wsj_2016_11',
+            'validators': [
+                ['2016'],
+                ['11'],
             ],
         },
     ]
