@@ -295,6 +295,16 @@ class WSJConfig:
             ],
         },
         {
+            'name': 'Dragon Ball Vol 1 初版',
+            'mercari_keyword': 'ドラゴンボール 1巻 初版',
+            'state_category': 'simple_dragonball_v1',
+            'validators': [
+                ['ドラゴンボール', 'dragon ball', 'dragonball', 'DRAGON BALL'],
+                ['1巻'],
+                ['初版', '第1刷', '第一刷'],
+            ],
+        },
+        {
             'name': '電撃 RPG\'96',
             'mercari_url': 'https://jp.mercari.com/search?keyword=%E9%9B%BB%E6%92%83%20RPG%E2%80%9996&srsltid=AfmBOooDJCEu2u_xL7jc9cCXVCmu9RaoPcWQ4tUagAxb_De80gdOw84U&sort=created_time&order=desc',
             'yahoo_keyword': '電撃 RPG\'96',
