@@ -312,6 +312,26 @@ class WSJConfig:
             'validators': [['電撃'], ['rpg', 'RPG'], ['96']],
         },
         {
+            'name': '週刊少年ジャンプ 1989年 47号',
+            'mercari_keyword': '週刊少年ジャンプ 1989年 47号',
+            'state_category': 'simple_wsj_1989_47',
+            'validators': [
+                ['1989'],
+                ['47'],
+            ],
+            'exclude': ['梱包'],
+        },
+        {
+            'name': '週刊少年ジャンプ 1989年 2-3号',
+            'mercari_keyword': '週刊少年ジャンプ 1989年 2-3号',
+            'state_category': 'simple_wsj_1989_2_3',
+            'validators': [
+                ['1989'],
+                ['2-3', '2・3', '2,3'],
+            ],
+            'exclude': ['梱包'],
+        },
+        {
             'name': 'Pocket Monsters (Anakubo) Vol 1 初版',
             'mercari_keyword': '穴久保 ポケモン 1巻 初版',
             'mercari_url': 'https://jp.mercari.com/search?keyword=%E7%A9%B4%E4%B9%85%E4%BF%9D%20%E3%83%9D%E3%82%B1%E3%83%A2%E3%83%B3%201%E5%B7%BB%20%E5%88%9D%E7%89%88&sort=created_time&order=desc',
