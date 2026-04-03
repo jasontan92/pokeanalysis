@@ -262,7 +262,6 @@ class WSJConfig:
         {
             'name': 'CoroCoro Comic 1996',
             'mercari_keyword': 'コロコロコミック 1996年',
-            'mercari_url': 'https://jp.mercari.com/search?keyword=%E3%82%B3%E3%83%AD%E3%82%B3%E3%83%AD%E3%82%B3%E3%83%9F%E3%83%83%E3%82%AF%201996&category_id=5&sort=created_time&order=desc',
             'yahoo_keyword': 'コロコロコミック 1996年',
             'state_category': 'simple_corocoro_1996',
             'validators': [['コロコロ', 'corocoro'], ['1996'], ['月刊', '特刊', '増刊', '別冊', '号', '月号', 'comic', 'コミック']],
