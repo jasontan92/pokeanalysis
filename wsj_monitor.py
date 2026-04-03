@@ -146,6 +146,8 @@ class WSJTelegramNotifier:
 class StateManager:
     """Track seen listings to avoid duplicate alerts."""
 
+    CATEGORY_SETTLING_HOURS = 48  # Silence most alerts for new categories
+
     def __init__(self):
         self.state_file = WSJConfig.STATE_FILE
         self.state = self._load()
@@ -155,12 +157,20 @@ class StateManager:
         if self.state_file.exists():
             try:
                 with open(self.state_file, 'r', encoding='utf-8') as f:
-                    return json.load(f)
+                    data = json.load(f)
+                # Track whether category_first_seen already existed (migration flag)
+                self._needs_category_migration = 'category_first_seen' not in data
+                data.setdefault('category_first_seen', {})
+                data.setdefault('category_settling_alerts', {})
+                return data
             except (json.JSONDecodeError, IOError) as e:
                 logger.warning(f"Failed to load state: {e}")
+        self._needs_category_migration = False
         return {
             'seen': {},          # listing_id -> first_seen ISO timestamp
             'last_check': None,
+            'category_first_seen': {},      # category_key -> ISO timestamp
+            'category_settling_alerts': {}, # category_key -> alert count during settling
         }
 
     def save(self):
@@ -175,6 +185,14 @@ class StateManager:
         self.state['seen'] = {
             k: v for k, v in self.state['seen'].items() if v > cutoff
         }
+        # Clean up settling alert counts for categories past settling period
+        settled = [
+            k for k, v in self.state.get('category_first_seen', {}).items()
+            if self.get_category_age_hours(k) is not None
+            and self.get_category_age_hours(k) >= self.CATEGORY_SETTLING_HOURS
+        ]
+        for k in settled:
+            self.state.get('category_settling_alerts', {}).pop(k, None)
 
     def is_new(self, listing_id: str) -> bool:
         if not listing_id:
@@ -184,6 +202,47 @@ class StateManager:
     def mark_seen(self, listing_id: str):
         if listing_id:
             self.state['seen'][listing_id] = datetime.now().isoformat()
+
+    def register_category(self, category_key: str):
+        """Record first-seen timestamp for a category if not already tracked.
+
+        On first deploy (migration), all existing categories get backdated past
+        the settling window. After migration, new categories start settling.
+        """
+        cfs = self.state['category_first_seen']
+        if category_key not in cfs:
+            if self._needs_category_migration:
+                # First deploy — backdate past settling period
+                backdate = (datetime.now() - timedelta(hours=self.CATEGORY_SETTLING_HOURS + 1)).isoformat()
+                cfs[category_key] = backdate
+                logger.info(f"Existing category registered (backdated): {category_key}")
+            else:
+                cfs[category_key] = datetime.now().isoformat()
+                logger.info(f"New category registered: {category_key} (settling for {self.CATEGORY_SETTLING_HOURS}h)")
+
+    def get_category_age_hours(self, category_key: str) -> float | None:
+        """Return hours since category was first seen, or None if unknown."""
+        ts = self.state['category_first_seen'].get(category_key)
+        if not ts:
+            return None
+        first_seen = datetime.fromisoformat(ts)
+        return (datetime.now() - first_seen).total_seconds() / 3600
+
+    def is_category_settling(self, category_key: str) -> bool:
+        """True if category is still in its settling period."""
+        age = self.get_category_age_hours(category_key)
+        if age is None:
+            return True  # Brand new, treat as settling
+        return age < self.CATEGORY_SETTLING_HOURS
+
+    def get_settling_alert_count(self, category_key: str) -> int:
+        """Return how many alerts have been sent for this category during settling."""
+        return self.state.get('category_settling_alerts', {}).get(category_key, 0)
+
+    def increment_settling_alerts(self, category_key: str):
+        """Increment the settling alert count for a category."""
+        sa = self.state.setdefault('category_settling_alerts', {})
+        sa[category_key] = sa.get(category_key, 0) + 1
 
 
 # ---------------------------------------------------------------------------
@@ -931,18 +990,29 @@ class WSJMonitor:
             series_key = result['series']
             series = WSJConfig.SERIES.get(series_key)
 
+            # Register category for settling tracking
+            self.state.register_category(series_key)
+
             if not self.state.is_new(listing_id):
                 self.state.mark_seen(listing_id)
                 continue
 
             self.state.mark_seen(listing_id)
 
-            # First run throttle per series
+            # First run throttle per series (global first run)
             if self.state.is_first_run:
                 count = alerts_per_series.get(series_key, 0)
                 if count >= self.FIRST_RUN_ALERT_LIMIT:
                     continue
                 alerts_per_series[series_key] = count + 1
+
+            # Per-category settling: limit alerts for newly-added searches
+            # so page-draining backlog is silently absorbed
+            elif self.state.is_category_settling(series_key):
+                if self.state.get_settling_alert_count(series_key) >= self.FIRST_RUN_ALERT_LIMIT:
+                    logger.info(f"    Settling (silenced): {result.get('title', listing_id)[:60]}")
+                    continue
+                self.state.increment_settling_alerts(series_key)
 
             title = result['title']
             currency = '¥' if result['currency'] == 'JPY' else '$'
