@@ -280,6 +280,33 @@ def wait_for_page_load(page, timeout_seconds=30):
     return False
 
 
+def mercari_goto_and_wait(page, url, max_retries=2):
+    """Navigate to a Mercari search URL and wait for item links to render.
+
+    Returns the list of item link elements, retrying on empty results.
+    """
+    for attempt in range(max_retries):
+        page.goto(url, timeout=30000)
+        wait_for_page_load(page)
+
+        # Wait for item links to render (Mercari loads results via JS)
+        try:
+            page.wait_for_selector('a[href*="/item/"]', timeout=8000)
+        except Exception:
+            pass  # May legitimately have 0 results
+
+        links = page.query_selector_all('a[href*="/item/"]')
+        if links:
+            return links
+
+        # 0 links — could be slow render or bot detection; retry once
+        if attempt < max_retries - 1:
+            logger.info(f"    Mercari returned 0 links, retrying ({attempt + 1}/{max_retries})...")
+            page.wait_for_timeout(3000)
+
+    return []
+
+
 # ---------------------------------------------------------------------------
 # Exclusion & relevance filters
 # ---------------------------------------------------------------------------
@@ -372,10 +399,7 @@ def search_mercari(page, series_key: str, series: dict) -> list[dict]:
             encoded = quote(query)
             url = f"https://jp.mercari.com/search?keyword={encoded}&order=desc&sort=created_time&status=on_sale"
 
-            page.goto(url, timeout=30000)
-            wait_for_page_load(page)
-
-            links = page.query_selector_all('a[href*="/item/"]')
+            links = mercari_goto_and_wait(page, url)
             logger.info(f"    Query '{query}': found {len(links)} raw links on page")
 
             for link in links:
@@ -455,10 +479,7 @@ def search_mercari(page, series_key: str, series: dict) -> list[dict]:
     # --- Raw Mercari URLs (broader searches with their own filtering) ---
     for raw_url in series.get('mercari_urls', []):
         try:
-            page.goto(raw_url, timeout=30000)
-            wait_for_page_load(page)
-
-            links = page.query_selector_all('a[href*="/item/"]')
+            links = mercari_goto_and_wait(page, raw_url)
             logger.info(f"    Raw URL: found {len(links)} raw links on page")
 
             for link in links:
@@ -740,10 +761,7 @@ def _scrape_all_mercari_inner(page, monitor) -> list[dict]:
         logger.info(f"Simple search (Mercari): {sname}")
         try:
             url = mercari_url or f"https://jp.mercari.com/search?keyword={quote(mercari_kw)}&order=desc&sort=created_time&status=on_sale"
-            page.goto(url, timeout=30000)
-            wait_for_page_load(page)
-
-            links = page.query_selector_all('a[href*="/item/"]')
+            links = mercari_goto_and_wait(page, url)
             logger.info(f"  Mercari '{sname}': {len(links)} raw links")
 
             for link in links:
@@ -805,10 +823,7 @@ def _scrape_all_mercari_inner(page, monitor) -> list[dict]:
         sname = search['name']
         logger.info(f"Unfiltered Mercari search: {sname}")
         try:
-            page.goto(search['url'], timeout=30000)
-            wait_for_page_load(page)
-
-            links = page.query_selector_all('a[href*="/item/"]')
+            links = mercari_goto_and_wait(page, search['url'])
             logger.info(f"  Unfiltered '{sname}': {len(links)} raw links")
 
             seen_ids = set()
