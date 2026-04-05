@@ -342,10 +342,21 @@ class WSJConfig:
             'exclude': ['梱包'],
         },
         {
-            'name': 'Pocket Monsters (Anakubo) Vol 1 初版',
+            'name': 'Pocket Monsters (Anakubo) Vol 1 初版 (ポケモン)',
             'mercari_keyword': 'ポケモン 1巻 初版',
             'mercari_url': 'https://jp.mercari.com/search?keyword=%E3%83%9D%E3%82%B1%E3%83%A2%E3%83%B3%201%E5%B7%BB%20%E5%88%9D%E7%89%88&sort=created_time&order=desc',
             'yahoo_keyword': 'ポケモン 1巻 初版',
+            'state_category': 'simple_anakubo_pokemon_v1',
+            'validators': [
+                ['ポケモン', 'ポケットモンスター'],
+                ['巻'],
+            ],
+        },
+        {
+            'name': 'Pocket Monsters (Anakubo) Vol 1 初版 (ポケットモンスター)',
+            'mercari_keyword': 'ポケットモンスター 1巻 初版',
+            'mercari_url': 'https://jp.mercari.com/search?keyword=%E3%83%9D%E3%82%B1%E3%83%83%E3%83%88%E3%83%A2%E3%83%B3%E3%82%B9%E3%82%BF%E3%83%BC%201%E5%B7%BB%20%E5%88%9D%E7%89%88&sort=created_time&order=desc',
+            'yahoo_keyword': 'ポケットモンスター 1巻 初版',
             'state_category': 'simple_anakubo_pokemon_v1',
             'validators': [
                 ['ポケモン', 'ポケットモンスター'],
