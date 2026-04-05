@@ -343,12 +343,13 @@ class WSJConfig:
         },
         {
             'name': 'Pocket Monsters (Anakubo) Vol 1 初版',
-            'mercari_keyword': '穴久保 ポケモン 1巻 初版',
-            'mercari_url': 'https://jp.mercari.com/search?keyword=%E7%A9%B4%E4%B9%85%E4%BF%9D%20%E3%83%9D%E3%82%B1%E3%83%A2%E3%83%B3%201%E5%B7%BB%20%E5%88%9D%E7%89%88&sort=created_time&order=desc',
+            'mercari_keyword': 'ポケモン 1巻 初版',
+            'mercari_url': 'https://jp.mercari.com/search?keyword=%E3%83%9D%E3%82%B1%E3%83%A2%E3%83%B3%201%E5%B7%BB%20%E5%88%9D%E7%89%88&sort=created_time&order=desc',
+            'yahoo_keyword': 'ポケモン 1巻 初版',
             'state_category': 'simple_anakubo_pokemon_v1',
             'validators': [
-                ['1'],
-                ['初版'],
+                ['ポケモン', 'ポケットモンスター'],
+                ['巻'],
             ],
         },
         {
