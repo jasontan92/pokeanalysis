@@ -349,7 +349,7 @@ class WSJConfig:
             'state_category': 'simple_anakubo_pokemon_v1',
             'validators': [
                 ['ポケモン', 'ポケットモンスター'],
-                ['巻'],
+                ['1', '全'],
             ],
         },
         {
@@ -360,7 +360,7 @@ class WSJConfig:
             'state_category': 'simple_anakubo_pokemon_v1',
             'validators': [
                 ['ポケモン', 'ポケットモンスター'],
-                ['巻'],
+                ['1', '全'],
             ],
         },
         {
