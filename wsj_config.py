@@ -50,11 +50,9 @@ class WSJConfig:
             'wsj_desc': 'NARUTO Chapter 1 - 週刊少年ジャンプ 1999年43号',
             'mercari_queries': [
                 '週刊少年ジャンプ 1999年43号',
-                'NARUTO 新連載号 ジャンプ 1999',
             ],
             'yahoo_queries': [
                 '週刊少年ジャンプ 1999年 43号',
-                'NARUTO 新連載 ジャンプ 1999',
             ],
             'exclude_keywords': [
                 'trading card', 'tcg', 'card game', 'figure', 'figurine',
@@ -72,11 +70,9 @@ class WSJConfig:
             'wsj_desc': 'Yu-Gi-Oh! Chapter 1 - 週刊少年ジャンプ 1996年42号',
             'mercari_queries': [
                 '週刊少年ジャンプ 1996年42号',
-                '遊戯王 新連載号 ジャンプ 1996',
             ],
             'yahoo_queries': [
                 '週刊少年ジャンプ 1996年 42号',
-                '遊戯王 新連載 ジャンプ 1996',
             ],
             'exclude_keywords': [
                 'ocg', 'duel monsters card', 'trading card', 'tcg',
@@ -96,11 +92,9 @@ class WSJConfig:
             'wsj_desc': 'Romance Dawn one-shot - 週刊少年ジャンプ 1996年41号 (Sexy Commando Gaiden cover)',
             'mercari_queries': [
                 '週刊少年ジャンプ 1996年41号',
-                'ロマンスドーン ジャンプ 1996',
             ],
             'yahoo_queries': [
                 '週刊少年ジャンプ 1996年 41号',
-                'ROMANCE DAWN ジャンプ 1996',
             ],
             'exclude_keywords': [
                 'trading card', 'tcg', 'card game', 'figure', 'figurine',
@@ -118,11 +112,9 @@ class WSJConfig:
             'wsj_desc': 'One Piece Chapter 1 - 週刊少年ジャンプ 1997年34号',
             'mercari_queries': [
                 '週刊少年ジャンプ 1997年34号',
-                'ONE PIECE 新連載号 ジャンプ 1997',
             ],
             'yahoo_queries': [
                 '週刊少年ジャンプ 1997年 34号',
-                'ONE PIECE 新連載 ジャンプ 1997',
             ],
             'exclude_keywords': [
                 'trading card', 'tcg', 'card game', 'figure', 'figurine',
@@ -140,13 +132,9 @@ class WSJConfig:
             'wsj_desc': 'BLEACH Chapter 1 - 週刊少年ジャンプ 2001年36・37合併号',
             'mercari_queries': [
                 '週刊少年ジャンプ 2001年36',
-                'BLEACH 新連載号 ジャンプ 2001',
-                'ブリーチ 新連載 ジャンプ 2001',
             ],
             'yahoo_queries': [
                 '週刊少年ジャンプ 2001年 36',
-                'BLEACH 新連載 ジャンプ 2001',
-                'ブリーチ 新連載 ジャンプ 2001',
             ],
             'exclude_keywords': [
                 'trading card', 'tcg', 'card game', 'figure', 'figurine',
@@ -165,11 +153,9 @@ class WSJConfig:
             'wsj_desc': 'JoJo Chapter 1 - 週刊少年ジャンプ 1987年1・2合併号',
             'mercari_queries': [
                 '週刊少年ジャンプ 1987 1-2',
-                'ジョジョ 新連載 ジャンプ 1987',
             ],
             'yahoo_queries': [
                 '週刊少年ジャンプ 1987 1-2',
-                'ジョジョ 新連載 ジャンプ 1987',
             ],
             'exclude_keywords': [
                 'trading card', 'tcg', 'card game', 'figure', 'figurine',
@@ -190,12 +176,10 @@ class WSJConfig:
             'mercari_queries': [
                 '週刊少年ジャンプ 1984年51号',
                 'ドラゴンボール 新連載号 ジャンプ 1984',
-                'DRAGON BALL 新連載 ジャンプ 1984',
             ],
             'yahoo_queries': [
                 '週刊少年ジャンプ 1984年 51号',
                 'ドラゴンボール 新連載 ジャンプ 1984',
-                'DRAGON BALL ジャンプ 1984 51',
             ],
             'exclude_keywords': [
                 'trading card', 'tcg', 'card game', 'figure', 'figurine',
@@ -214,13 +198,9 @@ class WSJConfig:
             'wsj_desc': 'HUNTER×HUNTER Chapter 1 - 週刊少年ジャンプ 1998年14号',
             'mercari_queries': [
                 '週刊少年ジャンプ 1998年14号',
-                'ハンターハンター 新連載号 ジャンプ 1998',
-                'HUNTER HUNTER 新連載 ジャンプ 1998',
             ],
             'yahoo_queries': [
                 '週刊少年ジャンプ 1998年 14号',
-                'ハンターハンター 新連載 ジャンプ 1998',
-                'HUNTER HUNTER ジャンプ 1998 14',
             ],
             'exclude_keywords': [
                 'trading card', 'tcg', 'card game', 'figure', 'figurine',
@@ -353,14 +333,12 @@ class WSJConfig:
             ],
         },
         {
-            'name': 'Pocket Monsters (Anakubo) Vol 1 初版 (ポケットモンスター)',
-            'mercari_keyword': 'ポケットモンスター 1巻 初版',
-            'mercari_url': 'https://jp.mercari.com/search?keyword=%E3%83%9D%E3%82%B1%E3%83%83%E3%83%88%E3%83%A2%E3%83%B3%E3%82%B9%E3%82%BF%E3%83%BC%201%E5%B7%BB%20%E5%88%9D%E7%89%88&sort=created_time&order=desc',
-            'yahoo_keyword': 'ポケットモンスター 1巻 初版',
-            'state_category': 'simple_anakubo_pokemon_v1',
+            'name': '穴久保 初版 (Anakubo first edition)',
+            'mercari_keyword': '穴久保 初版',
+            'state_category': 'simple_anakubo_first_edition',
             'validators': [
-                ['ポケモン', 'ポケットモンスター'],
-                ['1', '全'],
+                ['穴久保'],
+                ['初版', '第1刷', '第一刷'],
             ],
         },
         {
@@ -442,15 +420,6 @@ class WSJConfig:
             'state_category': 'unfiltered_fresh_jump_1983_08',
         },
         {
-            'name': '週刊少年サンデー 2020年22・23号',
-            'url': 'https://jp.mercari.com/search?keyword=%E9%80%B1%E5%88%8A%E5%B0%91%E5%B9%B4%E3%82%B5%E3%83%B3%E3%83%87%E3%83%BC%202020%E5%B9%B422&sort=created_time&order=desc',
-            'state_category': 'unfiltered_sunday_2020_22',
-            'validators': [
-                ['2020'],
-                ['22', '23'],
-            ],
-        },
-        {
             'name': '別冊少年マガジン 2009年10月号',
             'url': 'https://jp.mercari.com/search?keyword=%E5%88%A5%E5%86%8A%E5%B0%91%E5%B9%B4%E3%83%9E%E3%82%AC%E3%82%B8%E3%83%B3%202009%E5%B9%B410%E6%9C%88%E5%8F%B7&sort=created_time&order=desc',
             'state_category': 'unfiltered_bessatsu_2009_10',
@@ -458,15 +427,6 @@ class WSJConfig:
                 ['別冊'],
                 ['2009'],
                 ['10'],
-            ],
-        },
-        {
-            'name': '週刊少年ジャンプ 2016年11号 (unfiltered)',
-            'url': 'https://jp.mercari.com/search?keyword=%E9%80%B1%E5%88%8A%E5%B0%91%E5%B9%B4%E3%82%B8%E3%83%A3%E3%83%B3%E3%83%97%202016%E5%B9%B411%E5%8F%B7&sort=created_time&order=desc',
-            'state_category': 'unfiltered_wsj_2016_11',
-            'validators': [
-                ['2016'],
-                ['11'],
             ],
         },
     ]
