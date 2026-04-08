@@ -280,14 +280,14 @@ def wait_for_page_load(page, timeout_seconds=15):
     return False
 
 
-def mercari_goto_and_wait(page, url, max_attempts=3, scroll_rounds=3):
-    """Navigate to a Mercari search URL, wait for items to render, and scroll
-    to widen the results window.
+def mercari_goto_and_wait(page, url, max_attempts=3):
+    """Navigate to a Mercari search URL and wait for items to render.
 
     Mercari is a JS-rendered SPA and on GHA runners sometimes returns zero
     items due to slow render or soft bot gating. We retry with backoff and
-    longer waits. On success, we also scroll a few times to trigger infinite
-    scroll, capturing ~60-100 items instead of just the first ~20.
+    longer waits. Returns item links from the first rendered page; the
+    caller iterates newest-first and relies on early-term on first seen
+    listing to stop, so we don't scroll for more items.
     """
     for attempt in range(max_attempts):
         try:
@@ -301,7 +301,7 @@ def mercari_goto_and_wait(page, url, max_attempts=3, scroll_rounds=3):
 
         wait_for_page_load(page)
 
-        # Wait for item tiles to render (longer than before — slow renders on CI).
+        # Wait for item tiles to render (slow renders on CI runners).
         try:
             page.wait_for_selector('a[href*="/item/"]', timeout=10000)
         except Exception:
@@ -312,31 +312,16 @@ def mercari_goto_and_wait(page, url, max_attempts=3, scroll_rounds=3):
             pass
 
         links = page.query_selector_all('a[href*="/item/"]')
-        if not links:
-            if attempt < max_attempts - 1:
-                backoff = 3000 + attempt * 2000
-                logger.info(
-                    f"    Mercari returned 0 links, retrying in {backoff}ms "
-                    f"({attempt + 1}/{max_attempts})"
-                )
-                page.wait_for_timeout(backoff)
-                continue
-            return []
+        if links:
+            return links
 
-        # Scroll to trigger infinite-scroll loads. Stop early if no new items.
-        for _ in range(scroll_rounds):
-            prev = len(page.query_selector_all('a[href*="/item/"]'))
-            page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-            try:
-                page.wait_for_load_state('networkidle', timeout=3000)
-            except Exception:
-                pass
-            page.wait_for_timeout(600)
-            curr = len(page.query_selector_all('a[href*="/item/"]'))
-            if curr == prev:
-                break
-
-        return page.query_selector_all('a[href*="/item/"]')
+        if attempt < max_attempts - 1:
+            backoff = 3000 + attempt * 2000
+            logger.info(
+                f"    Mercari returned 0 links, retrying in {backoff}ms "
+                f"({attempt + 1}/{max_attempts})"
+            )
+            page.wait_for_timeout(backoff)
 
     return []
 
@@ -423,8 +408,13 @@ def is_relevant_listing(title: str, series: dict) -> bool:
 # Mercari Japan scraper (Playwright)
 # ---------------------------------------------------------------------------
 
-def search_mercari(page, series_key: str, series: dict) -> list[dict]:
-    """Search Mercari JP for a series' WSJ issue and Vol 1."""
+def search_mercari(page, monitor, series_key: str, series: dict) -> list[dict]:
+    """Search Mercari JP for a series' WSJ issue and Vol 1.
+
+    Results are sorted newest-first; we break as soon as we encounter a
+    listing already in `monitor.state['seen']`, since every item below a
+    seen one is older and therefore also seen (or past the 30-day cleanup).
+    """
     results = []
     seen_ids = set()
 
@@ -449,6 +439,11 @@ def search_mercari(page, series_key: str, series: dict) -> list[dict]:
                     if item_id in seen_ids:
                         continue
                     seen_ids.add(item_id)
+
+                    # Early-terminate on first already-seen listing (results
+                    # are newest-first, so everything below is older).
+                    if not monitor.state.is_new(f"mercari_{item_id}"):
+                        break
 
                     text = link.inner_text().strip()
                     lines = [l.strip() for l in text.split('\n') if l.strip()]
@@ -529,6 +524,10 @@ def search_mercari(page, series_key: str, series: dict) -> list[dict]:
                     if item_id in seen_ids:
                         continue
                     seen_ids.add(item_id)
+
+                    # Early-terminate on first already-seen listing.
+                    if not monitor.state.is_new(f"mercari_{item_id}"):
+                        break
 
                     text = link.inner_text().strip()
                     lines = [l.strip() for l in text.split('\n') if l.strip()]
@@ -705,15 +704,19 @@ def _wait_for_yahoo_page(page):
     return False
 
 
-def search_yahoo_auctions(page, series_key: str, series: dict) -> list[dict]:
-    """Search Yahoo Auctions JP for a series' WSJ issue and Vol 1."""
+def search_yahoo_auctions(page, monitor, series_key: str, series: dict) -> list[dict]:
+    """Search Yahoo Auctions JP for a series' WSJ issue and Vol 1.
+
+    URL uses `s1=new&o1=d` so results are sorted newest-first; we break as
+    soon as we encounter a listing already in `monitor.state['seen']`.
+    """
     results = []
     seen_titles = set()
 
     for query in series['yahoo_queries']:
         try:
             encoded = quote(query)
-            url = f"https://auctions.yahoo.co.jp/search/search?p={encoded}&va={encoded}&exflg=1&b=1&n=50"
+            url = f"https://auctions.yahoo.co.jp/search/search?p={encoded}&va={encoded}&exflg=1&b=1&n=50&s1=new&o1=d"
 
             page.goto(url, timeout=30000)
             _wait_for_yahoo_page(page)
@@ -722,6 +725,10 @@ def search_yahoo_auctions(page, series_key: str, series: dict) -> list[dict]:
             logger.info(f"    Query '{query}': {len(raw_listings)} listings extracted")
 
             for listing in raw_listings:
+                # Early-terminate on first already-seen listing.
+                if not monitor.state.is_new(listing['listing_id']):
+                    break
+
                 title = listing['title']
 
                 if should_exclude(title, series['exclude_keywords']):
@@ -776,7 +783,7 @@ def _scrape_mercari_series_inner(page, monitor) -> list[dict]:
     for series_key, series in WSJConfig.SERIES.items():
         logger.info(f"Mercari JP search: {series['name']}")
         try:
-            mercari_results = search_mercari(page, series_key, series)
+            mercari_results = search_mercari(page, monitor, series_key, series)
             results.extend(mercari_results)
             logger.info(f"  Mercari {series['name']}: {len(mercari_results)} results")
         except Exception as e:
@@ -806,6 +813,10 @@ def _scrape_mercari_series_inner(page, monitor) -> list[dict]:
                     if not item_match:
                         continue
                     item_id = item_match.group(1)
+
+                    # Early-terminate on first already-seen listing.
+                    if not monitor.state.is_new(f"mercari_{item_id}"):
+                        break
 
                     text = link.inner_text().strip()
                     lines = [l.strip() for l in text.split('\n') if l.strip()]
@@ -894,6 +905,10 @@ def _scrape_mercari_simple_inner(page, monitor) -> list[dict]:
                         continue
                     item_id = item_match.group(1)
 
+                    # Early-terminate on first already-seen listing.
+                    if not monitor.state.is_new(f"mercari_{item_id}"):
+                        break
+
                     text = link.inner_text().strip()
                     lines = [l.strip() for l in text.split('\n') if l.strip()]
                     title_lines = [
@@ -959,6 +974,10 @@ def _scrape_mercari_simple_inner(page, monitor) -> list[dict]:
                     if item_id in seen_ids:
                         continue
                     seen_ids.add(item_id)
+
+                    # Early-terminate on first already-seen listing.
+                    if not monitor.state.is_new(f"mercari_{item_id}"):
+                        break
 
                     text = link.inner_text().strip()
                     lines = [l.strip() for l in text.split('\n') if l.strip()]
@@ -1033,7 +1052,7 @@ def _scrape_all_yahoo_inner(page, monitor) -> list[dict]:
     for series_key, series in WSJConfig.SERIES.items():
         logger.info(f"Yahoo Auctions search: {series['name']}")
         try:
-            yahoo_results = search_yahoo_auctions(page, series_key, series)
+            yahoo_results = search_yahoo_auctions(page, monitor, series_key, series)
             results.extend(yahoo_results)
             logger.info(f"  Yahoo {series['name']}: {len(yahoo_results)} results")
         except Exception as e:
@@ -1048,7 +1067,7 @@ def _scrape_all_yahoo_inner(page, monitor) -> list[dict]:
         logger.info(f"Simple search (Yahoo): {sname}")
         try:
             encoded = quote(yahoo_kw)
-            url = f"https://auctions.yahoo.co.jp/search/search?p={encoded}&va={encoded}&exflg=1&b=1&n=50"
+            url = f"https://auctions.yahoo.co.jp/search/search?p={encoded}&va={encoded}&exflg=1&b=1&n=50&s1=new&o1=d"
             page.goto(url, timeout=30000)
             _wait_for_yahoo_page(page)
 
@@ -1056,6 +1075,10 @@ def _scrape_all_yahoo_inner(page, monitor) -> list[dict]:
             logger.info(f"  Yahoo '{sname}': {len(raw_listings)} listings extracted")
 
             for listing in raw_listings:
+                # Early-terminate on first already-seen listing.
+                if not monitor.state.is_new(listing['listing_id']):
+                    break
+
                 title = listing['title']
 
                 if not monitor._validate_simple(title, search['validators'], search.get('exclude')):
