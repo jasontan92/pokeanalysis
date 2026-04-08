@@ -302,12 +302,11 @@ def mercari_goto_and_wait(page, url, max_attempts=3):
         wait_for_page_load(page)
 
         # Wait for item tiles to render (slow renders on CI runners).
+        # Don't wait for networkidle — Mercari's SPA does background polling
+        # that almost never reaches idle within 5s, costing ~5s per search
+        # for ~zero benefit.
         try:
             page.wait_for_selector('a[href*="/item/"]', timeout=10000)
-        except Exception:
-            pass
-        try:
-            page.wait_for_load_state('networkidle', timeout=5000)
         except Exception:
             pass
 
