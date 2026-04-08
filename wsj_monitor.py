@@ -280,29 +280,63 @@ def wait_for_page_load(page, timeout_seconds=15):
     return False
 
 
-def mercari_goto_and_wait(page, url, max_retries=2):
-    """Navigate to a Mercari search URL and wait for item links to render.
+def mercari_goto_and_wait(page, url, max_attempts=3, scroll_rounds=3):
+    """Navigate to a Mercari search URL, wait for items to render, and scroll
+    to widen the results window.
 
-    Returns the list of item link elements, retrying on empty results.
+    Mercari is a JS-rendered SPA and on GHA runners sometimes returns zero
+    items due to slow render or soft bot gating. We retry with backoff and
+    longer waits. On success, we also scroll a few times to trigger infinite
+    scroll, capturing ~60-100 items instead of just the first ~20.
     """
-    for attempt in range(max_retries):
-        page.goto(url, timeout=30000)
+    for attempt in range(max_attempts):
+        try:
+            page.goto(url, timeout=30000, wait_until='domcontentloaded')
+        except Exception as e:
+            logger.info(f"    Mercari goto failed (attempt {attempt + 1}/{max_attempts}): {e}")
+            if attempt < max_attempts - 1:
+                page.wait_for_timeout(2000 + attempt * 2000)
+                continue
+            return []
+
         wait_for_page_load(page)
 
-        # Wait for item links to render (Mercari loads results via JS)
+        # Wait for item tiles to render (longer than before — slow renders on CI).
         try:
-            page.wait_for_selector('a[href*="/item/"]', timeout=5000)
+            page.wait_for_selector('a[href*="/item/"]', timeout=10000)
         except Exception:
-            pass  # May legitimately have 0 results
+            pass
+        try:
+            page.wait_for_load_state('networkidle', timeout=5000)
+        except Exception:
+            pass
 
         links = page.query_selector_all('a[href*="/item/"]')
-        if links:
-            return links
+        if not links:
+            if attempt < max_attempts - 1:
+                backoff = 3000 + attempt * 2000
+                logger.info(
+                    f"    Mercari returned 0 links, retrying in {backoff}ms "
+                    f"({attempt + 1}/{max_attempts})"
+                )
+                page.wait_for_timeout(backoff)
+                continue
+            return []
 
-        # 0 links — could be slow render or bot detection; retry once
-        if attempt < max_retries - 1:
-            logger.info(f"    Mercari returned 0 links, retrying ({attempt + 1}/{max_retries})...")
-            page.wait_for_timeout(3000)
+        # Scroll to trigger infinite-scroll loads. Stop early if no new items.
+        for _ in range(scroll_rounds):
+            prev = len(page.query_selector_all('a[href*="/item/"]'))
+            page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+            try:
+                page.wait_for_load_state('networkidle', timeout=3000)
+            except Exception:
+                pass
+            page.wait_for_timeout(600)
+            curr = len(page.query_selector_all('a[href*="/item/"]'))
+            if curr == prev:
+                break
+
+        return page.query_selector_all('a[href*="/item/"]')
 
     return []
 

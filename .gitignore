@@ -11,10 +11,19 @@ venv/
 .vscode/
 .idea/
 
-# Data files
-data/monitor.log
+# Local-run artifacts — the monitor runs on GitHub Actions.
+# Do NOT run monitor.py / wsj_monitor.py locally: it pollutes logs
+# and can race with the GHA state commits.
+data/*.log
+data/*_debug.png
+data/*.bak
 data/html_raw_data/
-# Note: seen_listings.json is tracked for state persistence
+data/match_test.json
+data/mercari_test.json
+# Stray Windows artifacts
+nul
+# Note: data/seen_listings.json and data/wsj_seen_listings.json are
+# tracked — GHA commits them; never edit or regenerate them locally.
 
 # OS
 .DS_Store
