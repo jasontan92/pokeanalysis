@@ -376,7 +376,7 @@ class WSJConfig:
             'state_category': 'simple_wsj_1989_1_2',
             'validators': [
                 ['1989'],
-                ['1', '2'],
+                ['1-2', '1・2', '1/2', 'No.1-2', '合併号', '1,2'],
             ],
         },
         {
