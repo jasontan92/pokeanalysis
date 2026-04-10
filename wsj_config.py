@@ -53,7 +53,9 @@ class WSJConfig:
             ],
             'yahoo_queries': [
                 '週刊少年ジャンプ 1999年 43号',
+                'NARUTO 新連載 ジャンプ 43号',
             ],
+            'title_identifiers': ['NARUTO', 'ナルト', '岸本斉史'],
             'exclude_keywords': [
                 'trading card', 'tcg', 'card game', 'figure', 'figurine',
                 'dvd', 'blu-ray', 'boruto', 'フィギュア', 'カードゲーム',
@@ -73,7 +75,9 @@ class WSJConfig:
             ],
             'yahoo_queries': [
                 '週刊少年ジャンプ 1996年 42号',
+                '遊戯王 新連載 ジャンプ 42号',
             ],
+            'title_identifiers': ['遊戯王', 'Yu-Gi-Oh', '高橋和希'],
             'exclude_keywords': [
                 'ocg', 'duel monsters card', 'trading card', 'tcg',
                 'card game', 'figure', 'figurine', 'dvd', 'blu-ray',
@@ -95,7 +99,9 @@ class WSJConfig:
             ],
             'yahoo_queries': [
                 '週刊少年ジャンプ 1996年 41号',
+                'ロマンスドーン ジャンプ 41号',
             ],
+            'title_identifiers': ['ロマンスドーン', 'ROMANCE DAWN', '尾田栄一郎'],
             'exclude_keywords': [
                 'trading card', 'tcg', 'card game', 'figure', 'figurine',
                 'dvd', 'blu-ray', 'フィギュア', 'カードゲーム',
@@ -115,7 +121,9 @@ class WSJConfig:
             ],
             'yahoo_queries': [
                 '週刊少年ジャンプ 1997年 34号',
+                'ワンピース 新連載 ジャンプ 34号',
             ],
+            'title_identifiers': ['ワンピース', 'ONE PIECE', '尾田栄一郎'],
             'exclude_keywords': [
                 'trading card', 'tcg', 'card game', 'figure', 'figurine',
                 'dvd', 'blu-ray', 'フィギュア', 'カードゲーム',
@@ -135,7 +143,9 @@ class WSJConfig:
             ],
             'yahoo_queries': [
                 '週刊少年ジャンプ 2001年 36',
+                'BLEACH 新連載 ジャンプ 36号',
             ],
+            'title_identifiers': ['BLEACH', 'ブリーチ', '久保帯人'],
             'exclude_keywords': [
                 'trading card', 'tcg', 'card game', 'figure', 'figurine',
                 'dvd', 'blu-ray', 'フィギュア', 'カードゲーム',
@@ -156,7 +166,9 @@ class WSJConfig:
             ],
             'yahoo_queries': [
                 '週刊少年ジャンプ 1987 1-2',
+                'ジョジョ 新連載 ジャンプ 1-2',
             ],
+            'title_identifiers': ['ジョジョ', 'JOJO', '荒木飛呂彦'],
             'exclude_keywords': [
                 'trading card', 'tcg', 'card game', 'figure', 'figurine',
                 'dvd', 'blu-ray', 'フィギュア', 'カードゲーム',
@@ -180,7 +192,9 @@ class WSJConfig:
             'yahoo_queries': [
                 '週刊少年ジャンプ 1984年 51号',
                 'ドラゴンボール 新連載 ジャンプ 1984',
+                'ドラゴンボール 新連載 ジャンプ 51号',
             ],
+            'title_identifiers': ['ドラゴンボール', 'DRAGON BALL', '鳥山明'],
             'exclude_keywords': [
                 'trading card', 'tcg', 'card game', 'figure', 'figurine',
                 'dvd', 'blu-ray', 'フィギュア', 'カードゲーム',
@@ -201,7 +215,9 @@ class WSJConfig:
             ],
             'yahoo_queries': [
                 '週刊少年ジャンプ 1998年 14号',
+                'HUNTER×HUNTER 新連載 ジャンプ 14号',
             ],
+            'title_identifiers': ['HUNTER', 'ハンター', '冨樫義博'],
             'exclude_keywords': [
                 'trading card', 'tcg', 'card game', 'figure', 'figurine',
                 'dvd', 'blu-ray', 'フィギュア', 'カードゲーム',
@@ -272,6 +288,7 @@ class WSJConfig:
         {
             'name': 'Yu-Gi-Oh Vol 1 初版',
             'mercari_keyword': '遊戯王 1巻 初版',
+            'yahoo_keyword': '遊戯王 1巻 初版',
             'state_category': 'simple_yugioh_v1',
             'validators': [
                 ['遊戯王', 'yugioh', 'yu-gi-oh'],
@@ -282,6 +299,7 @@ class WSJConfig:
         {
             'name': 'Dragon Ball Vol 1 初版',
             'mercari_keyword': 'ドラゴンボール 1巻 初版',
+            'yahoo_keyword': 'ドラゴンボール 1巻 初版',
             'state_category': 'simple_dragonball_v1',
             'validators': [
                 ['ドラゴンボール', 'dragon ball', 'dragonball', 'DRAGON BALL'],
@@ -299,6 +317,7 @@ class WSJConfig:
         {
             'name': '週刊少年ジャンプ 1989年 47号',
             'mercari_keyword': '週刊少年ジャンプ 1989年 47号',
+            'yahoo_keyword': '週刊少年ジャンプ 1989年 47号',
             'state_category': 'simple_wsj_1989_47',
             'validators': [
                 ['1989'],
@@ -309,6 +328,7 @@ class WSJConfig:
         {
             'name': '週刊少年ジャンプ 1989年 2-3号',
             'mercari_keyword': '週刊少年ジャンプ 1989年 2-3号',
+            'yahoo_keyword': '週刊少年ジャンプ 1989年 2-3号',
             'state_category': 'simple_wsj_1989_2_3',
             'validators': [
                 ['1989'],
@@ -319,6 +339,7 @@ class WSJConfig:
         {
             'name': '週刊少年ジャンプ 1990年 42号',
             'mercari_keyword': '週刊少年 1990年 42号',
+            'yahoo_keyword': '週刊少年ジャンプ 1990年 42号',
             'state_category': 'simple_wsj_1990_42',
             'validators': [
                 ['1990'],
@@ -340,6 +361,7 @@ class WSJConfig:
         {
             'name': '穴久保 初版 (Anakubo first edition)',
             'mercari_keyword': '穴久保 初版',
+            'yahoo_keyword': '穴久保 初版',
             'state_category': 'simple_anakubo_first_edition',
             'validators': [
                 ['穴久保'],
@@ -348,7 +370,9 @@ class WSJConfig:
         },
         {
             'name': '少年ジャンプ 1989年 1-2号',
+            'mercari_keyword': '少年ジャンプ 1989年 1-2号',
             'mercari_url': 'https://jp.mercari.com/search?keyword=%E5%B0%91%E5%B9%B4%E3%82%B8%E3%83%A3%E3%83%B3%E3%83%97%201989%E5%B9%B4%201-2%E5%8F%B7&sort=created_time&order=desc',
+            'yahoo_keyword': '少年ジャンプ 1989年 1-2号',
             'state_category': 'simple_wsj_1989_1_2',
             'validators': [
                 ['1989'],
@@ -357,7 +381,9 @@ class WSJConfig:
         },
         {
             'name': 'Pokemon Red/Green Flyer (チラシ)',
+            'mercari_keyword': 'ポケットモンスター 赤 緑 チラシ',
             'mercari_url': 'https://jp.mercari.com/search?keyword=%E3%83%9D%E3%82%B1%E3%83%83%E3%83%88%E3%83%A2%E3%83%B3%E3%82%B9%E3%82%BF%E3%83%BC%E3%80%80%E8%B5%A4%E3%80%80%E7%B7%91%E3%80%80%E3%83%81%E3%83%A9%E3%82%B7%E3%80%80&sort=created_time&order=desc',
+            'yahoo_keyword': 'ポケットモンスター 赤 緑 チラシ',
             'state_category': 'simple_pokemon_rg_flyer',
             'validators': [
                 ['チラシ'],

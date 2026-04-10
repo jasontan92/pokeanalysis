@@ -338,7 +338,10 @@ def should_exclude(title: str, exclude_keywords: list[str]) -> bool:
 
 
 def _is_reprint(title: str) -> bool:
-    """Check if a listing is a reprint/reproduction."""
+    """Check if a listing is a reprint/reproduction.
+
+    Handles Japanese negation: '復刻版ではありません' (= 'not a reprint') is NOT a reprint.
+    """
     t = title.lower()
     t_orig = title
     reprint_keywords = [
@@ -346,7 +349,16 @@ def _is_reprint(title: str) -> bool:
         '復刻', '復刻版', '復刻盤', 'リプリント', '再版', '再録',
         '愛蔵版', '完全版', '文庫版', '新装版', 'bunko', 'kanzenban',
     ]
-    return any(kw in t or kw in t_orig for kw in reprint_keywords)
+    negation_suffixes = ['ではありません', 'ではない', 'じゃない', 'じゃありません', 'ではなく']
+
+    # Strip negated reprint phrases first (longest keywords first to avoid partial matches)
+    cleaned_t, cleaned_orig = t, t_orig
+    for kw in sorted(reprint_keywords, key=len, reverse=True):
+        for neg in negation_suffixes:
+            cleaned_t = cleaned_t.replace(kw + neg, '')
+            cleaned_orig = cleaned_orig.replace(kw + neg, '')
+
+    return any(kw in cleaned_t or kw in cleaned_orig for kw in reprint_keywords)
 
 
 def _normalize_fullwidth(text: str) -> str:
@@ -399,7 +411,11 @@ def is_relevant_listing(title: str, series: dict) -> bool:
         'jump', 'wsj', 'ジャンプ',
     ])
 
-    return has_year and has_number and has_jump
+    # If a series-specific identifier is in the title, it can substitute for year
+    title_ids = series.get('title_identifiers', [])
+    has_series_id = any(tid.lower() in t for tid in title_ids)
+
+    return (has_year or has_series_id) and has_number and has_jump
 
 
 
