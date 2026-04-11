@@ -5,10 +5,18 @@ on:
     - cron: '*/10 * * * *'  # Every 10 minutes
   workflow_dispatch:
 
+# Queue runs back-to-back instead of overlapping. Prior to this, the cron
+# fired every 10 min but real runs took 20-30 min, so 2-3 jobs would execute
+# in parallel, each loading the same data/seen_listings.json and firing
+# duplicate Telegram alerts for the same items.
+concurrency:
+  group: monitor-pokemon
+  cancel-in-progress: false
+
 jobs:
   pokemon:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -47,65 +55,5 @@ jobs:
           git config user.name "GitHub Actions"
           git add data/seen_listings.json || true
           git diff --staged --quiet || git commit -m "Update state (pokemon)"
-          git pull --rebase || true
-          git push || true
-
-  manga:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-chromium
-
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-          playwright install chromium
-          playwright install-deps chromium
-
-      - name: Install xvfb for headless browser
-        run: sudo apt-get install -y xvfb
-
-      - name: Create env file
-        run: |
-          echo "WSJ_TELEGRAM_BOT_TOKEN=${{ secrets.WSJ_TELEGRAM_BOT_TOKEN }}" >> .env
-          echo "WSJ_TELEGRAM_CHAT_ID=${{ secrets.WSJ_TELEGRAM_CHAT_ID }}" >> .env
-
-      - name: Run mangascanner repeatedly (WSJ issues + Vol 1 + collectibles)
-        run: |
-          # Loop the scanner inside a single GHA job to bridge GHA's
-          # ~30-min cron-skip gaps. Each iteration is a fresh subprocess
-          # that loads/saves state from disk; the final Save state step
-          # commits the cumulative state once.
-          LOOP_BUDGET=$((22 * 60))   # 22 min budget
-          SLEEP_BETWEEN=90           # 90 s between iterations
-          end_time=$(($(date +%s) + LOOP_BUDGET))
-          iter=0
-          while [ $(date +%s) -lt $end_time ]; do
-            iter=$((iter + 1))
-            echo "::group::Iteration $iter"
-            xvfb-run --auto-servernum python wsj_monitor.py || echo "iteration $iter exited non-zero"
-            echo "::endgroup::"
-            [ $(date +%s) -ge $end_time ] && break
-            sleep $SLEEP_BETWEEN
-          done
-          echo "Loop ended after $iter iterations"
-
-      - name: Save state
-        run: |
-          git config user.email "actions@github.com"
-          git config user.name "GitHub Actions"
-          git add data/wsj_seen_listings.json || true
-          git diff --staged --quiet || git commit -m "Update state (manga)"
           git pull --rebase || true
           git push || true

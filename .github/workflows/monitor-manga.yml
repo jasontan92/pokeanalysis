@@ -1,0 +1,88 @@
+name: Manga Scanner
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '15 * * * *'  # Hourly watchdog — restarts the chain if a run dies
+                          # before reaching the Dispatch next run step.
+
+# Queue runs back-to-back instead of overlapping. This both prevents the
+# git push race on data/wsj_seen_listings.json and means the watchdog cron
+# is harmless when the chain is already running.
+concurrency:
+  group: monitor-manga
+  cancel-in-progress: false
+
+permissions:
+  contents: write   # for git push state
+  actions: write    # for self-dispatch via gh workflow run
+
+jobs:
+  manga:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-chromium
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          playwright install chromium
+          playwright install-deps chromium
+
+      - name: Install xvfb for headless browser
+        run: sudo apt-get install -y xvfb
+
+      - name: Create env file
+        run: |
+          echo "WSJ_TELEGRAM_BOT_TOKEN=${{ secrets.WSJ_TELEGRAM_BOT_TOKEN }}" >> .env
+          echo "WSJ_TELEGRAM_CHAT_ID=${{ secrets.WSJ_TELEGRAM_CHAT_ID }}" >> .env
+
+      - name: Run mangascanner repeatedly (WSJ issues + Vol 1 + collectibles)
+        run: |
+          # Loop the scanner inside a single GHA job to amortise the
+          # ~30s Playwright install across several scans. Each iteration
+          # is a fresh subprocess that loads/saves state from disk; the
+          # final Save state step commits the cumulative state once.
+          LOOP_BUDGET=$((22 * 60))   # 22 min budget
+          SLEEP_BETWEEN=90           # 90 s between iterations
+          end_time=$(($(date +%s) + LOOP_BUDGET))
+          iter=0
+          while [ $(date +%s) -lt $end_time ]; do
+            iter=$((iter + 1))
+            echo "::group::Iteration $iter"
+            xvfb-run --auto-servernum python wsj_monitor.py || echo "iteration $iter exited non-zero"
+            echo "::endgroup::"
+            [ $(date +%s) -ge $end_time ] && break
+            sleep $SLEEP_BETWEEN
+          done
+          echo "Loop ended after $iter iterations"
+
+      - name: Save state
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+          git add data/wsj_seen_listings.json || true
+          git diff --staged --quiet || git commit -m "Update state (manga)"
+          git pull --rebase || true
+          git push || true
+
+      - name: Dispatch next run
+        # Always chain — even if an earlier step failed — so the chain
+        # is self-healing. concurrency:cancel-in-progress=false guarantees
+        # the new run waits for this one to fully exit before starting.
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run monitor-manga.yml --ref main
