@@ -357,6 +357,7 @@ class WSJConfig:
                 ['ポケットモンスター'],
                 ['1', '一', '全'],
             ],
+            'exclude': ['XY', 'DVD'],
         },
         {
             'name': '穴久保 初版 (Anakubo first edition)',
@@ -367,6 +368,7 @@ class WSJConfig:
                 ['穴久保'],
                 ['初版', '第1刷', '第一刷'],
             ],
+            'exclude': ['XY', 'DVD'],
         },
         {
             'name': '少年ジャンプ 1989年 1-2号',
