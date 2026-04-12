@@ -1206,9 +1206,13 @@ class WSJMonitor:
             if success:
                 alerts_sent += 1
                 safe_title = title.encode('ascii', 'replace').decode('ascii')[:50]
-                logger.info(f"Alert sent: [{result['platform']}] {safe_title}")
+                logger.info(f"Alert sent: [{result['platform']}] {listing_id} {safe_title}")
             else:
                 logger.warning(f"Alert failed for {listing_id}")
+
+            # Persist state after each alert so a mid-run crash can't
+            # cause already-sent alerts to replay on the next iteration.
+            self.state.save()
 
             # Rate limit Telegram
             time.sleep(0.1)
