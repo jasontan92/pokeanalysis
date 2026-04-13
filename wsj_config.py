@@ -424,6 +424,19 @@ class WSJConfig:
                 ['24'],
             ],
         },
+        {
+            'name': 'NARUTO Vol 1 初版 帯付き',
+            'mercari_keyword': 'ナルト 初版 1 帯',
+            'mercari_url': 'https://jp.mercari.com/search?keyword=%E3%83%8A%E3%83%AB%E3%83%88%20%E5%88%9D%E7%89%88%201%20%E5%B8%AF&sort=created_time&order=desc',
+            'yahoo_keyword': 'ナルト 初版 1巻 帯',
+            'state_category': 'simple_naruto_v1_obi',
+            'validators': [
+                ['ナルト', 'NARUTO', 'naruto'],
+                ['初版', '第1刷', '第一刷'],
+                ['1巻', '1 巻'],
+                ['帯', '帯付'],
+            ],
+        },
     ]
 
     # -----------------------------------------------------------------------
