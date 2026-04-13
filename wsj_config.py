@@ -437,6 +437,41 @@ class WSJConfig:
                 ['帯', '帯付'],
             ],
         },
+        {
+            'name': 'なかよし 1992年2月号 (セーラームーン 新連載)',
+            'mercari_keyword': 'なかよし 1992年2月号',
+            'yahoo_keyword': 'なかよし 1992年 2月号',
+            'state_category': 'simple_nakayoshi_1992_02',
+            'validators': [
+                ['なかよし', 'nakayoshi'],
+                ['1992'],
+                ['2月'],
+            ],
+        },
+        {
+            'name': '別冊少年マガジン 2009年10月号 (進撃の巨人 新連載)',
+            'mercari_keyword': '別冊少年マガジン 2009年10月号',
+            'mercari_url': 'https://jp.mercari.com/search?keyword=%E5%88%A5%E5%86%8A%E5%B0%91%E5%B9%B4%E3%83%9E%E3%82%AC%E3%82%B8%E3%83%B3%202009%E5%B9%B410%E6%9C%88%E5%8F%B7&sort=created_time&order=desc',
+            'yahoo_keyword': '別冊少年マガジン 2009年 10月号',
+            'state_category': 'simple_bessatsu_2009_10',
+            'validators': [
+                ['別冊'],
+                ['2009'],
+                ['10'],
+            ],
+        },
+        {
+            'name': 'Fresh Jump 1983年8月号',
+            'mercari_keyword': 'フレッシュジャンプ 1983年8月号',
+            'mercari_url': 'https://jp.mercari.com/search?keyword=%E3%83%95%E3%83%AC%E3%83%83%E3%82%B7%E3%83%A5%E3%82%B8%E3%83%A3%E3%83%B3%E3%83%97%201983%E5%B9%B48%E6%9C%88%E5%8F%B7&sort=created_time&order=desc',
+            'yahoo_keyword': 'フレッシュジャンプ 1983年 8月号',
+            'state_category': 'simple_fresh_jump_1983_08',
+            'validators': [
+                ['フレッシュ', 'fresh'],
+                ['1983'],
+                ['8月'],
+            ],
+        },
     ]
 
     # -----------------------------------------------------------------------
@@ -448,21 +483,6 @@ class WSJConfig:
             'name': 'Romance Dawn WSJ 1996 (unfiltered)',
             'url': 'https://jp.mercari.com/search?keyword=%E9%80%B1%E5%88%8A%E5%B0%91%E5%B9%B4%E3%82%B8%E3%83%A3%E3%83%B3%E3%83%97%201996%20%20%E3%83%AD%E3%83%9E%E3%83%B3%E3%82%B9%E3%83%89%E3%83%BC%E3%83%B3&sort=created_time&order=desc',
             'state_category': 'unfiltered_romancedawn_1996',
-        },
-        {
-            'name': 'Fresh Jump 1983年8月号',
-            'url': 'https://jp.mercari.com/search?keyword=%E3%83%95%E3%83%AC%E3%83%83%E3%82%B7%E3%83%A5%E3%82%B8%E3%83%A3%E3%83%B3%E3%83%97%201983%E5%B9%B48%E6%9C%88%E5%8F%B7&sort=created_time&order=desc',
-            'state_category': 'unfiltered_fresh_jump_1983_08',
-        },
-        {
-            'name': '別冊少年マガジン 2009年10月号',
-            'url': 'https://jp.mercari.com/search?keyword=%E5%88%A5%E5%86%8A%E5%B0%91%E5%B9%B4%E3%83%9E%E3%82%AC%E3%82%B8%E3%83%B3%202009%E5%B9%B410%E6%9C%88%E5%8F%B7&sort=created_time&order=desc',
-            'state_category': 'unfiltered_bessatsu_2009_10',
-            'validators': [
-                ['別冊'],
-                ['2009'],
-                ['10'],
-            ],
         },
     ]
 
