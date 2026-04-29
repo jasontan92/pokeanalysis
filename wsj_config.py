@@ -358,15 +358,13 @@ class WSJConfig:
             'exclude': ['XY', 'DVD'],
         },
         {
-            'name': 'ポケモンカードになったワケ 未開封',
-            'mercari_keyword': 'ポケモンカードになったワケ 未開封',
-            'mercari_url': 'https://jp.mercari.com/search?keyword=%E3%83%9D%E3%82%B1%E3%83%A2%E3%83%B3%E3%82%AB%E3%83%BC%E3%83%89%E3%81%AB%E3%81%AA%E3%81%A3%E3%81%9F%E3%83%AF%E3%82%B1%20%E6%9C%AA%E9%96%8B%E5%B0%81&sort=created_time&order=desc',
-            'yahoo_keyword': 'ポケモンカードになったワケ 未開封',
+            'name': 'ポケモンカードになったワケ',
+            'mercari_keyword': 'ポケモンカードになったワケ',
+            'yahoo_keyword': 'ポケモンカードになったワケ',
             'state_category': 'simple_pokemon_card_ni_natta_wake',
             'validators': [
                 ['ポケモンカード', 'ポケカ'],
                 ['ワケ', 'わけ'],
-                ['未開封', 'シュリンク', '新品'],
             ],
         },
         {
