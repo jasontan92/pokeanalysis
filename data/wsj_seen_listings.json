@@ -1473,7 +1473,7 @@
     "mercari_m82340790925": "2026-04-29T14:54:28.139607",
     "mercari_m76266862450": "2026-04-29T14:54:28.749261"
   },
-  "last_check": "2026-04-29T15:40:08.855114",
+  "last_check": "2026-04-29T16:13:10.552521",
   "last_heartbeat": "2026-03-30T19:19:55.915380",
   "category_first_seen": {
     "naruto": "2026-04-01T15:59:39.594596",
@@ -1510,7 +1510,6 @@
     "simple_bessatsu_corocoro_1996_1997": "2026-04-29T11:25:33.182959"
   },
   "category_settling_alerts": {
-    "simple_anakubo": 10,
     "simple_pokemon_card_ni_natta_wake": 10,
     "simple_bessatsu_corocoro_1996_1997": 1
   }
