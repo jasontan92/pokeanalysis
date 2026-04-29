@@ -1462,9 +1462,12 @@
     "yahoo_z600610562": "2026-04-29T08:48:19.269786",
     "yahoo_p1228238391": "2026-04-29T09:11:59.682762",
     "mercari_m99277142731": "2026-04-29T09:34:06.117417",
-    "yahoo_w1228240737": "2026-04-29T09:43:19.984484"
+    "yahoo_w1228240737": "2026-04-29T09:43:19.984484",
+    "mercari_m16819303332": "2026-04-29T11:25:32.526245",
+    "mercari_m30177310013": "2026-04-29T11:25:33.183146",
+    "mercari_m69793274359": "2026-04-29T11:25:33.771384"
   },
-  "last_check": "2026-04-29T11:05:10.657435",
+  "last_check": "2026-04-29T11:37:03.230283",
   "last_heartbeat": "2026-03-30T19:19:55.915380",
   "category_first_seen": {
     "naruto": "2026-04-01T15:59:39.594596",
@@ -1497,10 +1500,12 @@
     "simple_naruto_v1_obi": "2026-04-13T12:02:16.714202",
     "simple_bessatsu_2009_10": "2026-04-13T12:02:22.374100",
     "simple_anakubo": "2026-04-27T15:59:21.313545",
-    "simple_pokemon_card_ni_natta_wake": "2026-04-29T04:53:28.525155"
+    "simple_pokemon_card_ni_natta_wake": "2026-04-29T04:53:28.525155",
+    "simple_bessatsu_corocoro_1996_1997": "2026-04-29T11:25:33.182959"
   },
   "category_settling_alerts": {
     "simple_anakubo": 10,
-    "simple_pokemon_card_ni_natta_wake": 10
+    "simple_pokemon_card_ni_natta_wake": 10,
+    "simple_bessatsu_corocoro_1996_1997": 1
   }
 }
