@@ -1487,7 +1487,7 @@
     "mercari_m92821914467": "2026-05-01T10:36:45.627875",
     "mercari_m82805000197": "2026-05-01T11:10:19.994548"
   },
-  "last_check": "2026-05-01T11:10:20.866061",
+  "last_check": "2026-05-01T11:37:26.448883",
   "last_heartbeat": "2026-03-30T19:19:55.915380",
   "category_first_seen": {
     "naruto": "2026-04-01T15:59:39.594596",
@@ -1525,7 +1525,6 @@
     "simple_nakayoshi_1992_02": "2026-04-30T17:33:41.338838"
   },
   "category_settling_alerts": {
-    "simple_bessatsu_corocoro_1996_1997": 1,
     "simple_nakayoshi_1992_02": 1
   }
 }
