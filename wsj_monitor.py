@@ -10,6 +10,7 @@ Sends alerts to the manga Telegram bot (separate from the Pokemon no-rarity scan
 
 import json
 import logging
+import os
 import re
 import sys
 import time
@@ -779,23 +780,31 @@ def search_yahoo_auctions(page, monitor, series_key: str, series: dict) -> list[
 # Platform-specific scrape functions (run in parallel threads)
 # ---------------------------------------------------------------------------
 
-def _scrape_mercari_series(monitor) -> list[dict]:
-    """Thread A: Mercari series queries + Mercari-only simple searches."""
+def _scrape_mercari_series(monitor, series_subset=None, simple_subset=None) -> list[dict]:
+    """Mercari thread: runs given series queries + given Mercari-only simple searches
+    in a single browser. Defaults to the full lists when called without slices."""
     with sync_playwright() as p:
         browser, context = create_browser_context(p)
         page = context.new_page()
         try:
-            return _scrape_mercari_series_inner(page, monitor)
+            return _scrape_mercari_series_inner(page, monitor, series_subset, simple_subset)
         finally:
             browser.close()
 
 
-def _scrape_mercari_series_inner(page, monitor) -> list[dict]:
-    """Series queries + Mercari-only simple searches (no yahoo_keyword)."""
+def _scrape_mercari_series_inner(page, monitor, series_subset=None, simple_subset=None) -> list[dict]:
+    """Series queries + Mercari-only simple searches (no yahoo_keyword).
+    Callers pass a slice of WSJConfig.SERIES items / SIMPLE_SEARCHES to split work
+    across threads. None means "the full default list" (backwards-compatible)."""
+    if series_subset is None:
+        series_subset = list(WSJConfig.SERIES.items())
+    if simple_subset is None:
+        simple_subset = [s for s in WSJConfig.SIMPLE_SEARCHES if not s.get('yahoo_keyword')]
+
     results = []
 
     # --- Series keyword queries ---
-    for series_key, series in WSJConfig.SERIES.items():
+    for series_key, series in series_subset:
         logger.info(f"Mercari JP search: {series['name']}")
         try:
             mercari_results = search_mercari(page, monitor, series_key, series)
@@ -805,10 +814,9 @@ def _scrape_mercari_series_inner(page, monitor) -> list[dict]:
             logger.error(f"  Mercari {series['name']} failed: {e}")
 
     # --- Mercari-only simple searches (no yahoo_keyword) ---
-    for search in WSJConfig.SIMPLE_SEARCHES:
+    # Caller has already filtered to Mercari-only entries; no need to re-filter here.
+    for search in simple_subset:
         sname = search['name']
-        if search.get('yahoo_keyword'):
-            continue  # handled by the other Mercari thread
         mercari_url = search.get('mercari_url')
         mercari_kw = search.get('mercari_keyword')
         if not (mercari_url or mercari_kw):
@@ -880,30 +888,36 @@ def _scrape_mercari_series_inner(page, monitor) -> list[dict]:
     return results
 
 
-def _scrape_mercari_simple(monitor) -> list[dict]:
-    """Thread B: Mercari simple searches (with yahoo_keyword) + unfiltered URLs."""
+def _scrape_mercari_simple(monitor, simple_subset=None, unfiltered_subset=None) -> list[dict]:
+    """Mercari thread: runs given simple searches (with yahoo_keyword) + given unfiltered URLs
+    in a single browser. Defaults to the full lists when called without slices."""
     with sync_playwright() as p:
         browser, context = create_browser_context(p)
         page = context.new_page()
         try:
-            return _scrape_mercari_simple_inner(page, monitor)
+            return _scrape_mercari_simple_inner(page, monitor, simple_subset, unfiltered_subset)
         finally:
             browser.close()
 
 
-def _scrape_mercari_simple_inner(page, monitor) -> list[dict]:
-    """Simple searches that also have a Yahoo counterpart + unfiltered URLs."""
+def _scrape_mercari_simple_inner(page, monitor, simple_subset=None, unfiltered_subset=None) -> list[dict]:
+    """Simple searches that also have a Yahoo counterpart + unfiltered URLs.
+    Callers pass slices to split work across threads; None means full default list."""
+    if simple_subset is None:
+        simple_subset = [s for s in WSJConfig.SIMPLE_SEARCHES if s.get('yahoo_keyword')]
+    if unfiltered_subset is None:
+        unfiltered_subset = list(WSJConfig.UNFILTERED_MERCARI_URLS)
+
     results = []
 
     # --- Simple searches (Mercari portion, only those with yahoo_keyword) ---
-    for search in WSJConfig.SIMPLE_SEARCHES:
+    # Caller has already filtered to entries with yahoo_keyword; no need to re-filter.
+    for search in simple_subset:
         sname = search['name']
         mercari_url = search.get('mercari_url')
         mercari_kw = search.get('mercari_keyword')
         if not (mercari_url or mercari_kw):
             continue
-        if not search.get('yahoo_keyword'):
-            continue  # handled by Mercari series thread
         logger.info(f"Simple search (Mercari B): {sname}")
         try:
             url = mercari_url or f"https://jp.mercari.com/search?keyword={quote(mercari_kw)}&order=desc&sort=created_time&status=on_sale"
@@ -969,7 +983,7 @@ def _scrape_mercari_simple_inner(page, monitor) -> list[dict]:
         time.sleep(0.1)
 
     # --- Unfiltered Mercari URL searches ---
-    for search in WSJConfig.UNFILTERED_MERCARI_URLS:
+    for search in unfiltered_subset:
         sname = search['name']
         logger.info(f"Unfiltered Mercari search: {sname}")
         try:
@@ -1047,24 +1061,31 @@ def _scrape_mercari_simple_inner(page, monitor) -> list[dict]:
     return results
 
 
-def _scrape_all_yahoo(monitor) -> list[dict]:
-    """Run all Yahoo Auctions JP searches: series queries and simple searches."""
+def _scrape_all_yahoo(monitor, series_subset=None, simple_subset=None) -> list[dict]:
+    """Yahoo thread: runs given series queries + given simple searches in a single browser.
+    Defaults to the full lists when called without slices."""
     with sync_playwright() as p:
         browser, context = create_browser_context(p)
         page = context.new_page()
 
         try:
-            return _scrape_all_yahoo_inner(page, monitor)
+            return _scrape_all_yahoo_inner(page, monitor, series_subset, simple_subset)
         finally:
             browser.close()
 
 
-def _scrape_all_yahoo_inner(page, monitor) -> list[dict]:
-    """Inner function for Yahoo scraping (has its own browser)."""
+def _scrape_all_yahoo_inner(page, monitor, series_subset=None, simple_subset=None) -> list[dict]:
+    """Inner function for Yahoo scraping (has its own browser).
+    Callers pass slices to split work across threads; None means full default list."""
+    if series_subset is None:
+        series_subset = list(WSJConfig.SERIES.items())
+    if simple_subset is None:
+        simple_subset = [s for s in WSJConfig.SIMPLE_SEARCHES if s.get('yahoo_keyword')]
+
     results = []
 
     # --- Series keyword queries ---
-    for series_key, series in WSJConfig.SERIES.items():
+    for series_key, series in series_subset:
         logger.info(f"Yahoo Auctions search: {series['name']}")
         try:
             yahoo_results = search_yahoo_auctions(page, monitor, series_key, series)
@@ -1074,11 +1095,10 @@ def _scrape_all_yahoo_inner(page, monitor) -> list[dict]:
             logger.error(f"  Yahoo {series['name']} failed: {e}")
 
     # --- Simple searches (Yahoo portion) ---
-    for search in WSJConfig.SIMPLE_SEARCHES:
+    # Caller has already filtered to entries with yahoo_keyword; no need to re-filter.
+    for search in simple_subset:
         sname = search['name']
         yahoo_kw = search.get('yahoo_keyword')
-        if not yahoo_kw:
-            continue
         logger.info(f"Simple search (Yahoo): {sname}")
         try:
             encoded = quote(yahoo_kw)
@@ -1242,14 +1262,46 @@ class WSJMonitor:
 
         all_results = []
 
-        # --- Japanese marketplaces (3 parallel threads, each with own browser) ---
+        # --- Japanese marketplaces (6 parallel threads, each with own browser) ---
+        # Splitting the old 3 threads in half halves the slowest-thread runtime
+        # (~10 min → ~5 min per iteration), which is what determines how quickly
+        # a new listing is picked up. 6 × Chromium ≈ 3 GB on a 7 GB GHA runner.
         if PLAYWRIGHT_AVAILABLE:
-            with ThreadPoolExecutor(max_workers=3) as executor:
-                mercari_a = executor.submit(_scrape_mercari_series, self)   # series + Mercari-only simple
-                mercari_b = executor.submit(_scrape_mercari_simple, self)   # simple (w/ yahoo_kw) + unfiltered
-                yahoo_future = executor.submit(_scrape_all_yahoo, self)     # all Yahoo searches
+            all_series = list(WSJConfig.SERIES.items())
+            mid_series = (len(all_series) + 1) // 2
 
-                for name, future in [('Mercari-A', mercari_a), ('Mercari-B', mercari_b), ('Yahoo', yahoo_future)]:
+            mercari_only_simple = [
+                s for s in WSJConfig.SIMPLE_SEARCHES if not s.get('yahoo_keyword')
+            ]
+            yahoo_simple = [
+                s for s in WSJConfig.SIMPLE_SEARCHES if s.get('yahoo_keyword')
+            ]
+            mid_yahoo_simple = (len(yahoo_simple) + 1) // 2
+            unfiltered = list(WSJConfig.UNFILTERED_MERCARI_URLS)
+
+            with ThreadPoolExecutor(max_workers=6) as executor:
+                futures = [
+                    ('M-series-1', executor.submit(
+                        _scrape_mercari_series, self,
+                        all_series[:mid_series], [])),
+                    ('M-series-2', executor.submit(
+                        _scrape_mercari_series, self,
+                        all_series[mid_series:], mercari_only_simple)),
+                    ('M-simple-1', executor.submit(
+                        _scrape_mercari_simple, self,
+                        yahoo_simple[:mid_yahoo_simple], [])),
+                    ('M-simple-2', executor.submit(
+                        _scrape_mercari_simple, self,
+                        yahoo_simple[mid_yahoo_simple:], unfiltered)),
+                    ('Y-1', executor.submit(
+                        _scrape_all_yahoo, self,
+                        all_series[:mid_series], yahoo_simple[:mid_yahoo_simple])),
+                    ('Y-2', executor.submit(
+                        _scrape_all_yahoo, self,
+                        all_series[mid_series:], yahoo_simple[mid_yahoo_simple:])),
+                ]
+
+                for name, future in futures:
                     try:
                         all_results.extend(future.result(timeout=900))
                     except Exception as e:
@@ -1272,13 +1324,45 @@ class WSJMonitor:
 
 
 def main():
+    # Time-budgeted loop. Replaces the bash-side loop in monitor-manga.yml:
+    # one Python process drives multiple iterations, so we avoid paying ~10–20 s
+    # of interpreter + import startup per iteration and keep the WSJMonitor /
+    # notifier / state objects warm.
+    budget_seconds = int(os.environ.get('WSJ_LOOP_BUDGET', '1320'))  # default 22 min
+    sleep_seconds = int(os.environ.get('WSJ_LOOP_SLEEP', '30'))      # default 30 s
+
     try:
         monitor = WSJMonitor()
-        results, alerts = monitor.run()
-        return 0
     except Exception as e:
-        logger.error(f"WSJ Monitor failed: {e}", exc_info=True)
+        logger.error(f"WSJ Monitor init failed: {e}", exc_info=True)
         return 1
+
+    deadline = time.monotonic() + budget_seconds
+    iter_n = 0
+    exit_code = 0
+
+    while True:
+        iter_n += 1
+        logger.info(f"=== Iteration {iter_n} (budget {budget_seconds}s, sleep {sleep_seconds}s) ===")
+        iter_start = time.monotonic()
+        try:
+            monitor.run()
+        except Exception as e:
+            logger.error(f"WSJ Monitor iteration {iter_n} failed: {e}", exc_info=True)
+            exit_code = 1
+        # After the first iteration the state has been saved, so subsequent
+        # iterations should behave like normal non-first runs (no first-run
+        # banner, no per-iteration FIRST_RUN_ALERT_LIMIT reset).
+        monitor.state.is_first_run = False
+        iter_dur = time.monotonic() - iter_start
+        logger.info(f"=== Iteration {iter_n} took {iter_dur:.0f}s ===")
+
+        if time.monotonic() + sleep_seconds >= deadline:
+            break
+        time.sleep(sleep_seconds)
+
+    logger.info(f"Loop ended after {iter_n} iteration(s)")
+    return exit_code
 
 
 if __name__ == '__main__':
