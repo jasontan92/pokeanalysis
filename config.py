@@ -83,6 +83,56 @@ class Config:
                 ['ゲームボーイ', 'gameboy', 'game boy', 'gb', '刻印'],
             ],
         },
+        # --- Unopened / sealed first-gen (初代) red & green ---
+        # e.g. "新品未開封　ポケットモンスター 初代" — factory-sealed boxes, not loose carts.
+        {
+            'name': 'Pokemon Red Unopened 1st Gen (Mercari)',
+            'platform': 'mercari',
+            'keyword': '新品未開封 ポケットモンスター 赤',
+            'state_category': 'mercari_pokemon_red_unopened',
+            'validators': [
+                ['ポケモン', 'ポケットモンスター', 'pocket monster'],
+                ['赤', 'レッド', 'red', 'aka'],
+                ['新品', '未開封', '未使用'],
+            ],
+            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
+        },
+        {
+            'name': 'Pokemon Red Unopened 1st Gen (Yahoo)',
+            'platform': 'yahoo',
+            'keyword': '新品未開封 ポケットモンスター 赤',
+            'state_category': 'yahoo_pokemon_red_unopened',
+            'validators': [
+                ['ポケモン', 'ポケットモンスター', 'pocket monster'],
+                ['赤', 'レッド', 'red', 'aka'],
+                ['新品', '未開封', '未使用'],
+            ],
+            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
+        },
+        {
+            'name': 'Pokemon Green Unopened 1st Gen (Mercari)',
+            'platform': 'mercari',
+            'keyword': '新品未開封 ポケットモンスター 緑',
+            'state_category': 'mercari_pokemon_green_unopened',
+            'validators': [
+                ['ポケモン', 'ポケットモンスター', 'pocket monster'],
+                ['緑', 'グリーン', 'green', 'midori'],
+                ['新品', '未開封', '未使用'],
+            ],
+            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
+        },
+        {
+            'name': 'Pokemon Green Unopened 1st Gen (Yahoo)',
+            'platform': 'yahoo',
+            'keyword': '新品未開封 ポケットモンスター 緑',
+            'state_category': 'yahoo_pokemon_green_unopened',
+            'validators': [
+                ['ポケモン', 'ポケットモンスター', 'pocket monster'],
+                ['緑', 'グリーン', 'green', 'midori'],
+                ['新品', '未開封', '未使用'],
+            ],
+            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
+        },
     ]
 
     # File paths
