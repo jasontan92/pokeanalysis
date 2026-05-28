@@ -133,6 +133,28 @@ class Config:
             ],
             'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
         },
+        # --- Satoshi Tajiri "New Game Design" book (Pokemon creator) ---
+        # e.g. https://jp.mercari.com/item/m47344194219 — 田尻智 新ゲームデザイン 初版
+        {
+            'name': 'Tajiri Satoshi New Game Design (Mercari)',
+            'platform': 'mercari',
+            'keyword': '田尻智 新ゲームデザイン',
+            'state_category': 'mercari_tajiri_new_game_design',
+            'validators': [
+                ['田尻智', '田尻 智', '田尻'],
+                ['ゲームデザイン', 'game design'],
+            ],
+        },
+        {
+            'name': 'Tajiri Satoshi New Game Design (Yahoo)',
+            'platform': 'yahoo',
+            'keyword': '田尻智 新ゲームデザイン',
+            'state_category': 'yahoo_tajiri_new_game_design',
+            'validators': [
+                ['田尻智', '田尻 智', '田尻'],
+                ['ゲームデザイン', 'game design'],
+            ],
+        },
     ]
 
     # File paths
