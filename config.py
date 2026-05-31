@@ -155,6 +155,16 @@ class Config:
                 ['ゲームデザイン', 'game design'],
             ],
         },
+        {
+            'name': 'Tajiri Satoshi New Game Design (eBay)',
+            'platform': 'ebay',
+            'keyword': '田尻智 新ゲームデザイン',
+            'state_category': 'ebay_tajiri_new_game_design',
+            'validators': [
+                ['田尻智', '田尻', 'tajiri'],
+                ['ゲームデザイン', 'game design'],
+            ],
+        },
     ]
 
     # File paths

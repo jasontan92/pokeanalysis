@@ -15,6 +15,7 @@ from typing import Optional
 from config import Config
 from mercari_scraper import MercariScraper
 from yahoo_auctions_scraper import YahooAuctionsScraper
+from scraper import EbayScraper
 from notifier import TelegramNotifier
 
 
@@ -104,6 +105,7 @@ class ListingMonitor:
         self.notifier = TelegramNotifier()
         self.mercari_scraper = MercariScraper()
         self.yahoo_scraper = YahooAuctionsScraper()
+        self.ebay_scraper = EbayScraper()
 
     def _validate_listing(self, title: str, validators: list[list[str]], exclude: list[str] = None) -> bool:
         """Check title against validation rules.
@@ -167,6 +169,8 @@ class ListingMonitor:
                             future = executor.submit(self.mercari_scraper.search_listings, keyword=keyword)
                         elif platform == 'yahoo':
                             future = executor.submit(self.yahoo_scraper.search_listings, keyword=keyword)
+                        elif platform == 'ebay':
+                            future = executor.submit(self.ebay_scraper.scrape_active_listings, search_term=keyword, max_pages=1)
                         else:
                             continue
                         listings = future.result(timeout=120)
@@ -204,8 +208,15 @@ class ListingMonitor:
                     logger.info(f"  New listing: {safe_title}")
 
                     # Send alert
-                    currency = listing.get('currency', '¥')
-                    platform_label = f"Yahoo ({name})" if platform == 'yahoo' else f"Mercari ({name})"
+                    if platform == 'ebay':
+                        currency = listing.get('currency', '$')
+                        platform_label = f"eBay ({name})"
+                    elif platform == 'yahoo':
+                        currency = listing.get('currency', '¥')
+                        platform_label = f"Yahoo ({name})"
+                    else:
+                        currency = listing.get('currency', '¥')
+                        platform_label = f"Mercari ({name})"
 
                     success = self.notifier.send_listing_alert(
                         platform=platform_label,
