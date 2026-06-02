@@ -189,6 +189,17 @@ class Config:
             ],
             'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
         },
+        {
+            'name': 'Pokemon Game VGA-Graded (eBay)',
+            'platform': 'ebay',
+            'keyword': 'pocket monsters vga',
+            'state_category': 'ebay_pokemon_vga',
+            'validators': [
+                ['pocket monster', 'pokemon', 'pokémon'],
+                ['vga'],
+            ],
+            'exclude': ['plush', 'figure', 'card'],
+        },
     ]
 
     # File paths
