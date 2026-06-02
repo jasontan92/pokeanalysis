@@ -165,6 +165,30 @@ class Config:
                 ['ゲームデザイン', 'game design'],
             ],
         },
+        # --- Any Pokemon game, VGA-graded (any generation/platform) ---
+        # e.g. https://jp.mercari.com/search?keyword=ポケットモンスター VGA
+        {
+            'name': 'Pokemon Game VGA-Graded (Mercari)',
+            'platform': 'mercari',
+            'keyword': 'ポケットモンスター VGA',
+            'state_category': 'mercari_pokemon_vga',
+            'validators': [
+                ['ポケモン', 'ポケットモンスター', 'pocket monster'],
+                ['vga'],
+            ],
+            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
+        },
+        {
+            'name': 'Pokemon Game VGA-Graded (Yahoo)',
+            'platform': 'yahoo',
+            'keyword': 'ポケットモンスター VGA',
+            'state_category': 'yahoo_pokemon_vga',
+            'validators': [
+                ['ポケモン', 'ポケットモンスター', 'pocket monster'],
+                ['vga'],
+            ],
+            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
+        },
     ]
 
     # File paths
