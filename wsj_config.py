@@ -286,66 +286,11 @@ class WSJConfig:
             ],
         },
         {
-            'name': 'Yu-Gi-Oh Vol 1 初版',
-            'mercari_keyword': '遊戯王 1巻 初版',
-            'yahoo_keyword': '遊戯王 1巻 初版',
-            'state_category': 'simple_yugioh_v1',
-            'validators': [
-                ['遊戯王', 'yugioh', 'yu-gi-oh'],
-                ['1巻'],
-                ['初版', '第1刷', '第一刷'],
-            ],
-        },
-        {
-            'name': 'Dragon Ball Vol 1 初版',
-            'mercari_keyword': 'ドラゴンボール 1巻 初版',
-            'yahoo_keyword': 'ドラゴンボール 1巻 初版',
-            'state_category': 'simple_dragonball_v1',
-            'validators': [
-                ['ドラゴンボール', 'dragon ball', 'dragonball', 'DRAGON BALL'],
-                ['1巻'],
-                ['初版', '第1刷', '第一刷'],
-            ],
-        },
-        {
             'name': '電撃 RPG\'96',
             'mercari_url': 'https://jp.mercari.com/search?keyword=%E9%9B%BB%E6%92%83%20RPG%E2%80%9996&srsltid=AfmBOooDJCEu2u_xL7jc9cCXVCmu9RaoPcWQ4tUagAxb_De80gdOw84U&sort=created_time&order=desc',
             'yahoo_keyword': '電撃 RPG\'96',
             'state_category': 'simple_dengeki_rpg_96',
             'validators': [['電撃'], ['rpg', 'RPG'], ['96']],
-        },
-        {
-            'name': '週刊少年ジャンプ 1989年 47号',
-            'mercari_keyword': '週刊少年ジャンプ 1989年 47号',
-            'yahoo_keyword': '週刊少年ジャンプ 1989年 47号',
-            'state_category': 'simple_wsj_1989_47',
-            'validators': [
-                ['1989'],
-                ['47'],
-            ],
-            'exclude': ['梱包'],
-        },
-        {
-            'name': '週刊少年ジャンプ 1989年 2-3号',
-            'mercari_keyword': '週刊少年ジャンプ 1989年 2-3号',
-            'yahoo_keyword': '週刊少年ジャンプ 1989年 2-3号',
-            'state_category': 'simple_wsj_1989_2_3',
-            'validators': [
-                ['1989'],
-                ['2-3', '2・3', '2,3'],
-            ],
-            'exclude': ['梱包'],
-        },
-        {
-            'name': '週刊少年ジャンプ 1990年 42号',
-            'mercari_keyword': '週刊少年 1990年 42号',
-            'yahoo_keyword': '週刊少年ジャンプ 1990年 42号',
-            'state_category': 'simple_wsj_1990_42',
-            'validators': [
-                ['1990'],
-                ['42'],
-            ],
-            'exclude': ['梱包'],
         },
         {
             'name': 'Anakubo Pokemon Manga (穴久保ポケットモンスター)',
@@ -356,27 +301,6 @@ class WSJConfig:
                 ['穴久保'],
             ],
             'exclude': ['XY', 'DVD'],
-        },
-        {
-            'name': 'ポケモンカードになったワケ',
-            'mercari_keyword': 'ポケモンカードになったワケ',
-            'yahoo_keyword': 'ポケモンカードになったワケ',
-            'state_category': 'simple_pokemon_card_ni_natta_wake',
-            'validators': [
-                ['ポケモンカード', 'ポケカ'],
-                ['ワケ', 'わけ'],
-            ],
-        },
-        {
-            'name': '少年ジャンプ 1989年 1-2号',
-            'mercari_keyword': '少年ジャンプ 1989年 1-2号',
-            'mercari_url': 'https://jp.mercari.com/search?keyword=%E5%B0%91%E5%B9%B4%E3%82%B8%E3%83%A3%E3%83%B3%E3%83%97%201989%E5%B9%B4%201-2%E5%8F%B7&sort=created_time&order=desc',
-            'yahoo_keyword': '少年ジャンプ 1989年 1-2号',
-            'state_category': 'simple_wsj_1989_1_2',
-            'validators': [
-                ['1989'],
-                ['1-2', '1・2', '1/2', 'No.1-2', '合併号', '1,2'],
-            ],
         },
         {
             'name': 'Pokemon Red/Green Flyer (チラシ)',
@@ -400,17 +324,6 @@ class WSJConfig:
             ],
         },
         {
-            'name': '週刊少年マガジン 2005年17号',
-            'mercari_keyword': '週刊少年マガジン 2005年 17号',
-            'yahoo_keyword': '週刊少年マガジン 2005年 17号',
-            'state_category': 'simple_magazine_2005_17',
-            'validators': [
-                ['週刊少年マガジン'],
-                ['2005'],
-                ['17'],
-            ],
-        },
-        {
             'name': 'ヤングマガジン 1982年24号',
             'mercari_keyword': 'ヤングマガジン 1982年 24',
             'yahoo_keyword': 'ヤングマガジン 1982年 24',
@@ -419,19 +332,6 @@ class WSJConfig:
                 ['ヤングマガジン'],
                 ['1982'],
                 ['24'],
-            ],
-        },
-        {
-            'name': 'NARUTO Vol 1 初版 帯付き',
-            'mercari_keyword': 'ナルト 初版 1 帯',
-            'mercari_url': 'https://jp.mercari.com/search?keyword=%E3%83%8A%E3%83%AB%E3%83%88%20%E5%88%9D%E7%89%88%201%20%E5%B8%AF&sort=created_time&order=desc',
-            'yahoo_keyword': 'ナルト 初版 1巻 帯',
-            'state_category': 'simple_naruto_v1_obi',
-            'validators': [
-                ['ナルト', 'NARUTO', 'naruto'],
-                ['初版', '第1刷', '第一刷'],
-                ['1巻', '1 巻'],
-                ['帯', '帯付'],
             ],
         },
         {
