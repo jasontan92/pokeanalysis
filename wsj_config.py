@@ -469,6 +469,42 @@ class WSJConfig:
                 ['8月'],
             ],
         },
+
+        # --- Akamaru Jump one-shots (赤マルジャンプ) ---
+        # Seasonal special issues, NOT numbered weekly Jump issues, so they live
+        # here (validator matching) rather than in SERIES (which requires an "X号"
+        # issue number + "jump" keyword). Each issue is pinned by magazine name +
+        # year + season so we don't alert on the other seasonal issues of the
+        # same year. GLOBAL_EXCLUDE already filters reprints (復刻 etc.).
+        {
+            # Masashi Kishimoto's NARUTO pilot one-shot (the demon-fox-boy
+            # version), 赤マルジャンプ 1997 SUMMER. Predates the 1999 WSJ #43
+            # serialization tracked in SERIES['naruto'].
+            'name': 'NARUTO 読切 — 赤マルジャンプ 1997 SUMMER (Kishimoto pilot one-shot)',
+            'mercari_keyword': '赤マルジャンプ 1997 SUMMER',
+            'yahoo_keyword': '赤マルジャンプ 1997 SUMMER',
+            'state_category': 'simple_naruto_akamaru_1997_summer',
+            'validators': [
+                ['赤マルジャンプ', '赤マル', 'akamaru'],
+                ['1997'],
+                ['summer', 'サマー', '夏'],
+            ],
+        },
+        {
+            # Tite Kubo's BLEACH pre-serialization one-shot (連載前読切),
+            # 赤マルジャンプ 2001 WINTER (this is the issue in the user's example
+            # listing m88664137800 — NOT 1999). Predates the 2001 WSJ #36-37
+            # serialization tracked in SERIES['bleach'].
+            'name': 'BLEACH 読切 — 赤マルジャンプ 2001 WINTER (Kubo pre-serialization one-shot)',
+            'mercari_keyword': '赤マルジャンプ 2001 WINTER',
+            'yahoo_keyword': '赤マルジャンプ 2001 WINTER',
+            'state_category': 'simple_bleach_akamaru_2001_winter',
+            'validators': [
+                ['赤マルジャンプ', '赤マル', 'akamaru'],
+                ['2001'],
+                ['winter', 'ウィンター', '冬'],
+            ],
+        },
     ]
 
     # -----------------------------------------------------------------------
