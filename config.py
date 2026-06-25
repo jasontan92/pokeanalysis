@@ -83,56 +83,6 @@ class Config:
                 ['ゲームボーイ', 'gameboy', 'game boy', 'gb', '刻印'],
             ],
         },
-        # --- Unopened / sealed first-gen (初代) red & green ---
-        # e.g. "新品未開封　ポケットモンスター 初代" — factory-sealed boxes, not loose carts.
-        {
-            'name': 'Pokemon Red Unopened 1st Gen (Mercari)',
-            'platform': 'mercari',
-            'keyword': '新品未開封 ポケットモンスター 赤',
-            'state_category': 'mercari_pokemon_red_unopened',
-            'validators': [
-                ['ポケモン', 'ポケットモンスター', 'pocket monster'],
-                ['赤', 'レッド', 'red', 'aka'],
-                ['新品', '未開封', '未使用'],
-            ],
-            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
-        },
-        {
-            'name': 'Pokemon Red Unopened 1st Gen (Yahoo)',
-            'platform': 'yahoo',
-            'keyword': '新品未開封 ポケットモンスター 赤',
-            'state_category': 'yahoo_pokemon_red_unopened',
-            'validators': [
-                ['ポケモン', 'ポケットモンスター', 'pocket monster'],
-                ['赤', 'レッド', 'red', 'aka'],
-                ['新品', '未開封', '未使用'],
-            ],
-            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
-        },
-        {
-            'name': 'Pokemon Green Unopened 1st Gen (Mercari)',
-            'platform': 'mercari',
-            'keyword': '新品未開封 ポケットモンスター 緑',
-            'state_category': 'mercari_pokemon_green_unopened',
-            'validators': [
-                ['ポケモン', 'ポケットモンスター', 'pocket monster'],
-                ['緑', 'グリーン', 'green', 'midori'],
-                ['新品', '未開封', '未使用'],
-            ],
-            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
-        },
-        {
-            'name': 'Pokemon Green Unopened 1st Gen (Yahoo)',
-            'platform': 'yahoo',
-            'keyword': '新品未開封 ポケットモンスター 緑',
-            'state_category': 'yahoo_pokemon_green_unopened',
-            'validators': [
-                ['ポケモン', 'ポケットモンスター', 'pocket monster'],
-                ['緑', 'グリーン', 'green', 'midori'],
-                ['新品', '未開封', '未使用'],
-            ],
-            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
-        },
         # --- Satoshi Tajiri "New Game Design" book (Pokemon creator) ---
         # e.g. https://jp.mercari.com/item/m47344194219 — 田尻智 新ゲームデザイン 初版
         {
@@ -197,6 +147,176 @@ class Config:
             'validators': [
                 ['pocket monster', 'pokemon', 'pokémon'],
                 ['vga'],
+            ],
+            'exclude': ['plush', 'figure', 'card'],
+        },
+        # --- Any Pokemon game, CGC-graded (any generation/platform) ---
+        {
+            'name': 'Pokemon Game CGC-Graded (Mercari)',
+            'platform': 'mercari',
+            'keyword': 'ポケットモンスター CGC',
+            'state_category': 'mercari_pokemon_cgc',
+            'validators': [
+                ['ポケモン', 'ポケットモンスター', 'pocket monster'],
+                ['cgc'],
+            ],
+            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
+        },
+        {
+            'name': 'Pokemon Game CGC-Graded (Yahoo)',
+            'platform': 'yahoo',
+            'keyword': 'ポケットモンスター CGC',
+            'state_category': 'yahoo_pokemon_cgc',
+            'validators': [
+                ['ポケモン', 'ポケットモンスター', 'pocket monster'],
+                ['cgc'],
+            ],
+            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
+        },
+        {
+            'name': 'Pokemon Game CGC-Graded (eBay)',
+            'platform': 'ebay',
+            'keyword': 'pocket monsters cgc',
+            'state_category': 'ebay_pokemon_cgc',
+            'validators': [
+                ['pocket monster', 'pokemon', 'pokémon'],
+                ['cgc'],
+            ],
+            'exclude': ['plush', 'figure', 'card'],
+        },
+        # --- Final Fantasy (Famicom), VGA-graded ---
+        {
+            'name': 'Final Fantasy Famicom VGA-Graded (Mercari)',
+            'platform': 'mercari',
+            'keyword': 'ファイナルファンタジー ファミコン VGA',
+            'state_category': 'mercari_ff_famicom_vga',
+            'validators': [
+                ['ファイナルファンタジー', 'final fantasy'],
+                ['vga'],
+            ],
+            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
+        },
+        {
+            'name': 'Final Fantasy Famicom VGA-Graded (Yahoo)',
+            'platform': 'yahoo',
+            'keyword': 'ファイナルファンタジー ファミコン VGA',
+            'state_category': 'yahoo_ff_famicom_vga',
+            'validators': [
+                ['ファイナルファンタジー', 'final fantasy'],
+                ['vga'],
+            ],
+            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
+        },
+        {
+            'name': 'Final Fantasy Famicom VGA-Graded (eBay)',
+            'platform': 'ebay',
+            'keyword': 'final fantasy famicom vga',
+            'state_category': 'ebay_ff_famicom_vga',
+            'validators': [
+                ['final fantasy'],
+                ['vga'],
+            ],
+            'exclude': ['plush', 'figure', 'card'],
+        },
+        # --- Final Fantasy (Famicom), CGC-graded ---
+        {
+            'name': 'Final Fantasy Famicom CGC-Graded (Mercari)',
+            'platform': 'mercari',
+            'keyword': 'ファイナルファンタジー ファミコン CGC',
+            'state_category': 'mercari_ff_famicom_cgc',
+            'validators': [
+                ['ファイナルファンタジー', 'final fantasy'],
+                ['cgc'],
+            ],
+            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
+        },
+        {
+            'name': 'Final Fantasy Famicom CGC-Graded (Yahoo)',
+            'platform': 'yahoo',
+            'keyword': 'ファイナルファンタジー ファミコン CGC',
+            'state_category': 'yahoo_ff_famicom_cgc',
+            'validators': [
+                ['ファイナルファンタジー', 'final fantasy'],
+                ['cgc'],
+            ],
+            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
+        },
+        {
+            'name': 'Final Fantasy Famicom CGC-Graded (eBay)',
+            'platform': 'ebay',
+            'keyword': 'final fantasy famicom cgc',
+            'state_category': 'ebay_ff_famicom_cgc',
+            'validators': [
+                ['final fantasy'],
+                ['cgc'],
+            ],
+            'exclude': ['plush', 'figure', 'card'],
+        },
+        # --- Dragon Quest (Famicom), VGA-graded ---
+        {
+            'name': 'Dragon Quest Famicom VGA-Graded (Mercari)',
+            'platform': 'mercari',
+            'keyword': 'ドラゴンクエスト ファミコン VGA',
+            'state_category': 'mercari_dq_famicom_vga',
+            'validators': [
+                ['ドラゴンクエスト', 'ドラクエ', 'dragon quest'],
+                ['vga'],
+            ],
+            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
+        },
+        {
+            'name': 'Dragon Quest Famicom VGA-Graded (Yahoo)',
+            'platform': 'yahoo',
+            'keyword': 'ドラゴンクエスト ファミコン VGA',
+            'state_category': 'yahoo_dq_famicom_vga',
+            'validators': [
+                ['ドラゴンクエスト', 'ドラクエ', 'dragon quest'],
+                ['vga'],
+            ],
+            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
+        },
+        {
+            'name': 'Dragon Quest Famicom VGA-Graded (eBay)',
+            'platform': 'ebay',
+            'keyword': 'dragon quest famicom vga',
+            'state_category': 'ebay_dq_famicom_vga',
+            'validators': [
+                ['dragon quest', 'dragon warrior'],
+                ['vga'],
+            ],
+            'exclude': ['plush', 'figure', 'card'],
+        },
+        # --- Dragon Quest (Famicom), CGC-graded ---
+        {
+            'name': 'Dragon Quest Famicom CGC-Graded (Mercari)',
+            'platform': 'mercari',
+            'keyword': 'ドラゴンクエスト ファミコン CGC',
+            'state_category': 'mercari_dq_famicom_cgc',
+            'validators': [
+                ['ドラゴンクエスト', 'ドラクエ', 'dragon quest'],
+                ['cgc'],
+            ],
+            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
+        },
+        {
+            'name': 'Dragon Quest Famicom CGC-Graded (Yahoo)',
+            'platform': 'yahoo',
+            'keyword': 'ドラゴンクエスト ファミコン CGC',
+            'state_category': 'yahoo_dq_famicom_cgc',
+            'validators': [
+                ['ドラゴンクエスト', 'ドラクエ', 'dragon quest'],
+                ['cgc'],
+            ],
+            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
+        },
+        {
+            'name': 'Dragon Quest Famicom CGC-Graded (eBay)',
+            'platform': 'ebay',
+            'keyword': 'dragon quest famicom cgc',
+            'state_category': 'ebay_dq_famicom_cgc',
+            'validators': [
+                ['dragon quest', 'dragon warrior'],
+                ['cgc'],
             ],
             'exclude': ['plush', 'figure', 'card'],
         },
