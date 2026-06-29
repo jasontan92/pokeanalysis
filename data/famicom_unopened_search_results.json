@@ -1,6 +1,6 @@
 {
-  "search_date": "2026-06-28T22:05:49.662222",
-  "total_results": 16,
+  "search_date": "2026-06-29T09:50:26.718402",
+  "total_results": 24,
   "results": [
     {
       "platform": "Mercari Japan",
@@ -90,25 +90,13 @@
       "platform": "Mercari Japan",
       "game": "Dragon Quest",
       "condition": "sealed",
-      "title": "未開封　ドラゴンクエストⅣ　ドラゴンクエスト4 ファミコン奥義大全書　　攻略本",
+      "title": "【新品未開封・当時物】ドラゴンクエストⅡ 悪霊の神々 ファミコン デッドストック",
       "price": "N/A",
       "price_raw": null,
       "currency": "JPY",
-      "link": "https://jp.mercari.com/item/m48067979590",
+      "link": "https://jp.mercari.com/item/m57670074902",
       "listing_type": "buy_now",
-      "search_query": "ファミコン 未開封 ドラゴンクエスト"
-    },
-    {
-      "platform": "Mercari Japan",
-      "game": "Dragon Quest",
-      "condition": "sealed",
-      "title": "ドラゴンクエストⅣ　導かれし者たち　ファミコン奥義大全書　初版　袋とじ未開封",
-      "price": "N/A",
-      "price_raw": null,
-      "currency": "JPY",
-      "link": "https://jp.mercari.com/item/m52295933949",
-      "listing_type": "buy_now",
-      "search_query": "ファミコン 未開封 ドラゴンクエスト"
+      "search_query": "ファミコン 未開封 ドラクエ"
     },
     {
       "platform": "Mercari Japan",
@@ -135,6 +123,102 @@
       "search_query": "ファミコン 未開封 ファイナルファンタジー"
     },
     {
+      "platform": "Mercari Japan",
+      "game": "Mario",
+      "condition": "VGA",
+      "title": "【鑑定品】 VGA ドクター　マリオ　MARIO ファミコン　ソフト　新品　未開",
+      "price": "N/A",
+      "price_raw": null,
+      "currency": "JPY",
+      "link": "https://jp.mercari.com/item/m21090576819",
+      "listing_type": "buy_now",
+      "search_query": "ファミコン VGA マリオ"
+    },
+    {
+      "platform": "Mercari Japan",
+      "game": "Mario",
+      "condition": "VGA",
+      "title": "VGA鑑定品80+ FC スーパーマリオUSA 未開封未使用新品",
+      "price": "N/A",
+      "price_raw": null,
+      "currency": "JPY",
+      "link": "https://jp.mercari.com/item/m68761715829",
+      "listing_type": "buy_now",
+      "search_query": "ファミコン VGA マリオ"
+    },
+    {
+      "platform": "Mercari Japan",
+      "game": "Mario",
+      "condition": "VGA",
+      "title": "VGA鑑定品FC オールナイトニッポン スーパーマリオ 未開封未使用新品",
+      "price": "N/A",
+      "price_raw": null,
+      "currency": "JPY",
+      "link": "https://jp.mercari.com/item/m33431947324",
+      "listing_type": "buy_now",
+      "search_query": "ファミコン VGA マリオ"
+    },
+    {
+      "platform": "Mercari Japan",
+      "game": "Mario",
+      "condition": "VGA",
+      "title": "VGA鑑定品80+ FC スーパーマリオブラザーズ3 未開封未使用新品",
+      "price": "N/A",
+      "price_raw": null,
+      "currency": "JPY",
+      "link": "https://jp.mercari.com/item/m93252091401",
+      "listing_type": "buy_now",
+      "search_query": "ファミコン VGA マリオ"
+    },
+    {
+      "platform": "Mercari Japan",
+      "game": "Mario",
+      "condition": "VGA",
+      "title": "VGA鑑定品80+ FC スーパーマリオブラザーズ 未開封未使用新品",
+      "price": "N/A",
+      "price_raw": null,
+      "currency": "JPY",
+      "link": "https://jp.mercari.com/item/m59484541078",
+      "listing_type": "buy_now",
+      "search_query": "ファミコン VGA マリオ"
+    },
+    {
+      "platform": "Mercari Japan",
+      "game": "Dragon Quest",
+      "condition": "VGA",
+      "title": "VGA鑑定品80 FC ドラゴンクエストIV 未開封未使用新品",
+      "price": "N/A",
+      "price_raw": null,
+      "currency": "JPY",
+      "link": "https://jp.mercari.com/item/m26707080139",
+      "listing_type": "buy_now",
+      "search_query": "ファミコン VGA ドラゴンクエスト"
+    },
+    {
+      "platform": "Mercari Japan",
+      "game": "Dragon Quest",
+      "condition": "VGA",
+      "title": "VGA鑑定品80+ FC ドラゴンクエスト 未開封未使用新品",
+      "price": "N/A",
+      "price_raw": null,
+      "currency": "JPY",
+      "link": "https://jp.mercari.com/item/m65513984360",
+      "listing_type": "buy_now",
+      "search_query": "ファミコン VGA ドラゴンクエスト"
+    },
+    {
+      "platform": "Mercari Japan",
+      "game": "Dragon Quest",
+      "condition": "VGA",
+      "title": "VGA鑑定品80+ FC ドラゴンクエストII 未開封未使用新品",
+      "price": "N/A",
+      "price_raw": null,
+      "currency": "JPY",
+      "link": "https://jp.mercari.com/item/m57562890260",
+      "listing_type": "buy_now",
+      "search_query": "ファミコン VGA ドラゴンクエスト"
+    },
+    {
       "platform": "Buyee",
       "game": "Zelda",
       "condition": "sealed",
@@ -157,6 +241,18 @@
       "link": "https://buyee.jp/item/jdirectitems/auction/l1233112075?conversionType=jdirectitems_auction_DirectSearch",
       "listing_type": "auction",
       "search_query": "ファミコン 未開封 ゼルダの伝説"
+    },
+    {
+      "platform": "Buyee",
+      "game": "Mario",
+      "condition": "sealed",
+      "title": "ファミコン ディスクシステム　新品未使用未開封　スーパーマリオブラザーズ2",
+      "price": "現在の価格\n17,999円 (153.00シンガポールドル)\n即決価格\n17,999円 (153.00シンガポールドル)",
+      "price_raw": null,
+      "currency": "JPY",
+      "link": "https://buyee.jp/item/jdirectitems/auction/p1228973762?conversionType=jdirectitems_auction_DirectSearch",
+      "listing_type": "auction",
+      "search_query": "ファミコン 未開封 スーパーマリオブラザーズ"
     },
     {
       "platform": "Buyee",
@@ -187,7 +283,7 @@
       "game": "Final Fantasy",
       "condition": "sealed",
       "title": "【新品未開封・極上品】FC ファミコンソフト ファイナルファンタジー2 スクウェア 1円スタート 非常に綺麗な新品 当時物",
-      "price": "現在の価格\n31円 (0.27シンガポールドル)",
+      "price": "現在の価格\n520円 (4.42シンガポールドル)",
       "price_raw": null,
       "currency": "JPY",
       "link": "https://buyee.jp/item/jdirectitems/auction/w1235093232?conversionType=jdirectitems_auction_DirectSearch",

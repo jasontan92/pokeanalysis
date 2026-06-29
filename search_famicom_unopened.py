@@ -60,6 +60,8 @@ EXCLUDE_KEYWORDS = [
     'キーホルダー', 'アクリル', 'ストラップ', 'ぬいぐるみ', 'フィギュア',
     'tシャツ', 'ポスター', 'カード', 'シール', 'attaché', 'グッズ',
     'keychain', 'keyholder', 'strap', 'figure', 'plush', 'poster', 'sticker',
+    # Strategy guide books (not games)
+    '奥義大全書', '攻略本', 'ガイドブック', 'strategy guide', 'guide book',
 ]
 
 

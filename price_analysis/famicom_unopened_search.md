@@ -1,9 +1,9 @@
 # Unopened / VGA Famicom Games - Search Results
 
-**Search Date:** 2026-06-28
+**Search Date:** 2026-06-29
 **Required keywords:** ファミコン (Famicom) + 未開封 (unopened) OR VGA (graded)
 **Target titles:** Zelda / Mario / Dragon Quest / Final Fantasy
-**Total Listings:** 16  (16 sealed, 0 VGA)
+**Total Listings:** 24  (16 sealed, 8 VGA)
 
 ---
 
@@ -12,17 +12,17 @@
 | Game | Sealed | VGA | Total |
 |------|--------|-----|-------|
 | Zelda | 6 | 0 | 6 |
-| Mario | 3 | 0 | 3 |
-| Dragon Quest | 4 | 0 | 4 |
+| Mario | 4 | 5 | 9 |
+| Dragon Quest | 3 | 3 | 6 |
 | Final Fantasy | 3 | 0 | 3 |
-| **Total** | **16** | **0** | **16** |
+| **Total** | **16** | **8** | **24** |
 
 ## Summary by Platform
 
 | Platform | Listings |
 |----------|----------|
-| Mercari Japan | 11 |
-| Buyee | 5 |
+| Mercari Japan | 18 |
+| Buyee | 6 |
 
 ---
 
@@ -47,8 +47,17 @@
 
 | Platform | Cond | Title | Price | Type | Link |
 |----------|------|-------|-------|------|------|
+| Mercari Japan | VGA | 【鑑定品】 VGA ドクター　マリオ　MARIO ファミコン　ソフト　新品　未開 | N/A | buy_now | [View](https://jp.mercari.com/item/m21090576819) |
+| Mercari Japan | VGA | VGA鑑定品80+ FC スーパーマリオUSA 未開封未使用新品 | N/A | buy_now | [View](https://jp.mercari.com/item/m68761715829) |
+| Mercari Japan | VGA | VGA鑑定品FC オールナイトニッポン スーパーマリオ 未開封未使用新品 | N/A | buy_now | [View](https://jp.mercari.com/item/m33431947324) |
+| Mercari Japan | VGA | VGA鑑定品80+ FC スーパーマリオブラザーズ3 未開封未使用新品 | N/A | buy_now | [View](https://jp.mercari.com/item/m93252091401) |
+| Mercari Japan | VGA | VGA鑑定品80+ FC スーパーマリオブラザーズ 未開封未使用新品 | N/A | buy_now | [View](https://jp.mercari.com/item/m59484541078) |
 | Mercari Japan | sealed | 250　未開封　スーパーマリオブラザーズ　ファミコンディスクシステム | N/A | buy_now | [View](https://jp.mercari.com/item/m46521966454) |
 | Mercari Japan | sealed | 新品未開封品ファミコンミニ マリオブラザーズ GBA | N/A | buy_now | [View](https://jp.mercari.com/item/m69071131579) |
+| Buyee | sealed | ファミコン ディスクシステム　新品未使用未開封　スーパーマリオブラザーズ2 | 現在の価格
+17,999円 (153.00シンガポールドル)
+即決価格
+17,999円 (153.00シンガポールドル) | auction | [View](https://buyee.jp/item/jdirectitems/auction/p1228973762?conversionType=jdirectitems_auction_DirectSearch) |
 | Buyee | sealed | 送料安 新品未開封 ツクダ スーパーマリオ ファミコン ゆ太郎 3点まとめて | 現在の価格
 2,650円 (22.53シンガポールドル)
 即決価格
@@ -58,9 +67,11 @@
 
 | Platform | Cond | Title | Price | Type | Link |
 |----------|------|-------|-------|------|------|
+| Mercari Japan | VGA | VGA鑑定品80 FC ドラゴンクエストIV 未開封未使用新品 | N/A | buy_now | [View](https://jp.mercari.com/item/m26707080139) |
+| Mercari Japan | VGA | VGA鑑定品80+ FC ドラゴンクエスト 未開封未使用新品 | N/A | buy_now | [View](https://jp.mercari.com/item/m65513984360) |
+| Mercari Japan | VGA | VGA鑑定品80+ FC ドラゴンクエストII 未開封未使用新品 | N/A | buy_now | [View](https://jp.mercari.com/item/m57562890260) |
 | Mercari Japan | sealed | 315　未開封　ドラゴンクエスト4　ドラゴンクエストⅣ　ファミコン | N/A | buy_now | [View](https://jp.mercari.com/item/m73898869987) |
-| Mercari Japan | sealed | 未開封　ドラゴンクエストⅣ　ドラゴンクエスト4 ファミコン奥義大全書　　攻略本 | N/A | buy_now | [View](https://jp.mercari.com/item/m48067979590) |
-| Mercari Japan | sealed | ドラゴンクエストⅣ　導かれし者たち　ファミコン奥義大全書　初版　袋とじ未開封 | N/A | buy_now | [View](https://jp.mercari.com/item/m52295933949) |
+| Mercari Japan | sealed | 【新品未開封・当時物】ドラゴンクエストⅡ 悪霊の神々 ファミコン デッドストック | N/A | buy_now | [View](https://jp.mercari.com/item/m57670074902) |
 | Buyee | sealed | 【新品未開封】ドラゴンクエストⅣ 導かれし者たち　コレクションケース付き　ファミコン　FC　ファミリーコンピューター　ドラクエ　DQⅣ | 現在の価格
 18,000円 (153.00シンガポールドル)
 即決価格
@@ -73,21 +84,13 @@
 | Mercari Japan | sealed | 【新品未開封/凹みあり】ファイナルファンタジー3 ファミコンソフト任天堂 | N/A | buy_now | [View](https://jp.mercari.com/item/m84258859860) |
 | Mercari Japan | sealed | 【新品未開封/超美品】ファイナルファンタジー2 ファミコンソフトNintendo | N/A | buy_now | [View](https://jp.mercari.com/item/m44854227412) |
 | Buyee | sealed | 【新品未開封・極上品】FC ファミコンソフト ファイナルファンタジー2 スクウェア 1円スタート 非常に綺麗な新品 当時物 | 現在の価格
-31円 (0.27シンガポールドル) | auction | [View](https://buyee.jp/item/jdirectitems/auction/w1235093232?conversionType=jdirectitems_auction_DirectSearch) |
+520円 (4.42シンガポールドル) | auction | [View](https://buyee.jp/item/jdirectitems/auction/w1235093232?conversionType=jdirectitems_auction_DirectSearch) |
 
 ---
 
 ## Search Terms Used
 
 ### eBay
-- `famicom sealed zelda`
-- `famicom sealed mario`
-- `famicom sealed dragon quest`
-- `famicom sealed final fantasy`
-- `ファミコン 未開封 ゼルダ`
-- `ファミコン 未開封 マリオ`
-- `ファミコン 未開封 ドラゴンクエスト`
-- `ファミコン 未開封 ファイナルファンタジー`
 - `famicom vga zelda`
 - `famicom vga mario`
 - `famicom vga dragon quest`
