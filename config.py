@@ -31,6 +31,53 @@ class Config:
         '再版', '重版', '復刻', '復刻版', '再刷', '複製',
     ]
 
+    # --- Famicom game search building blocks (Zelda / Mario / DQ / FF) ---
+    # Condition: VGA OR CGC OR unopened. Keyword forces 未開封 on JP sites
+    # (also narrows Yahoo so the franchise term doesn't flood the results).
+    _FC_COND: list[str] = ['vga', 'cgc', '未開封', '未使用', 'sealed', 'unopened']
+    # Positive gate: the title must prove it's an actual Famicom cartridge/disk,
+    # not a Switch/SFC re-release or merch that merely names the franchise.
+    _FC_MEDIUM: list[str] = [
+        'ファミコン', 'ファミリーコンピュータ', 'ファミリーコンピューター',
+        'ディスクシステム', 'hvc', 'fc', 'famicom', 'family computer',
+    ]
+    # Aggressive reject list: other consoles, merch, apparel, books, peripherals.
+    _FC_EXCLUDE_JP: list[str] = [
+        # other consoles / not the original cartridge
+        'スーパーファミコン', 'スーファミ', 'sfc', 'super famicom', 'snes',
+        'ニンテンドースイッチ', 'switch', 'ゲームボーイアドバンス', 'gba',
+        'ニンテンドーds', '3ds', 'ツクダ', 'ゆ太郎', 'プレイステーション', 'ps1', 'ps2',
+        # books / magazines / paper goods
+        '攻略本', 'ガイドブック', '奥義大全書', 'ファンブック', '設定資料', '資料集',
+        '記念book', '記念ブック', 'てれびくん', '雑誌', '増刊', 'コミック', '漫画',
+        'カタログ', 'チラシ', 'カレンダー', '冊子',
+        # apparel / cloth / textile
+        '手ぬぐい', 'タオル', 'セーター', 'tシャツ', '靴下', 'パーカー', '帽子', 'キャップ',
+        'マスク', 'ストッカー', 'タペストリー', 'のれん', 'クッション', 'ブランケット',
+        # toys / figures / merch
+        'フィギュア', 'ブリングアーツ', 'ぬいぐるみ', '人形', 'プライズ', 'ガチャ',
+        '一番くじ', 'くじ', '缶バッジ', 'バッジ', 'ピンズ', 'メダル', '時計', '置物',
+        'マグカップ', '食器', '弁当', 'ストラップ', 'キーホルダー', 'アクリル', 'マグネット',
+        'プラモ', '模型', 'amiibo', 'アミーボ', 'ねんどろ',
+        # accessories / peripherals
+        'コントローラ', 'ケーブル', 'アダプタ', '周辺機器', '変換',
+        # cards / stickers / stationery
+        'カード', 'トレカ', 'シール', 'ステッカー', 'ブロマイド', '下敷き', 'トランプ',
+        'ジグソー', 'パズル', 'クリアファイル', 'ノート', '鉛筆', '消しゴム',
+        # music
+        'サントラ', 'サウンドトラック', 'レコード',
+        # generic merch grouping
+        'グッズ', 'ポスター', 'ビーチボール', 'リュック', 'リュッサック', 'バッグ',
+        'スマホ', 'iphone', 'ダイカット', 'go plus', 'poco', 'ぽこ', 'レゴ', 'lego',
+    ]
+    _FC_EXCLUDE_EN: list[str] = [
+        'plush', 'figure', 'poster', 'keychain', 'keyring', 'sticker', 'decal',
+        'card', 'trading card', 'strategy guide', 'guide book', 'guidebook',
+        'magazine', 'comic', 'soundtrack', 'vinyl', 't-shirt', 'towel', 'mug', 'badge',
+        'amiibo', 'super famicom', 'snes', 'sfc', 'super nintendo', 'switch',
+        'game boy advance', 'gba', 'nintendo ds', '3ds', 'reproduction', 'repro', 'lego',
+    ]
+
     # Monitored searches — Pokemon game cartridges only
     # validators: list of lists — each inner list = alternatives (OR), all outer lists must pass (AND)
     # optional 'exclude': per-search extra exclude terms (on top of GLOBAL_EXCLUDE)
@@ -136,141 +183,140 @@ class Config:
             ],
             'exclude': ['plush', 'figure', 'card'],
         },
-        # --- Final Fantasy (Famicom), VGA-graded ---
+        # --- Famicom games (Zelda / Mario / DQ / FF): VGA OR CGC OR unopened ---
+        # Zelda
         {
-            'name': 'Final Fantasy Famicom VGA-Graded (Mercari)',
+            'name': 'Zelda Famicom VGA/CGC/Sealed (Mercari)',
             'platform': 'mercari',
-            'keyword': 'ファイナルファンタジー ファミコン VGA',
-            'state_category': 'mercari_ff_famicom_vga',
-            'validators': [
-                ['ファイナルファンタジー', 'final fantasy'],
-                ['vga'],
-            ],
-            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
+            'keyword': 'ゼルダの伝説 ファミコン 未開封',
+            'state_category': 'mercari_zelda_famicom',
+            'validators': [['ゼルダの伝説', 'ゼルダ', 'zelda'], _FC_MEDIUM, _FC_COND],
+            'exclude': _FC_EXCLUDE_JP,
         },
         {
-            'name': 'Final Fantasy Famicom VGA-Graded (Yahoo)',
+            'name': 'Zelda Famicom VGA/CGC/Sealed (Yahoo)',
             'platform': 'yahoo',
-            'keyword': 'VGA 鑑定 未開封',
-            'state_category': 'yahoo_ff_famicom_vga',
-            'validators': [
-                ['ファイナルファンタジー', 'final fantasy'],
-                ['vga'],
-            ],
-            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
+            'keyword': 'ゼルダの伝説 ファミコン 未開封',
+            'state_category': 'yahoo_zelda_famicom',
+            'validators': [['ゼルダの伝説', 'ゼルダ', 'zelda'], _FC_MEDIUM, _FC_COND],
+            'exclude': _FC_EXCLUDE_JP,
         },
         {
-            'name': 'Final Fantasy Famicom VGA-Graded (eBay)',
+            'name': 'Zelda Famicom VGA/CGC/Sealed (eBay)',
             'platform': 'ebay',
-            'keyword': 'final fantasy famicom vga',
-            'state_category': 'ebay_ff_famicom_vga',
-            'validators': [
-                ['final fantasy'],
-                ['vga'],
-            ],
-            'exclude': ['plush', 'figure', 'card'],
+            'keyword': 'zelda famicom',
+            'state_category': 'ebay_zelda_famicom',
+            'validators': [['zelda'], _FC_MEDIUM, _FC_COND],
+            'exclude': _FC_EXCLUDE_EN,
         },
-        # --- Final Fantasy (Famicom), CGC-graded ---
+        # Mario
         {
-            'name': 'Final Fantasy Famicom CGC-Graded (Mercari)',
+            'name': 'Mario Famicom VGA/CGC/Sealed (Mercari)',
             'platform': 'mercari',
-            'keyword': 'ファイナルファンタジー ファミコン CGC',
-            'state_category': 'mercari_ff_famicom_cgc',
-            'validators': [
-                ['ファイナルファンタジー', 'final fantasy'],
-                ['cgc'],
-            ],
-            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
+            'keyword': 'スーパーマリオ ファミコン 未開封',
+            'state_category': 'mercari_mario_famicom',
+            'validators': [['スーパーマリオ', 'マリオ', 'mario'], _FC_MEDIUM, _FC_COND],
+            'exclude': _FC_EXCLUDE_JP,
         },
         {
-            'name': 'Final Fantasy Famicom CGC-Graded (Yahoo)',
+            'name': 'Mario Famicom VGA/CGC/Sealed (Yahoo)',
             'platform': 'yahoo',
-            'keyword': 'CGC 鑑定 未開封 ゲーム',
-            'state_category': 'yahoo_ff_famicom_cgc',
-            'validators': [
-                ['ファイナルファンタジー', 'final fantasy'],
-                ['cgc'],
-            ],
-            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
+            'keyword': 'スーパーマリオ ファミコン 未開封',
+            'state_category': 'yahoo_mario_famicom',
+            'validators': [['スーパーマリオ', 'マリオ', 'mario'], _FC_MEDIUM, _FC_COND],
+            'exclude': _FC_EXCLUDE_JP,
         },
         {
-            'name': 'Final Fantasy Famicom CGC-Graded (eBay)',
+            'name': 'Mario Famicom VGA/CGC/Sealed (eBay)',
             'platform': 'ebay',
-            'keyword': 'final fantasy famicom cgc',
-            'state_category': 'ebay_ff_famicom_cgc',
-            'validators': [
-                ['final fantasy'],
-                ['cgc'],
-            ],
-            'exclude': ['plush', 'figure', 'card'],
+            'keyword': 'super mario famicom',
+            'state_category': 'ebay_mario_famicom',
+            'validators': [['mario'], _FC_MEDIUM, _FC_COND],
+            'exclude': _FC_EXCLUDE_EN,
         },
-        # --- Dragon Quest (Famicom), VGA-graded ---
+        # Dragon Quest
         {
-            'name': 'Dragon Quest Famicom VGA-Graded (Mercari)',
+            'name': 'Dragon Quest Famicom VGA/CGC/Sealed (Mercari)',
             'platform': 'mercari',
-            'keyword': 'ドラゴンクエスト ファミコン VGA',
-            'state_category': 'mercari_dq_famicom_vga',
-            'validators': [
-                ['ドラゴンクエスト', 'ドラクエ', 'dragon quest'],
-                ['vga'],
-            ],
-            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
+            'keyword': 'ドラゴンクエスト ファミコン 未開封',
+            'state_category': 'mercari_dq_famicom',
+            'validators': [['ドラゴンクエスト', 'ドラクエ', 'dragon quest'], _FC_MEDIUM, _FC_COND],
+            'exclude': _FC_EXCLUDE_JP,
         },
         {
-            'name': 'Dragon Quest Famicom VGA-Graded (Yahoo)',
+            'name': 'Dragon Quest Famicom VGA/CGC/Sealed (Yahoo)',
             'platform': 'yahoo',
-            'keyword': 'VGA 鑑定 未開封',
-            'state_category': 'yahoo_dq_famicom_vga',
-            'validators': [
-                ['ドラゴンクエスト', 'ドラクエ', 'dragon quest'],
-                ['vga'],
-            ],
-            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
+            'keyword': 'ドラゴンクエスト ファミコン 未開封',
+            'state_category': 'yahoo_dq_famicom',
+            'validators': [['ドラゴンクエスト', 'ドラクエ', 'dragon quest'], _FC_MEDIUM, _FC_COND],
+            'exclude': _FC_EXCLUDE_JP,
         },
         {
-            'name': 'Dragon Quest Famicom VGA-Graded (eBay)',
+            'name': 'Dragon Quest Famicom VGA/CGC/Sealed (eBay)',
             'platform': 'ebay',
-            'keyword': 'dragon quest famicom vga',
-            'state_category': 'ebay_dq_famicom_vga',
-            'validators': [
-                ['dragon quest', 'dragon warrior'],
-                ['vga'],
-            ],
-            'exclude': ['plush', 'figure', 'card'],
+            'keyword': 'dragon quest famicom',
+            'state_category': 'ebay_dq_famicom',
+            'validators': [['dragon quest', 'dragon warrior'], _FC_MEDIUM, _FC_COND],
+            'exclude': _FC_EXCLUDE_EN,
         },
-        # --- Dragon Quest (Famicom), CGC-graded ---
+        # Final Fantasy
         {
-            'name': 'Dragon Quest Famicom CGC-Graded (Mercari)',
+            'name': 'Final Fantasy Famicom VGA/CGC/Sealed (Mercari)',
             'platform': 'mercari',
-            'keyword': 'ドラゴンクエスト ファミコン CGC',
-            'state_category': 'mercari_dq_famicom_cgc',
-            'validators': [
-                ['ドラゴンクエスト', 'ドラクエ', 'dragon quest'],
-                ['cgc'],
-            ],
-            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
+            'keyword': 'ファイナルファンタジー ファミコン 未開封',
+            'state_category': 'mercari_ff_famicom',
+            'validators': [['ファイナルファンタジー', 'final fantasy'], _FC_MEDIUM, _FC_COND],
+            'exclude': _FC_EXCLUDE_JP,
         },
         {
-            'name': 'Dragon Quest Famicom CGC-Graded (Yahoo)',
+            'name': 'Final Fantasy Famicom VGA/CGC/Sealed (Yahoo)',
             'platform': 'yahoo',
-            'keyword': 'CGC 鑑定 未開封 ゲーム',
-            'state_category': 'yahoo_dq_famicom_cgc',
-            'validators': [
-                ['ドラゴンクエスト', 'ドラクエ', 'dragon quest'],
-                ['cgc'],
-            ],
-            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
+            'keyword': 'ファイナルファンタジー ファミコン 未開封',
+            'state_category': 'yahoo_ff_famicom',
+            'validators': [['ファイナルファンタジー', 'final fantasy'], _FC_MEDIUM, _FC_COND],
+            'exclude': _FC_EXCLUDE_JP,
         },
         {
-            'name': 'Dragon Quest Famicom CGC-Graded (eBay)',
+            'name': 'Final Fantasy Famicom VGA/CGC/Sealed (eBay)',
             'platform': 'ebay',
-            'keyword': 'dragon quest famicom cgc',
-            'state_category': 'ebay_dq_famicom_cgc',
+            'keyword': 'final fantasy famicom',
+            'state_category': 'ebay_ff_famicom',
+            'validators': [['final fantasy'], _FC_MEDIUM, _FC_COND],
+            'exclude': _FC_EXCLUDE_EN,
+        },
+        # --- Pokemon games, unopened (未開封) ---
+        {
+            'name': 'Pokemon Game Unopened (Mercari)',
+            'platform': 'mercari',
+            'keyword': 'ポケットモンスター 未開封 ソフト',
+            'state_category': 'mercari_pokemon_unopened',
             'validators': [
-                ['dragon quest', 'dragon warrior'],
-                ['cgc'],
+                ['ポケモン', 'ポケットモンスター', 'pocket monster'],
+                ['未開封', '未使用', 'sealed', 'unopened'],
             ],
-            'exclude': ['plush', 'figure', 'card'],
+            'exclude': _FC_EXCLUDE_JP,
+        },
+        {
+            'name': 'Pokemon Game Unopened (Yahoo)',
+            'platform': 'yahoo',
+            'keyword': 'ポケットモンスター 未開封 ソフト',
+            'state_category': 'yahoo_pokemon_unopened',
+            'validators': [
+                ['ポケモン', 'ポケットモンスター', 'pocket monster'],
+                ['未開封', '未使用', 'sealed', 'unopened'],
+            ],
+            'exclude': _FC_EXCLUDE_JP,
+        },
+        {
+            'name': 'Pokemon Game Unopened (eBay)',
+            'platform': 'ebay',
+            'keyword': 'pokemon game sealed',
+            'state_category': 'ebay_pokemon_unopened',
+            'validators': [
+                ['pocket monster', 'pokemon', 'pokémon'],
+                ['sealed', 'unopened', '未開封'],
+            ],
+            'exclude': _FC_EXCLUDE_EN,
         },
     ]
 
