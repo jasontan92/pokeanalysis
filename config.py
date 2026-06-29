@@ -83,7 +83,7 @@ class Config:
         {
             'name': 'Pokemon Game VGA-Graded (Yahoo)',
             'platform': 'yahoo',
-            'keyword': 'ポケットモンスター VGA',
+            'keyword': 'VGA 鑑定 未開封',
             'state_category': 'yahoo_pokemon_vga',
             'validators': [
                 ['ポケモン', 'ポケットモンスター', 'pocket monster'],
@@ -117,7 +117,7 @@ class Config:
         {
             'name': 'Pokemon Game CGC-Graded (Yahoo)',
             'platform': 'yahoo',
-            'keyword': 'ポケットモンスター CGC',
+            'keyword': 'CGC 鑑定 未開封 ゲーム',
             'state_category': 'yahoo_pokemon_cgc',
             'validators': [
                 ['ポケモン', 'ポケットモンスター', 'pocket monster'],
@@ -151,7 +151,7 @@ class Config:
         {
             'name': 'Final Fantasy Famicom VGA-Graded (Yahoo)',
             'platform': 'yahoo',
-            'keyword': 'ファイナルファンタジー ファミコン VGA',
+            'keyword': 'VGA 鑑定 未開封',
             'state_category': 'yahoo_ff_famicom_vga',
             'validators': [
                 ['ファイナルファンタジー', 'final fantasy'],
@@ -185,7 +185,7 @@ class Config:
         {
             'name': 'Final Fantasy Famicom CGC-Graded (Yahoo)',
             'platform': 'yahoo',
-            'keyword': 'ファイナルファンタジー ファミコン CGC',
+            'keyword': 'CGC 鑑定 未開封 ゲーム',
             'state_category': 'yahoo_ff_famicom_cgc',
             'validators': [
                 ['ファイナルファンタジー', 'final fantasy'],
@@ -219,7 +219,7 @@ class Config:
         {
             'name': 'Dragon Quest Famicom VGA-Graded (Yahoo)',
             'platform': 'yahoo',
-            'keyword': 'ドラゴンクエスト ファミコン VGA',
+            'keyword': 'VGA 鑑定 未開封',
             'state_category': 'yahoo_dq_famicom_vga',
             'validators': [
                 ['ドラゴンクエスト', 'ドラクエ', 'dragon quest'],
@@ -253,7 +253,7 @@ class Config:
         {
             'name': 'Dragon Quest Famicom CGC-Graded (Yahoo)',
             'platform': 'yahoo',
-            'keyword': 'ドラゴンクエスト ファミコン CGC',
+            'keyword': 'CGC 鑑定 未開封 ゲーム',
             'state_category': 'yahoo_dq_famicom_cgc',
             'validators': [
                 ['ドラゴンクエスト', 'ドラクエ', 'dragon quest'],

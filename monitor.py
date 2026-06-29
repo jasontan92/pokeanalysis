@@ -197,11 +197,10 @@ class ListingMonitor:
                     if not self.state.is_new(category, listing_id):
                         continue
 
-                    # Mark as seen
-                    self.state.mark_seen(category, listing_id)
-
-                    # On first run, limit alerts
+                    # On first run, mark as baseline (seen) and limit alerts so we
+                    # don't blast the entire pre-existing inventory.
                     if self.state.is_first_run and alerts_sent >= self.FIRST_RUN_ALERT_LIMIT:
+                        self.state.mark_seen(category, listing_id)
                         continue
 
                     safe_title = title.encode('ascii', 'replace').decode('ascii')[:60]
@@ -229,12 +228,14 @@ class ListingMonitor:
                     )
 
                     if success:
+                        # Only mark seen after a confirmed send, so a failed
+                        # send is retried next run instead of silently swallowed.
+                        self.state.mark_seen(category, listing_id)
                         alerts_sent += 1
+                        all_new.append(listing)
                         logger.info(f"  Alert sent for {listing_id}")
                     else:
-                        logger.warning(f"  Failed to send alert for {listing_id}")
-
-                    all_new.append(listing)
+                        logger.warning(f"  Failed to send alert for {listing_id} (will retry next run)")
 
                 logger.info(f"  {alerts_sent} new alerts sent for {safe_name}")
 
