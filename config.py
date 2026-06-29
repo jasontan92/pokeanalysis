@@ -35,54 +35,6 @@ class Config:
     # validators: list of lists — each inner list = alternatives (OR), all outer lists must pass (AND)
     # optional 'exclude': per-search extra exclude terms (on top of GLOBAL_EXCLUDE)
     MONITORED_SEARCHES: list[dict] = [
-        {
-            'name': 'Pokemon Red Early Cart (Mercari)',
-            'platform': 'mercari',
-            'keyword': 'ポケットモンスター 赤 初期 ゲームボーイ',
-            'state_category': 'mercari_pokemon_red_1st',
-            'validators': [
-                ['ポケモン', 'ポケットモンスター', 'pocket monster'],
-                ['赤', 'レッド', 'red', 'aka'],
-                ['22', '00', '初期'],
-                ['ゲームボーイ', 'gameboy', 'game boy', 'gb', '刻印'],
-            ],
-        },
-        {
-            'name': 'Pokemon Red Early Cart (Yahoo)',
-            'platform': 'yahoo',
-            'keyword': 'ポケットモンスター 赤 初期 ゲームボーイ',
-            'state_category': 'yahoo_pokemon_red_1st',
-            'validators': [
-                ['ポケモン', 'ポケットモンスター', 'pocket monster'],
-                ['赤', 'レッド', 'red', 'aka'],
-                ['22', '00', '初期'],
-                ['ゲームボーイ', 'gameboy', 'game boy', 'gb', '刻印'],
-            ],
-        },
-        {
-            'name': 'Pokemon Green Early Cart (Mercari)',
-            'platform': 'mercari',
-            'keyword': 'ポケットモンスター 緑 初期 ゲームボーイ',
-            'state_category': 'mercari_pokemon_green_1st',
-            'validators': [
-                ['ポケモン', 'ポケットモンスター', 'pocket monster'],
-                ['緑', 'グリーン', 'green', 'midori'],
-                ['22', '00', '初期'],
-                ['ゲームボーイ', 'gameboy', 'game boy', 'gb', '刻印'],
-            ],
-        },
-        {
-            'name': 'Pokemon Green Early Cart (Yahoo)',
-            'platform': 'yahoo',
-            'keyword': 'ポケットモンスター 緑 初期 ゲームボーイ',
-            'state_category': 'yahoo_pokemon_green_1st',
-            'validators': [
-                ['ポケモン', 'ポケットモンスター', 'pocket monster'],
-                ['緑', 'グリーン', 'green', 'midori'],
-                ['22', '00', '初期'],
-                ['ゲームボーイ', 'gameboy', 'game boy', 'gb', '刻印'],
-            ],
-        },
         # --- Satoshi Tajiri "New Game Design" book (Pokemon creator) ---
         # e.g. https://jp.mercari.com/item/m47344194219 — 田尻智 新ゲームデザイン 初版
         {
