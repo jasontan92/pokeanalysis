@@ -94,6 +94,7 @@ class Config:
         # cards / paper
         'カード', 'ポケカ', 'トレカ', 'プロモ', 'trading card', 'シール', 'ステッカー',
         'sticker', 'ブロマイド', 'クリアファイル', 'カレンダー', '下敷き', 'トランプ',
+        'カードダス', 'シールダス', 'carddass', 'sealdass', 'sealldass', 'amada', 'アマダ',
         # figures / plush / toys
         'ぬいぐるみ', 'plush', 'フィギュア', 'figure', '人形', 'プライズ', 'ガチャ',
         '一番くじ', 'くじ', 'ナノブロック', 'プラモ', '模型', 'ジグソー', 'パズル',
@@ -151,74 +152,81 @@ class Config:
                 ['ゲームデザイン', 'game design'],
             ],
         },
-        # --- Any Pokemon game, VGA-graded (any generation/platform) ---
-        # e.g. https://jp.mercari.com/search?keyword=ポケットモンスター VGA
+        # --- Pokemon GAMES (Game Boy / GBC only), VGA-graded ---
+        # Game-medium gate (_PKMN_MEDIUM) requires a Game Boy term in the
+        # title, so graded CARDS (Carddass/Sealdass) are rejected.
         {
             'name': 'Pokemon Game VGA-Graded (Mercari)',
             'platform': 'mercari',
-            'keyword': 'ポケットモンスター VGA',
+            'keyword': 'ポケットモンスター ゲームボーイ VGA',
             'state_category': 'mercari_pokemon_vga',
             'validators': [
                 ['ポケモン', 'ポケットモンスター', 'pocket monster'],
+                _PKMN_MEDIUM,
                 ['vga'],
             ],
-            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
+            'exclude': _PKMN_EXCLUDE,
         },
         {
             'name': 'Pokemon Game VGA-Graded (Yahoo)',
             'platform': 'yahoo',
-            'keyword': 'VGA 鑑定 未開封',
+            'keyword': 'ポケットモンスター ゲームボーイ VGA',
             'state_category': 'yahoo_pokemon_vga',
             'validators': [
                 ['ポケモン', 'ポケットモンスター', 'pocket monster'],
+                _PKMN_MEDIUM,
                 ['vga'],
             ],
-            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
+            'exclude': _PKMN_EXCLUDE,
         },
         {
             'name': 'Pokemon Game VGA-Graded (eBay)',
             'platform': 'ebay',
-            'keyword': 'pocket monsters vga',
+            'keyword': 'pokemon game boy vga',
             'state_category': 'ebay_pokemon_vga',
             'validators': [
                 ['pocket monster', 'pokemon', 'pokémon'],
+                _PKMN_MEDIUM,
                 ['vga'],
             ],
-            'exclude': ['plush', 'figure', 'card'],
+            'exclude': _PKMN_EXCLUDE,
         },
-        # --- Any Pokemon game, CGC-graded (any generation/platform) ---
+        # --- Pokemon GAMES (Game Boy / GBC only), CGC-graded ---
         {
             'name': 'Pokemon Game CGC-Graded (Mercari)',
             'platform': 'mercari',
-            'keyword': 'ポケットモンスター CGC',
+            'keyword': 'ポケットモンスター ゲームボーイ CGC',
             'state_category': 'mercari_pokemon_cgc',
             'validators': [
                 ['ポケモン', 'ポケットモンスター', 'pocket monster'],
+                _PKMN_MEDIUM,
                 ['cgc'],
             ],
-            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
+            'exclude': _PKMN_EXCLUDE,
         },
         {
             'name': 'Pokemon Game CGC-Graded (Yahoo)',
             'platform': 'yahoo',
-            'keyword': 'CGC 鑑定 未開封 ゲーム',
+            'keyword': 'ポケットモンスター ゲームボーイ CGC',
             'state_category': 'yahoo_pokemon_cgc',
             'validators': [
                 ['ポケモン', 'ポケットモンスター', 'pocket monster'],
+                _PKMN_MEDIUM,
                 ['cgc'],
             ],
-            'exclude': ['カード', 'ぬいぐるみ', 'フィギュア'],
+            'exclude': _PKMN_EXCLUDE,
         },
         {
             'name': 'Pokemon Game CGC-Graded (eBay)',
             'platform': 'ebay',
-            'keyword': 'pocket monsters cgc',
+            'keyword': 'pokemon game boy cgc',
             'state_category': 'ebay_pokemon_cgc',
             'validators': [
                 ['pocket monster', 'pokemon', 'pokémon'],
+                _PKMN_MEDIUM,
                 ['cgc'],
             ],
-            'exclude': ['plush', 'figure', 'card'],
+            'exclude': _PKMN_EXCLUDE,
         },
         # --- Famicom games (Zelda / Mario / DQ / FF): VGA OR CGC OR unopened ---
         # Zelda
