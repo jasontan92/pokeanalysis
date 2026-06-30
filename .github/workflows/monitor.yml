@@ -45,6 +45,8 @@ jobs:
           echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}" >> .env
           echo "TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }}" >> .env
           echo "SEARCH_TERM=1996 no rarity" >> .env
+          echo "EBAY_CLIENT_ID=${{ secrets.EBAY_CLIENT_ID }}" >> .env
+          echo "EBAY_CLIENT_SECRET=${{ secrets.EBAY_CLIENT_SECRET }}" >> .env
 
       - name: Run norarityscanner (Pokemon games)
         run: xvfb-run --auto-servernum python monitor.py

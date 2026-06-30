@@ -4,13 +4,15 @@ Supports both sold listings and active (live) listings.
 Uses Playwright as primary method (more reliable), with requests as fallback.
 """
 
+import os
 import re
 import time
+import base64
 import random
 import json
 from datetime import datetime
 from pathlib import Path
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs, quote_plus
 from typing import Optional
 
 import requests
@@ -26,11 +28,117 @@ except ImportError:
 
 
 class EbayScraper:
+    # eBay Browse API (official, not blocked). Credentials via env / secrets.
+    OAUTH_URL = "https://api.ebay.com/identity/v1/oauth2/token"
+    BROWSE_URL = "https://api.ebay.com/buy/browse/v1/item_summary/search"
+    MARKETPLACE_ID = os.getenv('EBAY_MARKETPLACE_ID', 'EBAY_US')
+
     def __init__(self):
         self.session = requests.Session()
         self.ua = UserAgent()
         self._update_headers()
         self.use_playwright = PLAYWRIGHT_AVAILABLE
+        # Official Browse API credentials (preferred path; HTML scrape is blocked)
+        self.ebay_client_id = os.getenv('EBAY_CLIENT_ID', '')
+        self.ebay_client_secret = os.getenv('EBAY_CLIENT_SECRET', '')
+        self._oauth_token = None
+        self._token_expiry = 0.0
+
+    @property
+    def has_api_credentials(self) -> bool:
+        return bool(self.ebay_client_id and self.ebay_client_secret)
+
+    def _get_oauth_token(self) -> Optional[str]:
+        """Fetch (and cache) an application OAuth token via client-credentials."""
+        if not self.has_api_credentials:
+            return None
+        if self._oauth_token and time.time() < self._token_expiry - 60:
+            return self._oauth_token
+        try:
+            basic = base64.b64encode(
+                f"{self.ebay_client_id}:{self.ebay_client_secret}".encode()
+            ).decode()
+            resp = requests.post(
+                self.OAUTH_URL,
+                headers={
+                    'Authorization': f'Basic {basic}',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                data={
+                    'grant_type': 'client_credentials',
+                    'scope': 'https://api.ebay.com/oauth/api_scope',
+                },
+                timeout=20,
+            )
+            if resp.status_code != 200:
+                print(f"eBay OAuth failed: HTTP {resp.status_code} {resp.text[:160]}")
+                return None
+            payload = resp.json()
+            self._oauth_token = payload['access_token']
+            self._token_expiry = time.time() + int(payload.get('expires_in', 7200))
+            return self._oauth_token
+        except Exception as e:
+            print(f"eBay OAuth error: {e}")
+            return None
+
+    def search_browse_api(self, search_term, limit=50):
+        """Search active listings via the official eBay Browse API.
+
+        Returns the same listing dicts as the HTML scraper so callers are
+        unaffected by which path produced the data.
+        """
+        token = self._get_oauth_token()
+        if not token:
+            return []
+        try:
+            url = (
+                f"{self.BROWSE_URL}?q={quote_plus(search_term)}"
+                f"&limit={min(int(limit), 200)}&sort=newlyListed"
+            )
+            resp = requests.get(
+                url,
+                headers={
+                    'Authorization': f'Bearer {token}',
+                    'X-EBAY-C-MARKETPLACE-ID': self.MARKETPLACE_ID,
+                    'Content-Type': 'application/json',
+                },
+                timeout=25,
+            )
+            if resp.status_code != 200:
+                print(f"eBay Browse API HTTP {resp.status_code}: {resp.text[:160]}")
+                return []
+            data = resp.json()
+            listings = []
+            for it in data.get('itemSummaries', []) or []:
+                price_obj = it.get('price') or {}
+                opts = it.get('buyingOptions') or []
+                if 'AUCTION' in opts:
+                    listing_type = 'auction'
+                elif 'FIXED_PRICE' in opts:
+                    listing_type = 'buy_it_now'
+                elif 'BEST_OFFER' in opts:
+                    listing_type = 'best_offer'
+                else:
+                    listing_type = 'unknown'
+                try:
+                    price = float(price_obj['value']) if price_obj.get('value') else None
+                except (TypeError, ValueError):
+                    price = None
+                listings.append({
+                    'item_id': it.get('legacyItemId') or it.get('itemId'),
+                    'title': it.get('title'),
+                    'price': price,
+                    'currency': price_obj.get('currency', 'USD'),
+                    'listing_type': listing_type,
+                    'time_left': None,
+                    'link': it.get('itemWebUrl'),
+                    'image_url': (it.get('image') or {}).get('imageUrl'),
+                    'scraped_at': datetime.now().isoformat(),
+                })
+            return listings
+        except Exception as e:
+            print(f"eBay Browse API error: {e}")
+            return []
 
     def _update_headers(self):
         """Update session headers with a random user agent."""
@@ -277,6 +385,12 @@ class EbayScraper:
             max_pages: Maximum pages to fetch (default 3 for monitoring)
             items_per_page: Items per page (60, 120, or 240)
         """
+        # Prefer the official Browse API (the HTML endpoint is bot-blocked).
+        if self.has_api_credentials:
+            listings = self.search_browse_api(search_term, limit=items_per_page)
+            print(f"eBay Browse API: '{search_term}' -> {len(listings)} listings")
+            return listings
+
         # Sort by newly listed (_sop=10)
         base_url = (
             f"https://www.ebay.com/sch/i.html?"
