@@ -77,6 +77,40 @@ class Config:
         'amiibo', 'super famicom', 'snes', 'sfc', 'super nintendo', 'switch',
         'game boy advance', 'gba', 'nintendo ds', '3ds', 'reproduction', 'repro', 'lego',
     ]
+    # Pokemon unopened is scoped to Game Boy / Game Boy Color ONLY (the
+    # collectible red/green/blue/yellow + gold/silver/crystal era). The gate
+    # requires a Game Boy term; "ゲームボーイ" also matches "ゲームボーイアドバンス",
+    # so GBA is rejected explicitly below. DS/3DS/Switch lack a GB term and
+    # so fail the gate automatically.
+    _PKMN_MEDIUM: list[str] = [
+        'ゲームボーイ', 'game boy', 'gameboy', 'gb', 'gbc',
+        'ゲームボーイカラー', 'game boy color',
+    ]
+    _PKMN_EXCLUDE: list[str] = [
+        # later consoles (out of GB/GBC scope)
+        'ゲームボーイアドバンス', 'アドバンス', 'advance', 'gba',
+        'ニンテンドーds', 'nintendo ds', '3ds', 'switch', 'スイッチ',
+        'ゲームキューブ', 'gamecube', 'wii',
+        # cards / paper
+        'カード', 'ポケカ', 'トレカ', 'プロモ', 'trading card', 'シール', 'ステッカー',
+        'sticker', 'ブロマイド', 'クリアファイル', 'カレンダー', '下敷き', 'トランプ',
+        # figures / plush / toys
+        'ぬいぐるみ', 'plush', 'フィギュア', 'figure', '人形', 'プライズ', 'ガチャ',
+        '一番くじ', 'くじ', 'ナノブロック', 'プラモ', '模型', 'ジグソー', 'パズル',
+        # apparel / accessories / merch
+        'タオル', 'towel', 'tシャツ', 't-shirt', '靴下', '帽子', 'マスク', 'ポーチ',
+        'バッグ', 'リュック', 'キーホルダー', 'keychain', 'アクリル', 'ストラップ',
+        '缶バッジ', 'バッジ', 'badge', 'ピンズ', 'メダル', 'マグカップ', 'mug', '食器',
+        '弁当', '時計', '置物', 'スマホ', 'iphone', '切り絵', 'マグネット',
+        # music boxes / soundtracks / non-game GB-shaped novelties
+        'サントラ', 'サウンドトラック', 'soundtrack', 'music', 'ミュージック',
+        'さいせいマシン', 'レコード', 'vinyl', 'オルゴール',
+        # accessories that pass the GB gate but aren't games
+        'ケーブル', 'cable', '通信', '消しゴム', 'ケシゴム', 'プロテクター',
+        'protector', 'スタンド', '収納', 'カバー', '電池', 'アダプタ',
+        # substring traps
+        'ソフトバンク', 'グッズ', 'ポスター', 'poster',
+    ]
 
     # Monitored searches — Pokemon game cartridges only
     # validators: list of lists — each inner list = alternatives (OR), all outer lists must pass (AND)
@@ -284,39 +318,42 @@ class Config:
             'validators': [['final fantasy'], _FC_MEDIUM, _FC_COND],
             'exclude': _FC_EXCLUDE_EN,
         },
-        # --- Pokemon games, unopened (未開封) ---
+        # --- Pokemon games, unopened (未開封) — game-medium gated ---
         {
             'name': 'Pokemon Game Unopened (Mercari)',
             'platform': 'mercari',
-            'keyword': 'ポケットモンスター 未開封 ソフト',
+            'keyword': 'ポケットモンスター ゲームボーイ 未開封',
             'state_category': 'mercari_pokemon_unopened',
             'validators': [
                 ['ポケモン', 'ポケットモンスター', 'pocket monster'],
+                _PKMN_MEDIUM,
                 ['未開封', '未使用', 'sealed', 'unopened'],
             ],
-            'exclude': _FC_EXCLUDE_JP,
+            'exclude': _PKMN_EXCLUDE,
         },
         {
             'name': 'Pokemon Game Unopened (Yahoo)',
             'platform': 'yahoo',
-            'keyword': 'ポケットモンスター 未開封 ソフト',
+            'keyword': 'ポケットモンスター ゲームボーイ 未開封',
             'state_category': 'yahoo_pokemon_unopened',
             'validators': [
                 ['ポケモン', 'ポケットモンスター', 'pocket monster'],
+                _PKMN_MEDIUM,
                 ['未開封', '未使用', 'sealed', 'unopened'],
             ],
-            'exclude': _FC_EXCLUDE_JP,
+            'exclude': _PKMN_EXCLUDE,
         },
         {
             'name': 'Pokemon Game Unopened (eBay)',
             'platform': 'ebay',
-            'keyword': 'pokemon game sealed',
+            'keyword': 'pokemon game boy sealed',
             'state_category': 'ebay_pokemon_unopened',
             'validators': [
                 ['pocket monster', 'pokemon', 'pokémon'],
+                _PKMN_MEDIUM,
                 ['sealed', 'unopened', '未開封'],
             ],
-            'exclude': _FC_EXCLUDE_EN,
+            'exclude': _PKMN_EXCLUDE,
         },
     ]
 
