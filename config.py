@@ -110,6 +110,9 @@ class Config:
         'protector', 'スタンド', '収納', 'カバー', '電池', 'アダプタ',
         # substring traps
         'ソフトバンク', 'グッズ', 'ポスター', 'poster',
+        # English merch / cards / fast-food toys (mostly eBay)
+        'promo', 'holo', 'card', 'toy', 'meal', 'burger king', 'mcdonald',
+        'coin', 'medal', 'magnet', 'box art',
     ]
 
     # Monitored searches — Pokemon game cartridges only
