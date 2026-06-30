@@ -34,7 +34,7 @@ class Config:
     # --- Famicom game search building blocks (Zelda / Mario / DQ / FF) ---
     # Condition: VGA OR CGC OR unopened. Keyword forces 未開封 on JP sites
     # (also narrows Yahoo so the franchise term doesn't flood the results).
-    _FC_COND: list[str] = ['vga', 'cgc', '未開封', '未使用', 'sealed', 'unopened']
+    _FC_COND: list[str] = ['vga', 'cgc', 'wata', 'graded', '鑑定', '未開封', '未使用', 'sealed', 'unopened']
     # Positive gate: the title must prove it's an actual Famicom cartridge/disk,
     # not a Switch/SFC re-release or merch that merely names the franchise.
     _FC_MEDIUM: list[str] = [
