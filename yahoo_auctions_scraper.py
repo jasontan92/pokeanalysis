@@ -40,8 +40,8 @@ class YahooAuctionsScraper:
 
         all_listings = []
         encoded = quote(keyword)
-        # Sort by newest, 50 per page
-        search_url = f"{self.BASE_URL}/search/search?p={encoded}&va={encoded}&exflg=1&b=1&n=50&s1=new&o1=d"
+        # Sort by newest, 100 per page (max) so matches aren't capped off page 1
+        search_url = f"{self.BASE_URL}/search/search?p={encoded}&va={encoded}&exflg=1&b=1&n=100&s1=new&o1=d"
 
         try:
             with sync_playwright() as p:

@@ -386,8 +386,10 @@ class EbayScraper:
             items_per_page: Items per page (60, 120, or 240)
         """
         # Prefer the official Browse API (the HTML endpoint is bot-blocked).
+        # Pull the max page (200) so we don't miss matches buried past the
+        # newest 60 — most fail validation but the valid ones get caught.
         if self.has_api_credentials:
-            listings = self.search_browse_api(search_term, limit=items_per_page)
+            listings = self.search_browse_api(search_term, limit=200)
             print(f"eBay Browse API: '{search_term}' -> {len(listings)} listings")
             return listings
 
