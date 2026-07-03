@@ -160,6 +160,12 @@ class ListingMonitor:
                 validators = search['validators']
 
                 safe_name = name.encode('ascii', 'replace').decode('ascii')
+
+                # Allow temporarily disabling a search without deleting it.
+                if not search.get('enabled', True):
+                    logger.info(f"Skipping (disabled): {safe_name} ({platform})")
+                    continue
+
                 logger.info(f"Checking: {safe_name} ({platform})...")
 
                 # Scrape each keyword (hard 2-min timeout each), combine + dedup.

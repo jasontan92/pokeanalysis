@@ -431,6 +431,7 @@ class Config:
         {
             'name': 'Pokemon Game Unopened (eBay)',
             'platform': 'ebay',
+            'enabled': False,  # temporarily held back (large batch) — flip on when ready
             'keywords': [
                 'pokemon red game boy sealed', 'pokemon green game boy sealed',
                 'pokemon blue game boy sealed', 'pokemon yellow game boy sealed',
