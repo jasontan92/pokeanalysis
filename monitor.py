@@ -210,6 +210,16 @@ class ListingMonitor:
                         self.state.mark_seen(category, listing_id)
                         continue
 
+                    # eBay only: keep Japanese-version listings (Mercari/Yahoo
+                    # are already Japanese). Require a JP marker, reject other
+                    # regions (PAL/US/EU/etc).
+                    if platform == 'ebay':
+                        tl = title.lower()
+                        if any(r in tl for r in Config.EBAY_REGION_EXCLUDE) or \
+                           not any(m.lower() in tl for m in Config.EBAY_JP_MARKERS):
+                            self.state.mark_seen(category, listing_id)
+                            continue
+
                     if not self.state.is_new(category, listing_id):
                         continue
 

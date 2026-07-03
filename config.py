@@ -31,6 +31,20 @@ class Config:
         '再版', '重版', '復刻', '復刻版', '再刷', '複製',
     ]
 
+    # eBay-only: keep JAPANESE-version listings. Mercari/Yahoo are inherently
+    # Japanese so this is applied only to eBay results (see monitor.py).
+    EBAY_JP_MARKERS: list[str] = [
+        'japanese', 'japan', 'jpn', 'ntsc-j', 'ntscj', 'ntsc j',
+        'famicom', 'スーパーファミコン', 'ファミコン', 'ディスクシステム',
+        'pocket monsters', 'ポケットモンスター',
+        'ファイナルファンタジー', 'ドラゴンクエスト', 'ゼルダ', 'マリオ',
+    ]
+    EBAY_REGION_EXCLUDE: list[str] = [
+        'pal', 'spanish', 'edición', 'edicion', 'español', 'europe', 'european',
+        'deutsch', 'german', 'français', 'french', 'italiano', 'italian',
+        'australia', 'korea', 'korean', 'us version', 'usa version',
+    ]
+
     # --- Famicom game search building blocks (Zelda / Mario / DQ / FF) ---
     # Condition: VGA OR CGC OR unopened. Keyword forces 未開封 on JP sites
     # (also narrows Yahoo so the franchise term doesn't flood the results).
@@ -120,7 +134,7 @@ class Config:
         # GB-color merch that slips through
         '色紙', 'キーチェーン', 'ペンケース', 'ホッチキス', 'ルービック', 'モンコレ',
         'ソフビ', 'ソフトパック', 'グライダー', 'ポケットピカチュウ', '限定パック', 'キューブ',
-        'jukebox', 'ジュークボックス',
+        'jukebox', 'ジュークボックス', 'printer', 'プリンター', 'プリンタ',
         # cards / paper
         'カード', 'ポケカ', 'トレカ', 'プロモ', 'trading card', 'シール', 'ステッカー',
         'sticker', 'ブロマイド', 'クリアファイル', 'カレンダー', '下敷き', 'トランプ',
@@ -431,7 +445,6 @@ class Config:
         {
             'name': 'Pokemon Game Unopened (eBay)',
             'platform': 'ebay',
-            'enabled': False,  # temporarily held back (large batch) — flip on when ready
             'keywords': [
                 'pokemon red game boy sealed', 'pokemon green game boy sealed',
                 'pokemon blue game boy sealed', 'pokemon yellow game boy sealed',
