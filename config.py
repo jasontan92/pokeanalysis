@@ -40,13 +40,19 @@ class Config:
     _FC_MEDIUM: list[str] = [
         'ファミコン', 'ファミリーコンピュータ', 'ファミリーコンピューター',
         'ディスクシステム', 'hvc', 'fc', 'famicom', 'family computer',
+        # Super Famicom now allowed (Zelda/Mario/DQ/FF SFC titles)
+        'スーパーファミコン', 'スーファミ', 'super famicom', 'sfc', 'snes', 'super nintendo',
     ]
     # Aggressive reject list: other consoles, merch, apparel, books, peripherals.
     _FC_EXCLUDE_JP: list[str] = [
-        # other consoles / not the original cartridge
-        'スーパーファミコン', 'スーファミ', 'sfc', 'super famicom', 'snes',
+        # other consoles / not the original cartridge (Super Famicom now allowed)
         'ニンテンドースイッチ', 'switch', 'ゲームボーイアドバンス', 'gba',
         'ニンテンドーds', '3ds', 'ツクダ', 'ゆ太郎', 'プレイステーション', 'ps1', 'ps2',
+        'wii', 'ゲームキューブ', 'gamecube', 'ニンテンドー64', 'nintendo 64',
+        'バーチャルコンソール', 'virtual console', 'ミニ', 'クラシックミニ',
+        # cartridge/carry cases & other non-game accessories
+        '収納', 'キャリーケース', 'キャリング', '空ケース', 'ケースのみ',
+        'プラスティック', 'プラスチック', 'カセットケース',
         # books / magazines / paper goods
         '攻略本', 'ガイドブック', '奥義大全書', 'ファンブック', '設定資料', '資料集',
         '記念book', '記念ブック', 'てれびくん', '雑誌', '増刊', 'コミック', '漫画',
@@ -74,7 +80,7 @@ class Config:
         'plush', 'figure', 'poster', 'keychain', 'keyring', 'sticker', 'decal',
         'card', 'trading card', 'strategy guide', 'guide book', 'guidebook',
         'magazine', 'comic', 'soundtrack', 'vinyl', 't-shirt', 'towel', 'mug', 'badge',
-        'amiibo', 'super famicom', 'snes', 'sfc', 'super nintendo', 'switch',
+        'amiibo', 'switch',
         'game boy advance', 'gba', 'nintendo ds', '3ds', 'reproduction', 'repro', 'lego',
     ]
     # Pokemon unopened is scoped to Game Boy / Game Boy Color ONLY (the
@@ -267,7 +273,7 @@ class Config:
         # --- Famicom games (Zelda / Mario / DQ / FF): VGA OR CGC OR unopened ---
         # Zelda
         {
-            'name': 'Zelda Famicom VGA/CGC/Sealed (Mercari)',
+            'name': 'Zelda Famicom/SFC VGA/CGC/Sealed (Mercari)',
             'platform': 'mercari',
             'keyword': 'ゼルダの伝説 ファミコン 未開封',
             'state_category': 'mercari_zelda_famicom',
@@ -275,7 +281,7 @@ class Config:
             'exclude': _FC_EXCLUDE_JP,
         },
         {
-            'name': 'Zelda Famicom VGA/CGC/Sealed (Yahoo)',
+            'name': 'Zelda Famicom/SFC VGA/CGC/Sealed (Yahoo)',
             'platform': 'yahoo',
             'keyword': 'ゼルダの伝説 ファミコン 未開封',
             'state_category': 'yahoo_zelda_famicom',
@@ -283,7 +289,7 @@ class Config:
             'exclude': _FC_EXCLUDE_JP,
         },
         {
-            'name': 'Zelda Famicom VGA/CGC/Sealed (eBay)',
+            'name': 'Zelda Famicom/SFC VGA/CGC/Sealed (eBay)',
             'platform': 'ebay',
             'keyword': 'zelda famicom',
             'state_category': 'ebay_zelda_famicom',
@@ -292,7 +298,7 @@ class Config:
         },
         # Mario
         {
-            'name': 'Mario Famicom VGA/CGC/Sealed (Mercari)',
+            'name': 'Mario Famicom/SFC VGA/CGC/Sealed (Mercari)',
             'platform': 'mercari',
             'keyword': 'スーパーマリオ ファミコン 未開封',
             'state_category': 'mercari_mario_famicom',
@@ -300,7 +306,7 @@ class Config:
             'exclude': _FC_EXCLUDE_JP,
         },
         {
-            'name': 'Mario Famicom VGA/CGC/Sealed (Yahoo)',
+            'name': 'Mario Famicom/SFC VGA/CGC/Sealed (Yahoo)',
             'platform': 'yahoo',
             'keyword': 'スーパーマリオ ファミコン 未開封',
             'state_category': 'yahoo_mario_famicom',
@@ -308,7 +314,7 @@ class Config:
             'exclude': _FC_EXCLUDE_JP,
         },
         {
-            'name': 'Mario Famicom VGA/CGC/Sealed (eBay)',
+            'name': 'Mario Famicom/SFC VGA/CGC/Sealed (eBay)',
             'platform': 'ebay',
             'keyword': 'super mario famicom',
             'state_category': 'ebay_mario_famicom',
@@ -317,7 +323,7 @@ class Config:
         },
         # Dragon Quest
         {
-            'name': 'Dragon Quest Famicom VGA/CGC/Sealed (Mercari)',
+            'name': 'Dragon Quest Famicom/SFC VGA/CGC/Sealed (Mercari)',
             'platform': 'mercari',
             'keyword': 'ドラゴンクエスト ファミコン 未開封',
             'state_category': 'mercari_dq_famicom',
@@ -325,7 +331,7 @@ class Config:
             'exclude': _FC_EXCLUDE_JP,
         },
         {
-            'name': 'Dragon Quest Famicom VGA/CGC/Sealed (Yahoo)',
+            'name': 'Dragon Quest Famicom/SFC VGA/CGC/Sealed (Yahoo)',
             'platform': 'yahoo',
             'keyword': 'ドラゴンクエスト ファミコン 未開封',
             'state_category': 'yahoo_dq_famicom',
@@ -333,7 +339,7 @@ class Config:
             'exclude': _FC_EXCLUDE_JP,
         },
         {
-            'name': 'Dragon Quest Famicom VGA/CGC/Sealed (eBay)',
+            'name': 'Dragon Quest Famicom/SFC VGA/CGC/Sealed (eBay)',
             'platform': 'ebay',
             'keyword': 'dragon quest famicom',
             'state_category': 'ebay_dq_famicom',
@@ -342,7 +348,7 @@ class Config:
         },
         # Final Fantasy
         {
-            'name': 'Final Fantasy Famicom VGA/CGC/Sealed (Mercari)',
+            'name': 'Final Fantasy Famicom/SFC VGA/CGC/Sealed (Mercari)',
             'platform': 'mercari',
             'keyword': 'ファイナルファンタジー ファミコン 未開封',
             'state_category': 'mercari_ff_famicom',
@@ -350,7 +356,7 @@ class Config:
             'exclude': _FC_EXCLUDE_JP,
         },
         {
-            'name': 'Final Fantasy Famicom VGA/CGC/Sealed (Yahoo)',
+            'name': 'Final Fantasy Famicom/SFC VGA/CGC/Sealed (Yahoo)',
             'platform': 'yahoo',
             'keyword': 'ファイナルファンタジー ファミコン 未開封',
             'state_category': 'yahoo_ff_famicom',
@@ -358,7 +364,7 @@ class Config:
             'exclude': _FC_EXCLUDE_JP,
         },
         {
-            'name': 'Final Fantasy Famicom VGA/CGC/Sealed (eBay)',
+            'name': 'Final Fantasy Famicom/SFC VGA/CGC/Sealed (eBay)',
             'platform': 'ebay',
             'keyword': 'final fantasy famicom',
             'state_category': 'ebay_ff_famicom',
