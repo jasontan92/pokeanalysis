@@ -92,11 +92,35 @@ class Config:
         'ゲームボーイ', 'game boy', 'gameboy', 'gb', 'gbc',
         'ゲームボーイカラー', 'game boy color',
     ]
+    # Relaxed game-indicator gate for UNOPENED (per-color) searches: a real
+    # sealed game usually says one of these even without naming the console,
+    # so console-less listings (e.g. "ポケットモンスター 青 バーコード有り") pass
+    # while merch/cards (which lack these) are dropped.
+    _PKMN_GAME: list[str] = [
+        'ゲームボーイ', 'game boy', 'gameboy', 'gb', 'gbc', 'ゲームボーイカラー',
+        'ソフト', 'software', 'カセット', 'cartridge',
+        'バージョン', 'version', '初版', '初期版', 'バーコード',
+    ]
     _PKMN_EXCLUDE: list[str] = [
         # later consoles (out of GB/GBC scope)
         'ゲームボーイアドバンス', 'アドバンス', 'advance', 'gba',
-        'ニンテンドーds', 'nintendo ds', '3ds', 'switch', 'スイッチ',
-        'ゲームキューブ', 'gamecube', 'wii',
+        'ニンテンドーds', 'nintendo ds', '3ds', '2ds', 'switch', 'スイッチ',
+        'ゲームキューブ', 'gamecube', 'wii', 'vita', 'psp',
+        'ニンテンドー64', 'nintendo 64', 'n64', 'スタジアム', 'stadium', 'スナップ', 'snap',
+        # non-GB/GBC pokemon game titles (DS/3DS/GBA/Switch + remakes)
+        'ハートゴールド', 'ソウルシルバー', 'heartgold', 'soulsilver',
+        'ファイアレッド', 'リーフグリーン', 'firered', 'leafgreen',
+        'ダイヤモンド', 'パール', 'プラチナ', 'diamond', 'pearl', 'platinum',
+        'ブラック', 'ホワイト', 'ルビー', 'サファイア', 'エメラルド', 'emerald',
+        'オメガルビー', 'アルファサファイア', 'ウルトラサン', 'ウルトラムーン',
+        'バイオレット', 'スカーレット', 'violet', 'scarlet', 'ソード', 'シールド',
+        'sword', 'shield', 'アルセウス', 'arceus', 'ブリリアント', 'brilliant',
+        'レッツゴー', 'ピカブイ', 'pokopia', 'ぽこ', 'ノブナガ', 'レンジャー', 'ranger',
+        'トローゼ', 'trozei', '不思議のダンジョン', 'mystery dungeon', 'conquest',
+        # GB-color merch that slips through
+        '色紙', 'キーチェーン', 'ペンケース', 'ホッチキス', 'ルービック', 'モンコレ',
+        'ソフビ', 'ソフトパック', 'グライダー', 'ポケットピカチュウ', '限定パック', 'キューブ',
+        'jukebox', 'ジュークボックス',
         # cards / paper
         'カード', 'ポケカ', 'トレカ', 'プロモ', 'trading card', 'シール', 'ステッカー',
         'sticker', 'ブロマイド', 'クリアファイル', 'カレンダー', '下敷き', 'トランプ',
@@ -120,6 +144,14 @@ class Config:
         # English merch / cards / fast-food toys (mostly eBay)
         'promo', 'holo', 'card', 'toy', 'meal', 'burger king', 'mcdonald',
         'coin', 'medal', 'magnet', 'box art',
+    ]
+    # Per-color keywords so each GB/GBC mainline game is actually searched
+    # (a single keyword requiring ゲームボーイ misses console-less listings).
+    _PKMN_UNOPENED_KW: list[str] = [
+        'ポケットモンスター 赤 未開封', 'ポケットモンスター 緑 未開封',
+        'ポケットモンスター 青 未開封', 'ポケットモンスター ピカチュウ 未開封',
+        'ポケットモンスター 金 未開封', 'ポケットモンスター 銀 未開封',
+        'ポケットモンスター クリスタル 未開封',
     ]
 
     # --- Final Fantasy on PlayStation: ONLY FF7 / FF8 / FF9 / FFX ---
@@ -375,11 +407,11 @@ class Config:
         {
             'name': 'Pokemon Game Unopened (Mercari)',
             'platform': 'mercari',
-            'keyword': 'ポケットモンスター ゲームボーイ 未開封',
+            'keywords': _PKMN_UNOPENED_KW,
             'state_category': 'mercari_pokemon_unopened',
             'validators': [
                 ['ポケモン', 'ポケットモンスター', 'pocket monster'],
-                _PKMN_MEDIUM,
+                _PKMN_GAME,
                 ['未開封', '未使用', 'sealed', 'unopened'],
             ],
             'exclude': _PKMN_EXCLUDE,
@@ -387,11 +419,11 @@ class Config:
         {
             'name': 'Pokemon Game Unopened (Yahoo)',
             'platform': 'yahoo',
-            'keyword': 'ポケットモンスター ゲームボーイ 未開封',
+            'keywords': _PKMN_UNOPENED_KW,
             'state_category': 'yahoo_pokemon_unopened',
             'validators': [
                 ['ポケモン', 'ポケットモンスター', 'pocket monster'],
-                _PKMN_MEDIUM,
+                _PKMN_GAME,
                 ['未開封', '未使用', 'sealed', 'unopened'],
             ],
             'exclude': _PKMN_EXCLUDE,
@@ -399,11 +431,16 @@ class Config:
         {
             'name': 'Pokemon Game Unopened (eBay)',
             'platform': 'ebay',
-            'keyword': 'pokemon game boy sealed',
+            'keywords': [
+                'pokemon red game boy sealed', 'pokemon green game boy sealed',
+                'pokemon blue game boy sealed', 'pokemon yellow game boy sealed',
+                'pokemon gold game boy sealed', 'pokemon silver game boy sealed',
+                'pokemon crystal game boy sealed',
+            ],
             'state_category': 'ebay_pokemon_unopened',
             'validators': [
                 ['pocket monster', 'pokemon', 'pokémon'],
-                _PKMN_MEDIUM,
+                _PKMN_GAME,
                 ['sealed', 'unopened', '未開封'],
             ],
             'exclude': _PKMN_EXCLUDE,

@@ -154,32 +154,42 @@ class ListingMonitor:
             for search in Config.MONITORED_SEARCHES:
                 name = search['name']
                 platform = search['platform']
-                keyword = search['keyword']
+                # A search may carry a single 'keyword' or a list of 'keywords'.
+                keywords = search.get('keywords') or [search['keyword']]
                 category = search['state_category']
                 validators = search['validators']
 
                 safe_name = name.encode('ascii', 'replace').decode('ascii')
                 logger.info(f"Checking: {safe_name} ({platform})...")
 
-                # Scrape with a hard 2-minute timeout per search
+                # Scrape each keyword (hard 2-min timeout each), combine + dedup.
                 listings = []
-                try:
-                    with ThreadPoolExecutor(max_workers=1) as executor:
-                        if platform == 'mercari':
-                            future = executor.submit(self.mercari_scraper.search_listings, keyword=keyword)
-                        elif platform == 'yahoo':
-                            future = executor.submit(self.yahoo_scraper.search_listings, keyword=keyword)
-                        elif platform == 'ebay':
-                            future = executor.submit(self.ebay_scraper.scrape_active_listings, search_term=keyword, max_pages=1)
-                        else:
+                seen_scrape = set()
+                for kw in keywords:
+                    try:
+                        with ThreadPoolExecutor(max_workers=1) as executor:
+                            if platform == 'mercari':
+                                future = executor.submit(self.mercari_scraper.search_listings, keyword=kw)
+                            elif platform == 'yahoo':
+                                future = executor.submit(self.yahoo_scraper.search_listings, keyword=kw)
+                            elif platform == 'ebay':
+                                future = executor.submit(self.ebay_scraper.scrape_active_listings, search_term=kw, max_pages=1)
+                            else:
+                                break
+                            batch = future.result(timeout=120)
+                    except FuturesTimeout:
+                        logger.warning(f"  Timeout after 2min for {safe_name} (kw), skipping keyword")
+                        continue
+                    except Exception as e:
+                        logger.warning(f"  Search failed for {safe_name}: {e}")
+                        continue
+                    for l in batch:
+                        lid = l.get('item_id') or l.get('listing_id')
+                        if lid and lid in seen_scrape:
                             continue
-                        listings = future.result(timeout=120)
-                except FuturesTimeout:
-                    logger.warning(f"  Timeout after 2min for {safe_name}, skipping")
-                    continue
-                except Exception as e:
-                    logger.warning(f"  Search failed for {safe_name}: {e}")
-                    continue
+                        if lid:
+                            seen_scrape.add(lid)
+                        listings.append(l)
 
                 logger.info(f"  Found {len(listings)} raw listings")
 
