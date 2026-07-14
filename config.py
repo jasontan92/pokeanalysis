@@ -56,17 +56,22 @@ class Config:
         'ディスクシステム', 'hvc', 'fc', 'famicom', 'family computer',
         # Super Famicom now allowed (Zelda/Mario/DQ/FF SFC titles)
         'スーパーファミコン', 'スーファミ', 'super famicom', 'sfc', 'snes', 'super nintendo',
+        # Nintendo 64 now allowed (Zelda Ocarina/Majora, Super Mario 64, etc.)
+        # Specific console terms only ('64' alone matches product codes).
+        'ニンテンドー64', 'ニンテンドウ64', 'nintendo64', 'nintendo 64', 'n64', 'ロクヨン',
     ]
     # Aggressive reject list: other consoles, merch, apparel, books, peripherals.
     _FC_EXCLUDE_JP: list[str] = [
         # other consoles / not the original cartridge (Super Famicom now allowed)
         'ニンテンドースイッチ', 'switch', 'ゲームボーイアドバンス', 'gba',
         'ニンテンドーds', '3ds', 'ツクダ', 'ゆ太郎', 'プレイステーション', 'ps1', 'ps2',
-        'wii', 'ゲームキューブ', 'gamecube', 'ニンテンドー64', 'nintendo 64',
+        'wii', 'ゲームキューブ', 'gamecube',
         'バーチャルコンソール', 'virtual console', 'ミニ', 'クラシックミニ',
         # cartridge/carry cases & other non-game accessories
         '収納', 'キャリーケース', 'キャリング', '空ケース', 'ケースのみ',
         'プラスティック', 'プラスチック', 'カセットケース',
+        # toys / media that collide with the "64" keyword
+        'ホットウィール', 'hot wheels', 'マテル', 'mattel', 'cd', 'dvd', 'ホットウィールズ',
         # books / magazines / paper goods
         '攻略本', 'ガイドブック', '奥義大全書', 'ファンブック', '設定資料', '資料集',
         '記念book', '記念ブック', 'てれびくん', '雑誌', '増刊', 'コミック', '漫画',
@@ -319,100 +324,100 @@ class Config:
         # --- Famicom games (Zelda / Mario / DQ / FF): VGA OR CGC OR unopened ---
         # Zelda
         {
-            'name': 'Zelda Famicom/SFC VGA/CGC/Sealed (Mercari)',
+            'name': 'Zelda Famicom/SFC/N64 VGA/CGC/Sealed (Mercari)',
             'platform': 'mercari',
-            'keyword': 'ゼルダの伝説 ファミコン 未開封',
+            'keywords': ['ゼルダの伝説 ファミコン 未開封', 'ゼルダの伝説 64 未開封'],
             'state_category': 'mercari_zelda_famicom',
             'validators': [['ゼルダの伝説', 'ゼルダ', 'zelda'], _FC_MEDIUM, _FC_COND],
             'exclude': _FC_EXCLUDE_JP,
         },
         {
-            'name': 'Zelda Famicom/SFC VGA/CGC/Sealed (Yahoo)',
+            'name': 'Zelda Famicom/SFC/N64 VGA/CGC/Sealed (Yahoo)',
             'platform': 'yahoo',
-            'keyword': 'ゼルダの伝説 ファミコン 未開封',
+            'keywords': ['ゼルダの伝説 ファミコン 未開封', 'ゼルダの伝説 64 未開封'],
             'state_category': 'yahoo_zelda_famicom',
             'validators': [['ゼルダの伝説', 'ゼルダ', 'zelda'], _FC_MEDIUM, _FC_COND],
             'exclude': _FC_EXCLUDE_JP,
         },
         {
-            'name': 'Zelda Famicom/SFC VGA/CGC/Sealed (eBay)',
+            'name': 'Zelda Famicom/SFC/N64 VGA/CGC/Sealed (eBay)',
             'platform': 'ebay',
-            'keyword': 'zelda famicom',
+            'keywords': ['zelda famicom', 'zelda nintendo 64'],
             'state_category': 'ebay_zelda_famicom',
             'validators': [['zelda'], _FC_MEDIUM, _FC_COND],
             'exclude': _FC_EXCLUDE_EN,
         },
         # Mario
         {
-            'name': 'Mario Famicom/SFC VGA/CGC/Sealed (Mercari)',
+            'name': 'Mario Famicom/SFC/N64 VGA/CGC/Sealed (Mercari)',
             'platform': 'mercari',
-            'keyword': 'スーパーマリオ ファミコン 未開封',
+            'keywords': ['スーパーマリオ ファミコン 未開封', 'スーパーマリオ 64 未開封', 'マリオカート 64 未開封'],
             'state_category': 'mercari_mario_famicom',
             'validators': [['スーパーマリオ', 'マリオ', 'mario'], _FC_MEDIUM, _FC_COND],
             'exclude': _FC_EXCLUDE_JP,
         },
         {
-            'name': 'Mario Famicom/SFC VGA/CGC/Sealed (Yahoo)',
+            'name': 'Mario Famicom/SFC/N64 VGA/CGC/Sealed (Yahoo)',
             'platform': 'yahoo',
-            'keyword': 'スーパーマリオ ファミコン 未開封',
+            'keywords': ['スーパーマリオ ファミコン 未開封', 'スーパーマリオ 64 未開封', 'マリオカート 64 未開封'],
             'state_category': 'yahoo_mario_famicom',
             'validators': [['スーパーマリオ', 'マリオ', 'mario'], _FC_MEDIUM, _FC_COND],
             'exclude': _FC_EXCLUDE_JP,
         },
         {
-            'name': 'Mario Famicom/SFC VGA/CGC/Sealed (eBay)',
+            'name': 'Mario Famicom/SFC/N64 VGA/CGC/Sealed (eBay)',
             'platform': 'ebay',
-            'keyword': 'super mario famicom',
+            'keywords': ['super mario famicom', 'mario nintendo 64', 'mario kart 64'],
             'state_category': 'ebay_mario_famicom',
             'validators': [['mario'], _FC_MEDIUM, _FC_COND],
             'exclude': _FC_EXCLUDE_EN,
         },
         # Dragon Quest
         {
-            'name': 'Dragon Quest Famicom/SFC VGA/CGC/Sealed (Mercari)',
+            'name': 'Dragon Quest Famicom/SFC/N64 VGA/CGC/Sealed (Mercari)',
             'platform': 'mercari',
-            'keyword': 'ドラゴンクエスト ファミコン 未開封',
+            'keywords': ['ドラゴンクエスト ファミコン 未開封', 'ドラゴンクエスト 64 未開封'],
             'state_category': 'mercari_dq_famicom',
             'validators': [['ドラゴンクエスト', 'ドラクエ', 'dragon quest'], _FC_MEDIUM, _FC_COND],
             'exclude': _FC_EXCLUDE_JP,
         },
         {
-            'name': 'Dragon Quest Famicom/SFC VGA/CGC/Sealed (Yahoo)',
+            'name': 'Dragon Quest Famicom/SFC/N64 VGA/CGC/Sealed (Yahoo)',
             'platform': 'yahoo',
-            'keyword': 'ドラゴンクエスト ファミコン 未開封',
+            'keywords': ['ドラゴンクエスト ファミコン 未開封', 'ドラゴンクエスト 64 未開封'],
             'state_category': 'yahoo_dq_famicom',
             'validators': [['ドラゴンクエスト', 'ドラクエ', 'dragon quest'], _FC_MEDIUM, _FC_COND],
             'exclude': _FC_EXCLUDE_JP,
         },
         {
-            'name': 'Dragon Quest Famicom/SFC VGA/CGC/Sealed (eBay)',
+            'name': 'Dragon Quest Famicom/SFC/N64 VGA/CGC/Sealed (eBay)',
             'platform': 'ebay',
-            'keyword': 'dragon quest famicom',
+            'keywords': ['dragon quest famicom', 'dragon quest nintendo 64'],
             'state_category': 'ebay_dq_famicom',
             'validators': [['dragon quest', 'dragon warrior'], _FC_MEDIUM, _FC_COND],
             'exclude': _FC_EXCLUDE_EN,
         },
         # Final Fantasy
         {
-            'name': 'Final Fantasy Famicom/SFC VGA/CGC/Sealed (Mercari)',
+            'name': 'Final Fantasy Famicom/SFC/N64 VGA/CGC/Sealed (Mercari)',
             'platform': 'mercari',
-            'keyword': 'ファイナルファンタジー ファミコン 未開封',
+            'keywords': ['ファイナルファンタジー ファミコン 未開封', 'ファイナルファンタジー 64 未開封'],
             'state_category': 'mercari_ff_famicom',
             'validators': [['ファイナルファンタジー', 'final fantasy'], _FC_MEDIUM, _FC_COND],
             'exclude': _FC_EXCLUDE_JP,
         },
         {
-            'name': 'Final Fantasy Famicom/SFC VGA/CGC/Sealed (Yahoo)',
+            'name': 'Final Fantasy Famicom/SFC/N64 VGA/CGC/Sealed (Yahoo)',
             'platform': 'yahoo',
-            'keyword': 'ファイナルファンタジー ファミコン 未開封',
+            'keywords': ['ファイナルファンタジー ファミコン 未開封', 'ファイナルファンタジー 64 未開封'],
             'state_category': 'yahoo_ff_famicom',
             'validators': [['ファイナルファンタジー', 'final fantasy'], _FC_MEDIUM, _FC_COND],
             'exclude': _FC_EXCLUDE_JP,
         },
         {
-            'name': 'Final Fantasy Famicom/SFC VGA/CGC/Sealed (eBay)',
+            'name': 'Final Fantasy Famicom/SFC/N64 VGA/CGC/Sealed (eBay)',
             'platform': 'ebay',
-            'keyword': 'final fantasy famicom',
+            'keywords': ['final fantasy famicom', 'final fantasy nintendo 64'],
             'state_category': 'ebay_ff_famicom',
             'validators': [['final fantasy'], _FC_MEDIUM, _FC_COND],
             'exclude': _FC_EXCLUDE_EN,
