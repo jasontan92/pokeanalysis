@@ -433,6 +433,15 @@ class Config:
             'exclude': _FC_EXCLUDE_EN,
         },
         # --- Pokemon games, unopened (未開封) — game-medium gated ---
+        # Mercari only: NO sealed-word validator. Mercari's keyword search
+        # matches title AND description, and every _PKMN_UNOPENED_KW already
+        # contains 未開封 — so anything returned here has already been filtered
+        # on sealed-ness. Re-checking the title would drop listings where the
+        # seller states 未開封 only in the description and leads the title with
+        # the variant name, e.g. m65338075020 "限定品 トヨタ限定 ポケットモンスター
+        # 青 ゲームボーイソフト" (Toyota-limited Blue) — exactly the rare promos
+        # worth catching. Trade-off: looser description matches get through;
+        # _PKMN_EXCLUDE + _PKMN_GAME still gate out merch and non-GB/GBC games.
         {
             'name': 'Pokemon Game Unopened (Mercari)',
             'platform': 'mercari',
@@ -441,7 +450,6 @@ class Config:
             'validators': [
                 ['ポケモン', 'ポケットモンスター', 'pocket monster'],
                 _PKMN_GAME,
-                ['未開封', '未使用', 'sealed', 'unopened'],
             ],
             'exclude': _PKMN_EXCLUDE,
         },
