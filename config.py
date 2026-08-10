@@ -219,6 +219,171 @@ class Config:
         'プロダクトコード', 'クリアファイル', 'plush', 'figure', 'guide', 'movie',
     ]
 
+    # --- Per-title Famicom/SFC blocks (Castlevania / Chrono Trigger / Metroid /
+    # Metal Gear). Each reuses _FC_COND + _FC_EXCLUDE_JP and adds only the
+    # sequels/ports that the shared lists don't already reject.
+    # Narrower than _FC_MEDIUM: these titles were requested as Famicom (+SFC for
+    # Chrono Trigger / Super Metroid), so N64 and Game Boy are NOT accepted —
+    # that keeps e.g. "悪魔城ドラキュラ黙示録 ニンテンドウ64" out.
+    _FCSFC_MEDIUM: list[str] = [
+        'ファミコン', 'ファミリーコンピュータ', 'ファミリーコンピューター',
+        'ディスクシステム', 'hvc', 'fcd', 'fc', 'famicom', 'family computer',
+        'スーパーファミコン', 'スーファミ', 'super famicom', 'sfc', 'shvc',
+        'snes', 'super nintendo',
+    ]
+    _CASTLEVANIA_EXCLUDE: list[str] = _FC_EXCLUDE_JP + [
+        # non-Nintendo ports & later spin-offs that name the franchise
+        'pcエンジン', 'pc engine', 'メガドライブ', 'mega drive', 'msx', 'x68000',
+        'ワンダースワン', 'wonderswan', 'サターン', 'saturn', 'xbox', 'steam',
+        # NOTE: bare "コレクション" is NOT excluded — sellers write "コレクション整理"
+        # on genuine sealed listings. Only the re-release collections are named.
+        'アニバーサリーコレクション', 'anniversary collection', 'アドヴァンスコレクション',
+        'advance collection', 'ドミナスコレクション', 'dominus collection',
+        'netflix', 'ネットフリックス',
+        'ハーモニー', 'harmony', 'ロードオブシャドウ', 'lords of shadow',
+    ]
+    _CHRONO_EXCLUDE: list[str] = _FC_EXCLUDE_JP + [
+        # different game / later ports (DS, PS1, mobile, Steam all out of scope)
+        'クロノクロス', 'クロノ・クロス', 'chrono cross',
+        'ラジカルドリーマーズ', 'radical dreamers',
+        'アルティメットヒッツ', 'ultimate hits', 'steam', 'アプリ',
+    ]
+    _METROID_EXCLUDE: list[str] = _FC_EXCLUDE_JP + [
+        # sequels / remakes on consoles outside the FC/SFC scope
+        'プライム', 'prime', 'ドレッド', 'dread', 'フュージョン', 'fusion',
+        'ゼロミッション', 'zero mission', 'サムスリターンズ', 'samus returns',
+        'アザーエム', 'other m', 'メトロイド2', 'metroid ii',
+    ]
+    _METAL_GEAR_EXCLUDE: list[str] = _FC_EXCLUDE_JP + [
+        # MGS line and non-Nintendo platforms
+        'ソリッド', 'solid', 'mgs', 'サブシスタンス', 'subsistence',
+        'ライジング', 'rising', 'サバイヴ', 'survive', 'ファントムペイン',
+        'phantom pain', 'ピースウォーカー', 'peace walker',
+        'msx', 'メガドライブ', 'xbox', 'steam', 'マスターコレクション',
+        'master collection', 'デルタ', 'delta',
+    ]
+
+    # --- Kingdom Hearts 1 on PS2 ONLY (incl. Final Mix) ---
+    # KH1 listings often read just "キングダムハーツ", so the gate is the title
+    # word + a PlayStation term, and every sequel/spin-off/HD collection is
+    # rejected explicitly below. Note matching is plain substring, so the
+    # sequel numbers are anchored to "ハーツ"/"hearts" (bare "2"/"ii" would
+    # false-reject legitimate KH1 titles).
+    _KH_TITLES: list[str] = ['キングダムハーツ', 'キングダム ハーツ', 'kingdom hearts']
+    _KH_MEDIUM: list[str] = ['ps2', 'ps 2', 'プレイステーション', 'プレステ', 'playstation']
+    _KH_EXCLUDE: list[str] = [
+        # KH2 and beyond (anchored to the title word so "1" isn't needed)
+        'ハーツ2', 'ハーツ２', 'ハーツⅡ', 'ハーツii', 'ハーツ ii', 'ハーツ 2',
+        'hearts 2', 'hearts ii', 'kh2', 'kh 2',
+        'ハーツ3', 'ハーツ３', 'ハーツⅢ', 'ハーツiii', 'ハーツ 3',
+        'hearts 3', 'hearts iii', 'kh3', 'kh 3',
+        # spin-offs
+        'チェインオブメモリーズ', 'チェイン オブ メモリーズ', 'chain of memories',
+        're:コム', 'recom', 're:chain',
+        '358', 'デイズ', 'days',
+        'バースバイスリープ', 'バース バイ スリープ', 'birth by sleep', 'bbs',
+        'リコーデッド', 're:coded', 'コーデッド', 'coded',
+        'ドリームドロップ', 'dream drop', 'ddd',
+        'メロディオブメモリー', 'melody of memory',
+        'アンチェインド', 'unchained', 'ユニオンクロス', 'union', 'ミッシングリンク',
+        # HD remasters / collections (PS3/PS4/Switch/Xbox, not the PS2 original)
+        'hd 1.5', 'hd1.5', '1.5+', 'hd 2.5', 'hd2.5', '+2.5', 'hd 2.8', 'hd2.8',
+        'リミックス', 'remix', 'ザ ストーリー ソー ファー', 'story so far',
+        'integrum', 'インテグラム', 'オールインワン', 'all-in-one',
+        # wrong platforms
+        'ps3', 'ps4', 'ps5', 'playstation 3', 'playstation 4', 'playstation 5',
+        'プレイステーション3', 'プレイステーション4', 'プレイステーション5',
+        'プレイステーション 3', 'プレイステーション 4', 'プレイステーション 5',
+        'psp', 'vita', 'switch', 'スイッチ', 'xbox', 'steam', 'epic',
+        'ゲームボーイアドバンス', 'gba', 'ニンテンドーds', '3ds', 'クラウド版',
+        'リマスター', 'remaster', 'リメイク', 'remake', '体験版', 'demo', 'trial',
+        # merch / media
+        '攻略本', 'ガイドブック', '設定資料', 'カレンダー', 'サントラ',
+        'サウンドトラック', 'soundtrack', 'cd', 'dvd', 'blu-ray', 'コミック', '漫画',
+        'フィギュア', 'figure', 'ぬいぐるみ', 'plush', 'カード', 'トレカ',
+        'ステッカー', 'シール', 'ポスター', 'キーホルダー', 'ストラップ',
+        'アクリル', 'グッズ', 'クリアファイル', 'プロダクトコード', 'ネックレス',
+        'ピアス', 'tシャツ', '空ケース', 'ケースのみ', 'ウエハース', '一番くじ',
+        # merch multi-packs that name PS2 but aren't the game
+        '種類セット', '全6種', '全5種', '全4種', '全3種', 'コンプリートセット',
+    ]
+
+    # --- PlayStation 1 merch/media reject list, shared by the PS1 searches ---
+    _PS1_MERCH_EXCLUDE: list[str] = [
+        '攻略本', 'ガイドブック', '設定資料', '資料集', 'カレンダー', '冊子',
+        'コミック', '漫画', '小説', 'ノベル', '雑誌', 'カタログ', 'チラシ',
+        # game magazines that merely name the title on the cover
+        '月号', '付録', '増刊', '週刊', '別冊', '電撃playstation',
+        '電撃プレイステーション', 'ファミ通', 'ゲーム批評', 'vol.',
+        'サントラ', 'サウンドトラック', 'soundtrack', 'cd', 'dvd', 'blu-ray',
+        'vhs', 'ビデオ', 'レコード', 'vinyl', '映画', 'movie',
+        'フィギュア', 'figure', 'ぬいぐるみ', 'plush', '人形', 'プライズ',
+        '一番くじ', 'ガチャ', '缶バッジ', 'バッジ', 'ピンズ', 'メダル',
+        'カード', 'トレカ', 'trading card', 'シール', 'ステッカー', 'ポスター',
+        'キーホルダー', 'ストラップ', 'アクリル', 'グッズ', 'クリアファイル',
+        'tシャツ', 'タオル', 'マグカップ', '時計', 'zippo', 'ライター',
+        '空ケース', 'ケースのみ', 'ジャケットのみ', '説明書のみ', 'ディスクのみ',
+        'プロダクトコード', 'コントローラ', 'メモリーカード', 'アダプタ',
+    ]
+
+    # --- Biohazard 1 on PlayStation ONLY (incl. Director's Cut / DualShock ver) ---
+    # Sequel numbers are anchored to "ハザード"/"evil" because bare "2"/"3"
+    # appear in prices, lot counts and product codes.
+    _BIO1_TITLES: list[str] = ['バイオハザード', 'biohazard', 'resident evil', 'bio hazard']
+    _BIO1_MEDIUM: list[str] = ['ps', 'プレイステーション', 'プレステ', 'playstation', 'psx']
+    _BIO1_EXCLUDE: list[str] = _PS1_MERCH_EXCLUDE + [
+        # sequels / numbered entries (anchored to the title word)
+        'ハザード2', 'ハザード２', 'ハザードii', 'ハザード 2', 'バイオ2',
+        'ハザード3', 'ハザード３', 'ハザードiii', 'ハザード 3', 'バイオ3',
+        'ハザード4', 'ハザード４', 'ハザードiv', 'ハザード 4', 'バイオ4',
+        'ハザード5', 'ハザード5', 'ハザード6', 'ハザード7', 'ハザード8',
+        'ハザード0', 'ハザードゼロ', 'バイオ0',
+        'evil 2', 'evil 3', 'evil 4', 'evil 5', 'evil 6', 'evil 7',
+        'evil ii', 'evil iii', 'evil zero', 're2', 're3', 're4', 're:2', 're:3',
+        # spin-offs
+        'ヴェロニカ', 'ベロニカ', 'veronica', 'ガンサバイバー', 'gun survivor',
+        'サバイバー', 'survivor', 'アウトブレイク', 'outbreak', 'デッドエイム',
+        'dead aim', 'ダークサイド', 'アンブレラ', 'umbrella', 'クロニクルズ',
+        'chronicles', 'リベレーションズ', 'revelations', 'ヴィレッジ', 'village',
+        'オペレーション', 'operation', 'ラクーンシティ', 'raccoon city',
+        'リバースオブジエンド', 'ガイデン', 'gaiden', 'コードベロニカ',
+        # remakes / remasters / later platforms
+        'リメイク', 'remake', 'リマスター', 'remaster', 'hdリマスター', 'hd remaster',
+        'ps2', 'ps3', 'ps4', 'ps5', 'playstation 2', 'playstation 3',
+        'playstation 4', 'playstation 5', 'プレイステーション2', 'プレイステーション3',
+        'プレイステーション4', 'プレイステーション5', 'psp', 'vita',
+        'ゲームキューブ', 'gamecube', 'wii', 'switch', 'スイッチ', 'xbox',
+        'steam', 'ニンテンドーds', '3ds', 'アーカイブス', 'archives',
+        'ゲームボーイ', 'game boy', 'サターン', 'saturn', 'windows', 'pc版',
+        '体験版', 'demo', 'trial', '非売品',
+    ]
+
+    # --- Castlevania: Symphony of the Night (悪魔城ドラキュラX 月下の夜想曲) ---
+    # PS1 original + the Sega Saturn port; the PSP "Dracula X Chronicle" and
+    # every later re-release are rejected. 血の輪廻 (Rondo of Blood) also carries
+    # the "ドラキュラX" name, so it is excluded explicitly.
+    _SOTN_TITLES: list[str] = [
+        '月下の夜想曲', '月下夜想曲', 'symphony of the night', 'sotn', 'gekka',
+    ]
+    _SOTN_MEDIUM: list[str] = [
+        'ps', 'プレイステーション', 'プレステ', 'playstation', 'psx',
+        'サターン', 'セガサターン', 'saturn',
+    ]
+    _SOTN_EXCLUDE: list[str] = _PS1_MERCH_EXCLUDE + [
+        # different game that shares the "ドラキュラX" name
+        '血の輪廻', 'rondo', 'ロンド', 'pcエンジン', 'pc engine',
+        # PSP compilation and later re-releases
+        'クロニクル', 'chronicle', 'アドバンスコレクション', 'advance collection',
+        'ドミナスコレクション', 'dominus collection', 'レクイエム', 'requiem',
+        'アニバーサリーコレクション', 'anniversary collection',
+        # wrong platforms
+        'ps3', 'ps4', 'ps5', 'playstation 3', 'playstation 4', 'playstation 5',
+        'プレイステーション3', 'プレイステーション4', 'プレイステーション5',
+        'psp', 'vita', 'switch', 'スイッチ', 'xbox', '360', 'steam',
+        'ニンテンドーds', '3ds', 'gba', 'アドバンス', 'アーカイブス', 'archives',
+        'スマホ', 'アプリ', 'ios', 'android', '体験版', 'demo', 'trial',
+    ]
+
     # Monitored searches — Pokemon game cartridges only
     # validators: list of lists — each inner list = alternatives (OR), all outer lists must pass (AND)
     # optional 'exclude': per-search extra exclude terms (on top of GLOBAL_EXCLUDE)
@@ -506,6 +671,133 @@ class Config:
             'state_category': 'ebay_ff_ps',
             'validators': [_FF_PS_TITLES, _FF_PS_MEDIUM, _FC_COND],
             'exclude': _FF_PS_EXCLUDE,
+        },
+        # --- Castlevania Famicom (悪魔城ドラキュラ), sealed/graded ---
+        {
+            'name': 'Castlevania Famicom Sealed/Graded (Mercari)',
+            'platform': 'mercari',
+            'keywords': ['悪魔城ドラキュラ ファミコン 未開封', '悪魔城ドラキュラ ディスクシステム 未開封'],
+            'state_category': 'mercari_castlevania_famicom',
+            'validators': [['悪魔城ドラキュラ', '悪魔城', 'castlevania', 'akumajo', 'akumajou'], _FCSFC_MEDIUM, _FC_COND],
+            'exclude': _CASTLEVANIA_EXCLUDE,
+        },
+        {
+            'name': 'Castlevania Famicom Sealed/Graded (Yahoo)',
+            'platform': 'yahoo',
+            'keywords': ['悪魔城ドラキュラ ファミコン 未開封', '悪魔城ドラキュラ ディスクシステム 未開封'],
+            'state_category': 'yahoo_castlevania_famicom',
+            'validators': [['悪魔城ドラキュラ', '悪魔城', 'castlevania', 'akumajo', 'akumajou'], _FCSFC_MEDIUM, _FC_COND],
+            'exclude': _CASTLEVANIA_EXCLUDE,
+        },
+        # --- Chrono Trigger Super Famicom, sealed/graded ---
+        {
+            'name': 'Chrono Trigger SFC Sealed/Graded (Mercari)',
+            'platform': 'mercari',
+            'keywords': ['クロノトリガー スーパーファミコン 未開封', 'クロノ・トリガー SFC 未開封'],
+            'state_category': 'mercari_chrono_trigger_sfc',
+            'validators': [
+                ['クロノトリガー', 'クロノ・トリガー', 'クロノ トリガー', 'chrono trigger'],
+                _FCSFC_MEDIUM,
+                _FC_COND,
+            ],
+            'exclude': _CHRONO_EXCLUDE,
+        },
+        {
+            'name': 'Chrono Trigger SFC Sealed/Graded (Yahoo)',
+            'platform': 'yahoo',
+            'keywords': ['クロノトリガー スーパーファミコン 未開封', 'クロノ・トリガー SFC 未開封'],
+            'state_category': 'yahoo_chrono_trigger_sfc',
+            'validators': [
+                ['クロノトリガー', 'クロノ・トリガー', 'クロノ トリガー', 'chrono trigger'],
+                _FCSFC_MEDIUM,
+                _FC_COND,
+            ],
+            'exclude': _CHRONO_EXCLUDE,
+        },
+        # --- Kingdom Hearts 1 (PS2 only, incl. Final Mix), sealed/graded ---
+        {
+            'name': 'Kingdom Hearts 1 PS2 Sealed/Graded (Mercari)',
+            'platform': 'mercari',
+            'keywords': ['キングダムハーツ PS2 未開封', 'キングダムハーツ1 未開封', 'キングダムハーツ ファイナルミックス 未開封'],
+            'state_category': 'mercari_kh1_ps2',
+            'validators': [_KH_TITLES, _KH_MEDIUM, _FC_COND],
+            'exclude': _KH_EXCLUDE,
+        },
+        {
+            'name': 'Kingdom Hearts 1 PS2 Sealed/Graded (Yahoo)',
+            'platform': 'yahoo',
+            'keywords': ['キングダムハーツ PS2 未開封', 'キングダムハーツ1 未開封', 'キングダムハーツ ファイナルミックス 未開封'],
+            'state_category': 'yahoo_kh1_ps2',
+            'validators': [_KH_TITLES, _KH_MEDIUM, _FC_COND],
+            'exclude': _KH_EXCLUDE,
+        },
+        # --- Metroid Famicom (メトロイド), sealed/graded ---
+        {
+            'name': 'Metroid Famicom Sealed/Graded (Mercari)',
+            'platform': 'mercari',
+            'keywords': ['メトロイド ファミコン 未開封', 'メトロイド ディスクシステム 未開封'],
+            'state_category': 'mercari_metroid_famicom',
+            'validators': [['メトロイド', 'metroid'], _FCSFC_MEDIUM, _FC_COND],
+            'exclude': _METROID_EXCLUDE,
+        },
+        {
+            'name': 'Metroid Famicom Sealed/Graded (Yahoo)',
+            'platform': 'yahoo',
+            'keywords': ['メトロイド ファミコン 未開封', 'メトロイド ディスクシステム 未開封'],
+            'state_category': 'yahoo_metroid_famicom',
+            'validators': [['メトロイド', 'metroid'], _FCSFC_MEDIUM, _FC_COND],
+            'exclude': _METROID_EXCLUDE,
+        },
+        # --- Metal Gear Famicom (メタルギア), sealed/graded ---
+        {
+            'name': 'Metal Gear Famicom Sealed/Graded (Mercari)',
+            'platform': 'mercari',
+            'keywords': ['メタルギア ファミコン 未開封'],
+            'state_category': 'mercari_metal_gear_famicom',
+            'validators': [['メタルギア', 'metal gear'], _FCSFC_MEDIUM, _FC_COND],
+            'exclude': _METAL_GEAR_EXCLUDE,
+        },
+        {
+            'name': 'Metal Gear Famicom Sealed/Graded (Yahoo)',
+            'platform': 'yahoo',
+            'keywords': ['メタルギア ファミコン 未開封'],
+            'state_category': 'yahoo_metal_gear_famicom',
+            'validators': [['メタルギア', 'metal gear'], _FCSFC_MEDIUM, _FC_COND],
+            'exclude': _METAL_GEAR_EXCLUDE,
+        },
+        # --- Biohazard 1 (PlayStation), sealed/graded ---
+        {
+            'name': 'Biohazard 1 PS Sealed/Graded (Mercari)',
+            'platform': 'mercari',
+            'keywords': ['バイオハザード プレイステーション 未開封', 'バイオハザード PS 未開封'],
+            'state_category': 'mercari_biohazard1_ps',
+            'validators': [_BIO1_TITLES, _BIO1_MEDIUM, _FC_COND],
+            'exclude': _BIO1_EXCLUDE,
+        },
+        {
+            'name': 'Biohazard 1 PS Sealed/Graded (Yahoo)',
+            'platform': 'yahoo',
+            'keywords': ['バイオハザード プレイステーション 未開封', 'バイオハザード PS 未開封'],
+            'state_category': 'yahoo_biohazard1_ps',
+            'validators': [_BIO1_TITLES, _BIO1_MEDIUM, _FC_COND],
+            'exclude': _BIO1_EXCLUDE,
+        },
+        # --- Castlevania: Symphony of the Night (月下の夜想曲), sealed/graded ---
+        {
+            'name': 'Castlevania Symphony of the Night Sealed/Graded (Mercari)',
+            'platform': 'mercari',
+            'keywords': ['月下の夜想曲 未開封', '悪魔城ドラキュラX 月下の夜想曲 未開封'],
+            'state_category': 'mercari_sotn',
+            'validators': [_SOTN_TITLES, _SOTN_MEDIUM, _FC_COND],
+            'exclude': _SOTN_EXCLUDE,
+        },
+        {
+            'name': 'Castlevania Symphony of the Night Sealed/Graded (Yahoo)',
+            'platform': 'yahoo',
+            'keywords': ['月下の夜想曲 未開封', '悪魔城ドラキュラX 月下の夜想曲 未開封'],
+            'state_category': 'yahoo_sotn',
+            'validators': [_SOTN_TITLES, _SOTN_MEDIUM, _FC_COND],
+            'exclude': _SOTN_EXCLUDE,
         },
     ]
 
