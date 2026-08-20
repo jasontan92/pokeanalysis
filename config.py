@@ -326,6 +326,64 @@ class Config:
         'プロダクトコード', 'コントローラ', 'メモリーカード', 'アダプタ',
     ]
 
+    # --- Tekken 1 ONLY (鉄拳, SLPS-00040) on PlayStation ---
+    # 鉄拳 is a substring of 鉄拳2/3/4..., so every sequel is rejected by an
+    # anchored number. "鉄拳" is also an everyday word (鉄拳制裁) and a comedian's
+    # stage name, so the PlayStation gate does the heavy lifting here.
+    _TEKKEN1_TITLES: list[str] = ['鉄拳', 'tekken', 'slps-00040', 'slps00040']
+    _TEKKEN1_EXCLUDE: list[str] = _PS1_MERCH_EXCLUDE + [
+        # sequels (anchored to the title word — bare digits hit prices/codes)
+        '鉄拳2', '鉄拳２', '鉄拳3', '鉄拳３', '鉄拳4', '鉄拳４',
+        '鉄拳5', '鉄拳５', '鉄拳6', '鉄拳６', '鉄拳7', '鉄拳７', '鉄拳8', '鉄拳８',
+        '鉄拳 2', '鉄拳 3', '鉄拳 4', '鉄拳 5', '鉄拳 6', '鉄拳 7', '鉄拳 8',
+        'tekken 2', 'tekken 3', 'tekken 4', 'tekken 5', 'tekken 6', 'tekken 7',
+        'tekken 8', 'tekken2', 'tekken3', 'tekken ii', 'tekken iii',
+        # spin-offs / other product codes for later entries
+        'タッグ', 'tag tournament', 'タッグトーナメント', 'ニーナ',
+        'デス バイ ディグリーズ', 'death by degrees', 'アドバンス', 'advance',
+        'ダークリザレクション', 'dark resurrection', 'ブラッドライン',
+        'bloodline', 'ブラッド・ベンジェンス', 'blood vengeance', 'レボリューション',
+        'カードチャレンジ', 'モバイル', 'mobile',
+        # not the game: the comedian / the idiom
+        '鉄拳制裁', 'パラパラ漫画', '振り子',
+        # wrong platforms
+        'ps2', 'ps3', 'ps4', 'ps5', 'playstation 2', 'playstation 3',
+        'playstation 4', 'playstation 5', 'プレイステーション2',
+        'プレイステーション3', 'プレイステーション4', 'プレイステーション5',
+        'psp', 'vita', 'switch', 'スイッチ', 'xbox', '360', 'steam', 'arcade',
+        'アーケード', 'アーカイブス', 'archives', 'gba', 'ニンテンドーds', '3ds',
+        'リマスター', 'remaster', 'リメイク', 'remake', '体験版', 'demo', 'trial',
+    ]
+
+    # --- Silent Hill 1 ONLY (サイレントヒル) on PlayStation ---
+    # Sequel numbers anchored to "ヒル"/"hill"; the 2024 SH2 remake, the HD
+    # collection and every spin-off are rejected.
+    _SH1_TITLES: list[str] = ['サイレントヒル', 'silent hill', 'silenthill']
+    _SH1_EXCLUDE: list[str] = _PS1_MERCH_EXCLUDE + [
+        # sequels (anchored to the title word)
+        'ヒル2', 'ヒル２', 'ヒル 2', 'ヒルii', 'hill 2', 'hill ii', 'sh2',
+        'ヒル3', 'ヒル３', 'ヒル 3', 'ヒルiii', 'hill 3', 'hill iii', 'sh3',
+        'ヒル4', 'ヒル４', 'ヒル 4', 'ヒルiv', 'hill 4', 'hill iv', 'sh4',
+        'ザ・ルーム', 'ザ ルーム', 'the room',
+        # spin-offs / later entries
+        'オリジンズ', 'origins', 'ホームカミング', 'homecoming',
+        'シャッタードメモリーズ', 'shattered memories', 'ダウンプア', 'downpour',
+        'ブックオブメモリーズ', 'book of memories', 'アセンション', 'ascension',
+        'サイレントヒルf', 'silent hill f', 'タウンフォール', 'townfall',
+        'ショートメッセージ', 'short message', 'pt',
+        # collections / remakes / later platforms
+        'hdコレクション', 'hd collection', 'hdエディション',
+        'リメイク', 'remake', 'リマスター', 'remaster',
+        'ps2', 'ps3', 'ps4', 'ps5', 'playstation 2', 'playstation 3',
+        'playstation 4', 'playstation 5', 'プレイステーション2',
+        'プレイステーション3', 'プレイステーション4', 'プレイステーション5',
+        'psp', 'vita', 'switch', 'スイッチ', 'xbox', '360', 'steam',
+        'ニンテンドーds', '3ds', 'gba', 'アーカイブス', 'archives',
+        # the films
+        '映画', 'movie', 'リベレーション', 'revelation', 'blu-ray', 'ブルーレイ',
+        '体験版', 'demo', 'trial',
+    ]
+
     # --- Biohazard 1 on PlayStation ONLY (incl. Director's Cut / DualShock ver) ---
     # Sequel numbers are anchored to "ハザード"/"evil" because bare "2"/"3"
     # appear in prices, lot counts and product codes.
@@ -798,6 +856,40 @@ class Config:
             'state_category': 'yahoo_sotn',
             'validators': [_SOTN_TITLES, _SOTN_MEDIUM, _FC_COND],
             'exclude': _SOTN_EXCLUDE,
+        },
+        # --- Tekken 1 only (鉄拳 / SLPS-00040, PlayStation), sealed/graded ---
+        {
+            'name': 'Tekken 1 PS Sealed/Graded (Mercari)',
+            'platform': 'mercari',
+            'keywords': ['鉄拳 プレイステーション 未開封', '鉄拳 PS1 未開封'],
+            'state_category': 'mercari_tekken1_ps',
+            'validators': [_TEKKEN1_TITLES, _BIO1_MEDIUM, _FC_COND],
+            'exclude': _TEKKEN1_EXCLUDE,
+        },
+        {
+            'name': 'Tekken 1 PS Sealed/Graded (Yahoo)',
+            'platform': 'yahoo',
+            'keywords': ['鉄拳 プレイステーション 未開封', '鉄拳 PS1 未開封'],
+            'state_category': 'yahoo_tekken1_ps',
+            'validators': [_TEKKEN1_TITLES, _BIO1_MEDIUM, _FC_COND],
+            'exclude': _TEKKEN1_EXCLUDE,
+        },
+        # --- Silent Hill 1 only (サイレントヒル, PlayStation), sealed/graded ---
+        {
+            'name': 'Silent Hill 1 PS Sealed/Graded (Mercari)',
+            'platform': 'mercari',
+            'keywords': ['サイレントヒル 未開封', 'サイレントヒル プレイステーション 未開封'],
+            'state_category': 'mercari_silenthill1_ps',
+            'validators': [_SH1_TITLES, _BIO1_MEDIUM, _FC_COND],
+            'exclude': _SH1_EXCLUDE,
+        },
+        {
+            'name': 'Silent Hill 1 PS Sealed/Graded (Yahoo)',
+            'platform': 'yahoo',
+            'keywords': ['サイレントヒル 未開封', 'サイレントヒル プレイステーション 未開封'],
+            'state_category': 'yahoo_silenthill1_ps',
+            'validators': [_SH1_TITLES, _BIO1_MEDIUM, _FC_COND],
+            'exclude': _SH1_EXCLUDE,
         },
     ]
 
