@@ -49,6 +49,13 @@ class Config:
     # Condition: VGA OR CGC OR unopened. Keyword forces 未開封 on JP sites
     # (also narrows Yahoo so the franchise term doesn't flood the results).
     _FC_COND: list[str] = ['vga', 'cgc', 'wata', 'graded', '鑑定', '未開封', '未使用', 'sealed', 'unopened']
+    # Strict UNOPENED-only condition (未開封). Used by the retro-game searches
+    # added for the sealed-game watchlist. Deliberately narrower than _FC_COND:
+    #   - no grading houses (VGA/CGC/WATA/鑑定) — a graded copy can be opened
+    #   - no 未使用 ("unused") — that allows an opened-but-unplayed copy
+    # '未開封' as a substring already covers 新品未開封 / 未開封品 / 完全未開封.
+    _UNOPENED_ONLY: list[str] = ['未開封', 'sealed', 'unopened', 'シュリンク']
+
     # Positive gate: the title must prove it's an actual Famicom cartridge/disk,
     # not a Switch/SFC re-release or merch that merely names the franchise.
     _FC_MEDIUM: list[str] = [
@@ -736,7 +743,7 @@ class Config:
             'platform': 'mercari',
             'keywords': ['悪魔城ドラキュラ ファミコン 未開封', '悪魔城ドラキュラ ディスクシステム 未開封'],
             'state_category': 'mercari_castlevania_famicom',
-            'validators': [['悪魔城ドラキュラ', '悪魔城', 'castlevania', 'akumajo', 'akumajou'], _FCSFC_MEDIUM, _FC_COND],
+            'validators': [['悪魔城ドラキュラ', '悪魔城', 'castlevania', 'akumajo', 'akumajou'], _FCSFC_MEDIUM, _UNOPENED_ONLY],
             'exclude': _CASTLEVANIA_EXCLUDE,
         },
         {
@@ -744,7 +751,7 @@ class Config:
             'platform': 'yahoo',
             'keywords': ['悪魔城ドラキュラ ファミコン 未開封', '悪魔城ドラキュラ ディスクシステム 未開封'],
             'state_category': 'yahoo_castlevania_famicom',
-            'validators': [['悪魔城ドラキュラ', '悪魔城', 'castlevania', 'akumajo', 'akumajou'], _FCSFC_MEDIUM, _FC_COND],
+            'validators': [['悪魔城ドラキュラ', '悪魔城', 'castlevania', 'akumajo', 'akumajou'], _FCSFC_MEDIUM, _UNOPENED_ONLY],
             'exclude': _CASTLEVANIA_EXCLUDE,
         },
         # --- Chrono Trigger Super Famicom, sealed/graded ---
@@ -756,7 +763,7 @@ class Config:
             'validators': [
                 ['クロノトリガー', 'クロノ・トリガー', 'クロノ トリガー', 'chrono trigger'],
                 _FCSFC_MEDIUM,
-                _FC_COND,
+                _UNOPENED_ONLY,
             ],
             'exclude': _CHRONO_EXCLUDE,
         },
@@ -768,7 +775,7 @@ class Config:
             'validators': [
                 ['クロノトリガー', 'クロノ・トリガー', 'クロノ トリガー', 'chrono trigger'],
                 _FCSFC_MEDIUM,
-                _FC_COND,
+                _UNOPENED_ONLY,
             ],
             'exclude': _CHRONO_EXCLUDE,
         },
@@ -778,7 +785,7 @@ class Config:
             'platform': 'mercari',
             'keywords': ['キングダムハーツ PS2 未開封', 'キングダムハーツ1 未開封', 'キングダムハーツ ファイナルミックス 未開封'],
             'state_category': 'mercari_kh1_ps2',
-            'validators': [_KH_TITLES, _KH_MEDIUM, _FC_COND],
+            'validators': [_KH_TITLES, _KH_MEDIUM, _UNOPENED_ONLY],
             'exclude': _KH_EXCLUDE,
         },
         {
@@ -786,7 +793,7 @@ class Config:
             'platform': 'yahoo',
             'keywords': ['キングダムハーツ PS2 未開封', 'キングダムハーツ1 未開封', 'キングダムハーツ ファイナルミックス 未開封'],
             'state_category': 'yahoo_kh1_ps2',
-            'validators': [_KH_TITLES, _KH_MEDIUM, _FC_COND],
+            'validators': [_KH_TITLES, _KH_MEDIUM, _UNOPENED_ONLY],
             'exclude': _KH_EXCLUDE,
         },
         # --- Metroid Famicom (メトロイド), sealed/graded ---
@@ -795,7 +802,7 @@ class Config:
             'platform': 'mercari',
             'keywords': ['メトロイド ファミコン 未開封', 'メトロイド ディスクシステム 未開封'],
             'state_category': 'mercari_metroid_famicom',
-            'validators': [['メトロイド', 'metroid'], _FCSFC_MEDIUM, _FC_COND],
+            'validators': [['メトロイド', 'metroid'], _FCSFC_MEDIUM, _UNOPENED_ONLY],
             'exclude': _METROID_EXCLUDE,
         },
         {
@@ -803,7 +810,7 @@ class Config:
             'platform': 'yahoo',
             'keywords': ['メトロイド ファミコン 未開封', 'メトロイド ディスクシステム 未開封'],
             'state_category': 'yahoo_metroid_famicom',
-            'validators': [['メトロイド', 'metroid'], _FCSFC_MEDIUM, _FC_COND],
+            'validators': [['メトロイド', 'metroid'], _FCSFC_MEDIUM, _UNOPENED_ONLY],
             'exclude': _METROID_EXCLUDE,
         },
         # --- Metal Gear Famicom (メタルギア), sealed/graded ---
@@ -812,7 +819,7 @@ class Config:
             'platform': 'mercari',
             'keywords': ['メタルギア ファミコン 未開封'],
             'state_category': 'mercari_metal_gear_famicom',
-            'validators': [['メタルギア', 'metal gear'], _FCSFC_MEDIUM, _FC_COND],
+            'validators': [['メタルギア', 'metal gear'], _FCSFC_MEDIUM, _UNOPENED_ONLY],
             'exclude': _METAL_GEAR_EXCLUDE,
         },
         {
@@ -820,7 +827,7 @@ class Config:
             'platform': 'yahoo',
             'keywords': ['メタルギア ファミコン 未開封'],
             'state_category': 'yahoo_metal_gear_famicom',
-            'validators': [['メタルギア', 'metal gear'], _FCSFC_MEDIUM, _FC_COND],
+            'validators': [['メタルギア', 'metal gear'], _FCSFC_MEDIUM, _UNOPENED_ONLY],
             'exclude': _METAL_GEAR_EXCLUDE,
         },
         # --- Biohazard 1 (PlayStation), sealed/graded ---
@@ -829,7 +836,7 @@ class Config:
             'platform': 'mercari',
             'keywords': ['バイオハザード プレイステーション 未開封', 'バイオハザード PS 未開封'],
             'state_category': 'mercari_biohazard1_ps',
-            'validators': [_BIO1_TITLES, _BIO1_MEDIUM, _FC_COND],
+            'validators': [_BIO1_TITLES, _BIO1_MEDIUM, _UNOPENED_ONLY],
             'exclude': _BIO1_EXCLUDE,
         },
         {
@@ -837,7 +844,7 @@ class Config:
             'platform': 'yahoo',
             'keywords': ['バイオハザード プレイステーション 未開封', 'バイオハザード PS 未開封'],
             'state_category': 'yahoo_biohazard1_ps',
-            'validators': [_BIO1_TITLES, _BIO1_MEDIUM, _FC_COND],
+            'validators': [_BIO1_TITLES, _BIO1_MEDIUM, _UNOPENED_ONLY],
             'exclude': _BIO1_EXCLUDE,
         },
         # --- Castlevania: Symphony of the Night (月下の夜想曲), sealed/graded ---
@@ -846,7 +853,7 @@ class Config:
             'platform': 'mercari',
             'keywords': ['月下の夜想曲 未開封', '悪魔城ドラキュラX 月下の夜想曲 未開封'],
             'state_category': 'mercari_sotn',
-            'validators': [_SOTN_TITLES, _SOTN_MEDIUM, _FC_COND],
+            'validators': [_SOTN_TITLES, _SOTN_MEDIUM, _UNOPENED_ONLY],
             'exclude': _SOTN_EXCLUDE,
         },
         {
@@ -854,7 +861,7 @@ class Config:
             'platform': 'yahoo',
             'keywords': ['月下の夜想曲 未開封', '悪魔城ドラキュラX 月下の夜想曲 未開封'],
             'state_category': 'yahoo_sotn',
-            'validators': [_SOTN_TITLES, _SOTN_MEDIUM, _FC_COND],
+            'validators': [_SOTN_TITLES, _SOTN_MEDIUM, _UNOPENED_ONLY],
             'exclude': _SOTN_EXCLUDE,
         },
         # --- Tekken 1 only (鉄拳 / SLPS-00040, PlayStation), sealed/graded ---
@@ -863,7 +870,7 @@ class Config:
             'platform': 'mercari',
             'keywords': ['鉄拳 プレイステーション 未開封', '鉄拳 PS1 未開封'],
             'state_category': 'mercari_tekken1_ps',
-            'validators': [_TEKKEN1_TITLES, _BIO1_MEDIUM, _FC_COND],
+            'validators': [_TEKKEN1_TITLES, _BIO1_MEDIUM, _UNOPENED_ONLY],
             'exclude': _TEKKEN1_EXCLUDE,
         },
         {
@@ -871,7 +878,7 @@ class Config:
             'platform': 'yahoo',
             'keywords': ['鉄拳 プレイステーション 未開封', '鉄拳 PS1 未開封'],
             'state_category': 'yahoo_tekken1_ps',
-            'validators': [_TEKKEN1_TITLES, _BIO1_MEDIUM, _FC_COND],
+            'validators': [_TEKKEN1_TITLES, _BIO1_MEDIUM, _UNOPENED_ONLY],
             'exclude': _TEKKEN1_EXCLUDE,
         },
         # --- Silent Hill 1 only (サイレントヒル, PlayStation), sealed/graded ---
@@ -880,7 +887,7 @@ class Config:
             'platform': 'mercari',
             'keywords': ['サイレントヒル 未開封', 'サイレントヒル プレイステーション 未開封'],
             'state_category': 'mercari_silenthill1_ps',
-            'validators': [_SH1_TITLES, _BIO1_MEDIUM, _FC_COND],
+            'validators': [_SH1_TITLES, _BIO1_MEDIUM, _UNOPENED_ONLY],
             'exclude': _SH1_EXCLUDE,
         },
         {
@@ -888,7 +895,7 @@ class Config:
             'platform': 'yahoo',
             'keywords': ['サイレントヒル 未開封', 'サイレントヒル プレイステーション 未開封'],
             'state_category': 'yahoo_silenthill1_ps',
-            'validators': [_SH1_TITLES, _BIO1_MEDIUM, _FC_COND],
+            'validators': [_SH1_TITLES, _BIO1_MEDIUM, _UNOPENED_ONLY],
             'exclude': _SH1_EXCLUDE,
         },
     ]
