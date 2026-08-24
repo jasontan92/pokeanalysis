@@ -391,6 +391,49 @@ class Config:
         '体験版', 'demo', 'trial',
     ]
 
+    # --- Punch-Out!! GOLD CARTRIDGE (パンチアウト!! ゴールドカートリッジ, HVC-PT-S) ---
+    # Famicom prize cartridge, not a retail release — a grail, so this search is
+    # gated on IDENTITY (Punch-Out + a gold marker) rather than on condition:
+    # any copy is worth an alert, CIB included. Deliberately NOT using
+    # _UNOPENED_ONLY. Only parts-only listings (manual/box/flyer) are dropped.
+    _PUNCHOUT_TITLES: list[str] = [
+        'パンチアウト', 'punch-out', 'punch out', 'punchout', 'ﾊﾟﾝﾁｱｳﾄ',
+    ]
+    # Gold marker. 'ゴールド' alone is far too broad on its own (jewelry, clothing)
+    # but is safe here because the Punch-Out gate above must also pass.
+    # HVC-PT-S is the gold cartridge's product code and is decisive on its own.
+    _PUNCHOUT_GOLD: list[str] = [
+        'ゴールドカートリッジ', 'ゴールドカセット', 'ゴールド', 'gold',
+        '金色', '金カセ', '非売品',
+        # HVC-PT-S is the GOLD cartridge. Do NOT add bare 'hvc-pt' — that is the
+        # code for the ordinary Mike Tyson's Punch-Out!! retail cart, and it let
+        # a plain used copy through in testing.
+        'hvc-pt-s',
+    ]
+    _PUNCHOUT_EXCLUDE: list[str] = [
+        # parts only — not the cartridge
+        '説明書のみ', '取説のみ', '取扱説明書のみ', '箱のみ', '空箱', 'ケースのみ',
+        'ジャケットのみ', 'チラシ', 'フライヤー', 'カタログ', 'パンフレット', '販促',
+        # paper goods / media that name the title
+        '攻略本', 'ガイドブック', 'テクニックブック', '必勝本', '雑誌', '月号',
+        'magazine', '増刊', '別冊', 'ファミマガ', 'ポスター', '下敷き',
+        'サントラ', 'サウンドトラック', 'cd', 'dvd',
+        # a 非売品 sonosheet and the JITTERIN'JINN song both match "パンチアウト"
+        'ソノシート', 'レコード', 'vinyl', 'ep盤', 'lp盤', 'シングル',
+        'jitterin', 'ジッタリン', 'カセットテープ',
+        # OTHER consoles' gold cartridges (SEGA Mark III ran a whole gold line)
+        'セガ', 'sega', 'マーク3', 'マークiii', 'mark iii', 'markiii', 'sg-1000',
+        'マスターシステム', 'master system', 'メガドライブ', 'pcエンジン',
+        # different Punch-Out titles / other gold carts
+        'スーパーパンチアウト', 'super punch-out', 'ボンバーマン', 'マリオゴルフ',
+        'スーパーファミコン', 'スーファミ', 'sfc', 'ゲームボーイ', 'gba',
+        'wii', 'switch', 'スイッチ', 'ニンテンドーds', '3ds',
+        'バーチャルコンソール', 'virtual console', 'アーケード', 'ミニ',
+        # merch
+        'フィギュア', 'ぬいぐるみ', 'tシャツ', 'キーホルダー', 'ステッカー', 'シール',
+        'トレカ', 'グッズ', 'マグカップ', '缶バッジ', 'ピンズ',
+    ]
+
     # --- Biohazard 1 on PlayStation ONLY (incl. Director's Cut / DualShock ver) ---
     # Sequel numbers are anchored to "ハザード"/"evil" because bare "2"/"3"
     # appear in prices, lot counts and product codes.
@@ -897,6 +940,25 @@ class Config:
             'state_category': 'yahoo_silenthill1_ps',
             'validators': [_SH1_TITLES, _BIO1_MEDIUM, _UNOPENED_ONLY],
             'exclude': _SH1_EXCLUDE,
+        },
+        # --- Punch-Out!! Gold Cartridge (any condition, CIB included) ---
+        # No condition validator on purpose: this is a prize cartridge, so any
+        # copy that surfaces is worth an alert.
+        {
+            'name': 'Punch-Out!! Gold Cartridge (Mercari)',
+            'platform': 'mercari',
+            'keywords': ['パンチアウト ゴールド', 'パンチアウト!! ゴールドカートリッジ', 'パンチアウト 非売品'],
+            'state_category': 'mercari_punchout_gold',
+            'validators': [_PUNCHOUT_TITLES, _PUNCHOUT_GOLD],
+            'exclude': _PUNCHOUT_EXCLUDE,
+        },
+        {
+            'name': 'Punch-Out!! Gold Cartridge (Yahoo)',
+            'platform': 'yahoo',
+            'keywords': ['パンチアウト ファミコン', 'パンチアウト 非売品'],
+            'state_category': 'yahoo_punchout_gold',
+            'validators': [_PUNCHOUT_TITLES, _PUNCHOUT_GOLD],
+            'exclude': _PUNCHOUT_EXCLUDE,
         },
     ]
 
