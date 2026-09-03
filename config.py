@@ -25,6 +25,19 @@ class Config:
     WSJ_TELEGRAM_BOT_TOKEN: str = os.getenv('WSJ_TELEGRAM_BOT_TOKEN', '')
     WSJ_TELEGRAM_CHAT_ID: str = os.getenv('WSJ_TELEGRAM_CHAT_ID', '')
 
+    # Conditional requirements, applied to EVERY search: if a title contains
+    # any trigger term, it must also contain one of the required terms.
+    # A trial/demo disc is only wanted factory sealed, so 体験版 demands a true
+    # unopened marker. 未使用 ("unused"), a grading label and 実演用 (store
+    # display) all permit an OPENED disc, so none of them satisfy it — which is
+    # why this cannot live in the normal condition validator.
+    CONDITIONAL_REQUIRE: list[tuple[list[str], list[str]]] = [
+        (
+            ['体験版', 'デモ版', 'demo disc', 'trial version', 'sample version'],
+            ['未開封', 'sealed', 'unopened', 'シュリンク'],
+        ),
+    ]
+
     # Global exclude terms — reject any listing whose title contains these (reprint indicators)
     GLOBAL_EXCLUDE: list[str] = [
         'reprint', 'reproduction',

@@ -123,6 +123,13 @@ class ListingMonitor:
         if any(term.lower() in title_lower for term in all_exclude):
             return False
 
+        # Conditional requirements: a title matching a trigger must also carry
+        # one of the required terms (e.g. 体験版 is only wanted when 未開封).
+        for triggers, required in getattr(Config, 'CONDITIONAL_REQUIRE', []):
+            if any(t.lower() in title_lower for t in triggers):
+                if not any(r.lower() in title_lower for r in required):
+                    return False
+
         return all(
             any(alt.lower() in title_lower for alt in alternatives)
             for alternatives in validators
