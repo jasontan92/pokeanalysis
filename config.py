@@ -219,7 +219,10 @@ class Config:
         'タクティクス', 'tactics', 'ディシディア', 'dissidia', 'クライシス', 'crisis',
         '零式', 'type-0', 'アドベント', 'advent', 'rebirth', 'リバース', 'クロニクル',
         'チョコボ', 'chocobo', 'x-2', 'ⅹ-2', 'ナギ節', '聖剣',
-        'ダージュ', 'ケルベロス', 'dirge', 'cerberus', '体験版', 'demo', 'trial',
+        'ダージュ', 'ケルベロス', 'dirge', 'cerberus',
+        # 体験版 / demo / trial are deliberately NOT excluded: sealed demo
+        # discs are wanted. The condition gate (未開封) is what keeps this
+        # narrow — an opened trial disc still fails there.
         # wrong / newer platforms + remasters
         'ps3', 'ps4', 'ps5', 'playstation 3', 'playstation 4', 'playstation 5',
         'psp', 'vita', 'switch', 'スイッチ', 'steam', 'リマスター', 'remaster',
@@ -312,7 +315,10 @@ class Config:
         'プレイステーション 3', 'プレイステーション 4', 'プレイステーション 5',
         'psp', 'vita', 'switch', 'スイッチ', 'xbox', 'steam', 'epic',
         'ゲームボーイアドバンス', 'gba', 'ニンテンドーds', '3ds', 'クラウド版',
-        'リマスター', 'remaster', 'リメイク', 'remake', '体験版', 'demo', 'trial',
+        'リマスター', 'remaster', 'リメイク', 'remake',
+        # 体験版 / demo / trial are deliberately NOT excluded: sealed demo
+        # discs are wanted. The condition gate (未開封) is what keeps this
+        # narrow — an opened trial disc still fails there.
         # merch / media
         '攻略本', 'ガイドブック', '設定資料', 'カレンダー', 'サントラ',
         'サウンドトラック', 'soundtrack', 'cd', 'dvd', 'blu-ray', 'コミック', '漫画',
@@ -375,7 +381,10 @@ class Config:
         'プレイステーション3', 'プレイステーション4', 'プレイステーション5',
         'psp', 'vita', 'switch', 'スイッチ', 'xbox', '360', 'steam', 'arcade',
         'アーケード', 'アーカイブス', 'archives', 'gba', 'ニンテンドーds', '3ds',
-        'リマスター', 'remaster', 'リメイク', 'remake', '体験版', 'demo', 'trial',
+        'リマスター', 'remaster', 'リメイク', 'remake',
+        # 体験版 / demo / trial are deliberately NOT excluded: sealed demo
+        # discs are wanted. The condition gate (未開封) is what keeps this
+        # narrow — an opened trial disc still fails there.
     ]
 
     # --- Silent Hill 1 ONLY (サイレントヒル) on PlayStation ---
@@ -404,7 +413,9 @@ class Config:
         'ニンテンドーds', '3ds', 'gba', 'アーカイブス', 'archives',
         # the films
         '映画', 'movie', 'リベレーション', 'revelation', 'blu-ray', 'ブルーレイ',
-        '体験版', 'demo', 'trial',
+        # 体験版 / demo / trial are deliberately NOT excluded: sealed demo
+        # discs are wanted. The condition gate (未開封) is what keeps this
+        # narrow — an opened trial disc still fails there.
     ]
 
     # --- Punch-Out!! GOLD CARTRIDGE (パンチアウト!! ゴールドカートリッジ, HVC-PT-S) ---
@@ -481,7 +492,9 @@ class Config:
         'ゲームボーイ', 'game boy', 'サターン', 'saturn', 'windows', 'pc版',
         # NOTE: 非売品 is deliberately NOT excluded — 実演用サンプル (store demo)
         # copies are almost always marked 非売品, and those are wanted.
-        '体験版', 'demo', 'trial',
+        # 体験版 / demo / trial are deliberately NOT excluded: sealed demo
+        # discs are wanted. The condition gate (未開封) is what keeps this
+        # narrow — an opened trial disc still fails there.
     ]
 
     # --- Castlevania: Symphony of the Night (悪魔城ドラキュラX 月下の夜想曲) ---
@@ -507,7 +520,10 @@ class Config:
         'プレイステーション3', 'プレイステーション4', 'プレイステーション5',
         'psp', 'vita', 'switch', 'スイッチ', 'xbox', '360', 'steam',
         'ニンテンドーds', '3ds', 'gba', 'アドバンス', 'アーカイブス', 'archives',
-        'スマホ', 'アプリ', 'ios', 'android', '体験版', 'demo', 'trial',
+        'スマホ', 'アプリ', 'ios', 'android',
+        # 体験版 / demo / trial are deliberately NOT excluded: sealed demo
+        # discs are wanted. The condition gate (未開封) is what keeps this
+        # narrow — an opened trial disc still fails there.
     ]
 
     # Monitored searches — Pokemon game cartridges only
