@@ -431,6 +431,45 @@ class Config:
         # narrow — an opened trial disc still fails there.
     ]
 
+    # --- Super Mario Bros. Famicom, EARLY-PRINT box with NO barcode ---
+    # Like the Punch-Out gold cart this is gated on IDENTITY (title + the
+    # no-barcode marker), not condition: the real listings are 箱説付き / 初期版
+    # rather than 未開封, so a sealed gate would match almost nothing.
+    #
+    # No console gate either — genuine listings such as
+    # "スーパーマリオブラザーズ FF&箱バーコードなし" name no console at all.
+    # Wrong consoles are handled by the exclude list instead.
+    _SMB_TITLES: list[str] = [
+        'スーパーマリオブラザーズ', 'スーパーマリオブラザース', 'スーパーマリオ',
+        'super mario bros', 'super mario',
+    ]
+    # MUST be matched as one contiguous string. A bare 'バーコード' would match
+    # "バーコードあり" (a later print), and checking for 'バーコード' + 'なし'
+    # separately would wrongly match the real listing
+    # "…中期版 FFなしバーコードあり スーパーマリオ" (¥148,000, HAS a barcode).
+    _SMB_NO_BARCODE: list[str] = [
+        'バーコードなし', 'バーコード無し', 'バーコード無', 'バーコードナシ',
+        'ノンバーコード', 'バーコードレス',
+    ]
+    _SMB_EXCLUDE: list[str] = _FC_EXCLUDE_JP + [
+        # later Mario titles (anchored — bare digits hit prices/product codes)
+        'ブラザーズ2', 'ブラザーズ３', 'ブラザーズ3', 'ブラザーズ２',
+        'マリオブラザーズ2', 'マリオブラザーズ3', 'mario bros 2', 'mario bros 3',
+        'usa', 'ワールド', 'world', 'カート', 'kart', 'ランド', 'land',
+        'マリオコレクション', 'オデッセイ', 'odyssey', 'メーカー', 'maker',
+        'ヨッシー', 'yoshi', 'ドンキー', 'donkey', 'サンシャイン', 'ギャラクシー',
+        'オープンゴルフ', 'テニス', 'ゴルフ', 'ドクターマリオ', 'パズル',
+        # Famicom original only — no SFC/GB/N64 re-releases.
+        # NOTE: "ファミコン" is a substring of "スーパーファミコン", so the SFC
+        # must be rejected here rather than left to a console gate.
+        'スーパーファミコン', 'スーファミ', 'sfc', 'ゲームボーイ', 'game boy',
+        'ニンテンドー64', 'nintendo 64', 'n64', 'ディスクシステム',
+        # parts only. The no-barcode marker is a property of the BOX, so a
+        # box-only listing otherwise passes the gate cleanly.
+        '箱のみ', '空箱', '説明書のみ', '取説のみ', 'ジャケットのみ',
+        'カセットのみ', 'ソフトのみ', '内箱のみ', '外箱のみ',
+    ]
+
     # --- Punch-Out!! GOLD CARTRIDGE (パンチアウト!! ゴールドカートリッジ, HVC-PT-S) ---
     # Famicom prize cartridge, not a retail release — a grail, so this search is
     # gated on IDENTITY (Punch-Out + a gold marker) rather than on condition:
@@ -1006,6 +1045,24 @@ class Config:
             'state_category': 'yahoo_punchout_gold',
             'validators': [_PUNCHOUT_TITLES, _PUNCHOUT_GOLD],
             'exclude': _PUNCHOUT_EXCLUDE,
+        },
+        # --- Super Mario Bros. Famicom, no-barcode (early print) box ---
+        # No condition validator on purpose — see _SMB_TITLES note.
+        {
+            'name': 'Super Mario Bros Famicom No-Barcode Box (Mercari)',
+            'platform': 'mercari',
+            'keywords': ['スーパーマリオブラザーズ 箱バーコードなし', 'スーパーマリオブラザーズ バーコードなし'],
+            'state_category': 'mercari_smb_no_barcode',
+            'validators': [_SMB_TITLES, _SMB_NO_BARCODE],
+            'exclude': _SMB_EXCLUDE,
+        },
+        {
+            'name': 'Super Mario Bros Famicom No-Barcode Box (Yahoo)',
+            'platform': 'yahoo',
+            'keywords': ['スーパーマリオブラザーズ 箱バーコードなし', 'スーパーマリオブラザーズ バーコードなし'],
+            'state_category': 'yahoo_smb_no_barcode',
+            'validators': [_SMB_TITLES, _SMB_NO_BARCODE],
+            'exclude': _SMB_EXCLUDE,
         },
     ]
 
