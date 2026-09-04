@@ -65,7 +65,7 @@ class StateManager:
         with open(self.state_file, 'w', encoding='utf-8') as f:
             json.dump(self.state, f, indent=2)
 
-        logger.info(f"State saved to {self.state_file}")
+        logger.debug(f"State saved to {self.state_file}")
 
     def _cleanup_old_entries(self, days: int = 30):
         """Remove entries older than specified days to prevent file bloat."""
@@ -267,10 +267,19 @@ class ListingMonitor:
                         alerts_sent += 1
                         all_new.append(listing)
                         logger.info(f"  Alert sent for {listing_id}")
+                        # Persist immediately. A full pass takes ~33 min and the
+                        # GHA job cap kills it mid-run; without this, every alert
+                        # already sent replays on the next run (the FF5 Famicom
+                        # listing fired every ~30 min for hours).
+                        self.state.save_state()
                     else:
                         logger.warning(f"  Failed to send alert for {listing_id} (will retry next run)")
 
                 logger.info(f"  {alerts_sent} new alerts sent for {safe_name}")
+
+                # Checkpoint after every search so a killed run keeps the
+                # baseline it built, not just the alerts it sent.
+                self.state.save_state()
 
         except Exception as e:
             logger.error(f"Error during scraping: {e}")

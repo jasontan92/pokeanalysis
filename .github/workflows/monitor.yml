@@ -2,7 +2,9 @@ name: Listing Monitor
 
 on:
   schedule:
-    - cron: '*/10 * * * *'  # Every 10 minutes
+    - cron: '*/30 * * * *'  # Every 30 minutes. A full pass over all 49
+                            # searches takes ~33 min, so a tighter cron only
+                            # piles up pending runs that GitHub then cancels.
   workflow_dispatch:
 
 # Queue runs back-to-back instead of overlapping. Prior to this, the cron
@@ -16,7 +18,9 @@ concurrency:
 jobs:
   pokemon:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # A full pass takes ~33 min; at 30 the job was killed every time, ~4 of
+    # every 60 runs finished, and the last 4 searches were never reached.
+    timeout-minutes: 50
     steps:
       - uses: actions/checkout@v4
 
