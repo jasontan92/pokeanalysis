@@ -431,6 +431,38 @@ class Config:
         # narrow — an opened trial disc still fails there.
     ]
 
+    # --- Yu-Gi-Oh! Monster Capsule Breed & Battle (PlayStation), sealed ---
+    # Gated on TWO title parts ANDed together -- the franchise word AND the
+    # ブリード identifier -- because 遊戯王 on its own is drowned by the card
+    # game. Matching on bare ブリード (not ブリード＆バトル) sidesteps the
+    # full-width ＆ / half-width & / spaced-out variants sellers use.
+    #
+    # No console gate: the title is PS1-exclusive, and genuine listings such as
+    # "遊戯王 モンスターカプセル ブリード＆バトル 未開封" name no console at all.
+    _YGO_MCBB_FRANCHISE: list[str] = [
+        '遊戯王', '遊戲王', 'yu-gi-oh', 'yugioh', 'yu gi oh',
+        'モンスターカプセル', 'monster capsule',
+    ]
+    _YGO_MCBB_TITLES: list[str] = ['ブリード', 'breed']
+    # Reuses the PS1 merch exclusions but PUTS BACK the card wording: this game
+    # shipped with a promo trading card, so the most desirable sealed listings
+    # read "カード付き" / "カード同梱" and a カード exclusion would reject
+    # exactly the ones worth alerting on. The two-part title gate keeps the
+    # card game out on its own -- no 遊戯王 card lot is titled ブリード.
+    _YGO_MCBB_EXCLUDE: list[str] = [
+        t for t in _PS1_MERCH_EXCLUDE
+        if t not in ('カード', 'トレカ', 'trading card')
+    ] + [
+        # other Monster Capsule entries (the GB games / Capsule Monsters)
+        'モンスターカプセルgb', 'gb版', 'ゲームボーイ',
+        'カプセルモンスターズ', 'capsule monsters',
+        # wrong platforms
+        'ps2', 'ps3', 'ps4', 'ps5', 'プレイステーション2',
+        'プレイステーション3', 'psp', 'vita', 'switch', 'スイッチ',
+        'xbox', 'steam', 'gba', 'ニンテンドーds', '3ds',
+        'アーカイブス', 'archives',
+    ]
+
     # --- Super Mario Bros. Famicom, EARLY-PRINT box with NO barcode ---
     # Like the Punch-Out gold cart this is gated on IDENTITY (title + the
     # no-barcode marker), not condition: the real listings are 箱説付き / 初期版
@@ -1026,6 +1058,31 @@ class Config:
             'state_category': 'yahoo_silenthill1_ps',
             'validators': [_SH1_TITLES, _BIO1_MEDIUM, _UNOPENED_ONLY],
             'exclude': _SH1_EXCLUDE,
+        },
+        # --- Yu-Gi-Oh! Monster Capsule Breed & Battle (PS), sealed ---
+        {
+            'name': 'YGO Monster Capsule Breed&Battle PS Sealed (Mercari)',
+            'platform': 'mercari',
+            # No broad '遊戯王 モンスターカプセル' keyword: the title gate
+            # requires ブリード, so it can only ever return card merch that
+            # the ブリード keywords below already cover. Verified live --
+            # it fetched 19 listings and matched none of them.
+            'keywords': ['モンスターカプセル ブリード 未開封',
+                         'モンスターカプセル ブリード'],
+            'state_category': 'mercari_ygo_mcbb_ps',
+            'validators': [_YGO_MCBB_FRANCHISE, _YGO_MCBB_TITLES, _UNOPENED_ONLY],
+            'exclude': _YGO_MCBB_EXCLUDE,
+        },
+        {
+            'name': 'YGO Monster Capsule Breed&Battle PS Sealed (Yahoo)',
+            'platform': 'yahoo',
+            # 遊戯王 is deliberately absent from every Yahoo keyword: the card
+            # game floods the newest-first page and pushes the game off it.
+            'keywords': ['モンスターカプセル ブリード',
+                         'ブリード＆バトル'],
+            'state_category': 'yahoo_ygo_mcbb_ps',
+            'validators': [_YGO_MCBB_FRANCHISE, _YGO_MCBB_TITLES, _UNOPENED_ONLY],
+            'exclude': _YGO_MCBB_EXCLUDE,
         },
         # --- Punch-Out!! Gold Cartridge (any condition, CIB included) ---
         # No condition validator on purpose: this is a prize cartridge, so any
