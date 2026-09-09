@@ -15,6 +15,9 @@ concurrency:
   group: monitor-pokemon
   cancel-in-progress: false
 
+permissions:
+  contents: write   # for git push state
+
 jobs:
   pokemon:
     runs-on: ubuntu-latest
@@ -23,6 +26,17 @@ jobs:
     timeout-minutes: 50
     steps:
       - uses: actions/checkout@v4
+
+      # A scheduled run is pinned to the SHA main had when it was QUEUED, not
+      # when it starts. Runs queue for ~10-20 min behind the previous pass, so
+      # checkout was handing us a data/seen_listings.json from before the
+      # previous run pushed its state - every alert that run sent looked new
+      # again and re-fired. Always start from the real tip of main.
+      - name: Sync to latest main
+        run: |
+          git fetch --depth=1 origin main
+          git reset --hard FETCH_HEAD
+          git log -1 --format='starting from %h %s'
 
       - uses: actions/setup-python@v5
         with:
@@ -55,12 +69,41 @@ jobs:
       - name: Run norarityscanner (Pokemon games)
         run: xvfb-run --auto-servernum python monitor.py
 
+      # Every command here used to end in `|| true`, so a failed push was
+      # reported as success. `git pull --rebase` hit a content conflict on
+      # data/seen_listings.json, left the repo on a detached HEAD, and the
+      # push was silently dropped - discarding the dedup state for every alert
+      # the run had just sent. Merge the two versions instead of rebasing (both
+      # sides hold real alerts), retry on a losing race, and fail the job if
+      # the state can't be persisted.
       - name: Save state
         if: always()
         run: |
+          set -uo pipefail
+          if [ ! -f data/seen_listings.json ]; then
+            echo "No state file written this run - nothing to save."
+            exit 0
+          fi
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
-          git add data/seen_listings.json || true
-          git diff --staged --quiet || git commit -m "Update state (pokemon)"
-          git pull --rebase || true
-          git push || true
+          cp data/seen_listings.json "$RUNNER_TEMP/seen_local.json"
+          for attempt in 1 2 3 4 5; do
+            git fetch --depth=1 origin main
+            git reset --hard FETCH_HEAD
+            git show FETCH_HEAD:data/seen_listings.json > "$RUNNER_TEMP/seen_remote.json" || echo '{}' > "$RUNNER_TEMP/seen_remote.json"
+            python merge_state.py "$RUNNER_TEMP/seen_local.json" "$RUNNER_TEMP/seen_remote.json" -o data/seen_listings.json
+            git add data/seen_listings.json
+            if git diff --staged --quiet; then
+              echo "State unchanged - nothing to push."
+              exit 0
+            fi
+            git commit -m "Update state (pokemon)"
+            if git push origin HEAD:main; then
+              echo "State pushed on attempt $attempt."
+              exit 0
+            fi
+            echo "Push rejected on attempt $attempt (main moved) - re-merging."
+          done
+          echo "::error::Could not push data/seen_listings.json after 5 attempts."
+          echo "::error::Dedup state for this run is lost; expect repeat alerts."
+          exit 1

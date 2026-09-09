@@ -24,6 +24,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # checkout pins the SHA main had when this run was QUEUED. The chain
+      # self-dispatches and the watchdog cron queues behind it, so that SHA can
+      # predate the previous run's state push - which makes every listing it
+      # alerted on look new again. Always start from the real tip of main.
+      - name: Sync to latest main
+        run: |
+          git fetch --depth=1 origin main
+          git reset --hard FETCH_HEAD
+          git log -1 --format='starting from %h %s'
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -55,15 +65,42 @@ jobs:
           WSJ_LOOP_SLEEP: '30'      # 30 s between iterations
         run: xvfb-run --auto-servernum python wsj_monitor.py
 
+      # `git pull --rebase || true; git push || true` reported success even
+      # when the rebase conflicted on the state file and left a detached HEAD,
+      # silently dropping the dedup state for every alert just sent. Merge the
+      # runner's copy with origin's (both hold real alerts), retry a lost race,
+      # and fail loudly rather than quietly setting up repeat alerts.
       - name: Save state
         if: always()
         run: |
+          set -uo pipefail
+          if [ ! -f data/wsj_seen_listings.json ]; then
+            echo "No state file written this run - nothing to save."
+            exit 0
+          fi
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
-          git add data/wsj_seen_listings.json || true
-          git diff --staged --quiet || git commit -m "Update state (manga)"
-          git pull --rebase || true
-          git push || true
+          cp data/wsj_seen_listings.json "$RUNNER_TEMP/wsj_local.json"
+          for attempt in 1 2 3 4 5; do
+            git fetch --depth=1 origin main
+            git reset --hard FETCH_HEAD
+            git show FETCH_HEAD:data/wsj_seen_listings.json > "$RUNNER_TEMP/wsj_remote.json" || echo '{}' > "$RUNNER_TEMP/wsj_remote.json"
+            python merge_state.py "$RUNNER_TEMP/wsj_local.json" "$RUNNER_TEMP/wsj_remote.json" -o data/wsj_seen_listings.json
+            git add data/wsj_seen_listings.json
+            if git diff --staged --quiet; then
+              echo "State unchanged - nothing to push."
+              exit 0
+            fi
+            git commit -m "Update state (manga)"
+            if git push origin HEAD:main; then
+              echo "State pushed on attempt $attempt."
+              exit 0
+            fi
+            echo "Push rejected on attempt $attempt (main moved) - re-merging."
+          done
+          echo "::error::Could not push data/wsj_seen_listings.json after 5 attempts."
+          echo "::error::Dedup state for this run is lost; expect repeat alerts."
+          exit 1
 
       - name: Dispatch next run
         # Always chain — even if an earlier step failed — so the chain
