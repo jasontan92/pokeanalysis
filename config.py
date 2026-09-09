@@ -59,8 +59,15 @@ class Config:
     ]
 
     # --- Famicom game search building blocks (Zelda / Mario / DQ / FF) ---
-    # Condition: VGA OR CGC OR unopened. Keyword forces 未開封 on JP sites
-    # (also narrows Yahoo so the franchise term doesn't flood the results).
+    # Condition: VGA OR CGC OR unopened.
+    # IMPORTANT: JP sites AND every query term against the *title*, so a keyword
+    # is a hard filter, not a hint — any condition word _FC_COND accepts but no
+    # keyword searches for is unreachable. Keywords therefore carry 未開封 AND
+    # 未使用 AND vga/cgc variants. (A 未開封-only keyword set silently missed a
+    # sealed N64 Super Mario 64 titled 新品未使用 — the validator would have
+    # passed it, but the search never returned it.)
+    # The medium term (ファミコン/64/ゲームボーイ) stays in each keyword to keep
+    # the franchise term from flooding Yahoo's 100-result page.
     # 実演用(サンプル) = a store demonstration/display copy. Not sealed, but
     # wanted alongside 未開封 — these are rare shop-only units.
     _FC_COND: list[str] = ['vga', 'cgc', 'wata', 'graded', '鑑定', '未開封', '未使用',
@@ -206,6 +213,14 @@ class Config:
         'ポケットモンスター 青 未開封', 'ポケットモンスター ピカチュウ 未開封',
         'ポケットモンスター 金 未開封', 'ポケットモンスター 銀 未開封',
         'ポケットモンスター クリスタル 未開封',
+        # 未使用 twins: the validator accepts 未使用, but a 未開封-only keyword
+        # can never surface a title that says 新品未使用 instead. Yahoo ANDs
+        # every query term against the title, so the condition word in the
+        # keyword must cover every condition word the validator accepts.
+        'ポケットモンスター 赤 未使用', 'ポケットモンスター 緑 未使用',
+        'ポケットモンスター 青 未使用', 'ポケットモンスター ピカチュウ 未使用',
+        'ポケットモンスター 金 未使用', 'ポケットモンスター 銀 未使用',
+        'ポケットモンスター クリスタル 未使用',
     ]
 
     # --- Final Fantasy on PlayStation: ONLY FF7 / FF8 / FF9 / FFX ---
@@ -727,7 +742,7 @@ class Config:
         {
             'name': 'Zelda Famicom/SFC/N64 VGA/CGC/Sealed (Mercari)',
             'platform': 'mercari',
-            'keywords': ['ゼルダの伝説 ファミコン 未開封', 'ゼルダの伝説 64 未開封', 'ゼルダの伝説 ゲームボーイ 未開封', 'ゼルダの伝説 実演用'],
+            'keywords': ['ゼルダの伝説 ファミコン 未開封', 'ゼルダの伝説 64 未開封', 'ゼルダの伝説 ゲームボーイ 未開封', 'ゼルダの伝説 実演用', 'ゼルダの伝説 ファミコン 未使用', 'ゼルダの伝説 64 未使用', 'ゼルダの伝説 ゲームボーイ 未使用', 'ゼルダの伝説 vga', 'ゼルダの伝説 cgc'],
             'state_category': 'mercari_zelda_famicom',
             'validators': [['ゼルダの伝説', 'ゼルダ', 'zelda'], _FC_MEDIUM, _FC_COND],
             'exclude': _FC_EXCLUDE_JP,
@@ -735,7 +750,7 @@ class Config:
         {
             'name': 'Zelda Famicom/SFC/N64 VGA/CGC/Sealed (Yahoo)',
             'platform': 'yahoo',
-            'keywords': ['ゼルダの伝説 ファミコン 未開封', 'ゼルダの伝説 64 未開封', 'ゼルダの伝説 ゲームボーイ 未開封', 'ゼルダの伝説 実演用'],
+            'keywords': ['ゼルダの伝説 ファミコン 未開封', 'ゼルダの伝説 64 未開封', 'ゼルダの伝説 ゲームボーイ 未開封', 'ゼルダの伝説 実演用', 'ゼルダの伝説 ファミコン 未使用', 'ゼルダの伝説 64 未使用', 'ゼルダの伝説 ゲームボーイ 未使用', 'ゼルダの伝説 vga', 'ゼルダの伝説 cgc'],
             'state_category': 'yahoo_zelda_famicom',
             'validators': [['ゼルダの伝説', 'ゼルダ', 'zelda'], _FC_MEDIUM, _FC_COND],
             'exclude': _FC_EXCLUDE_JP,
@@ -752,7 +767,7 @@ class Config:
         {
             'name': 'Mario Famicom/SFC/N64 VGA/CGC/Sealed (Mercari)',
             'platform': 'mercari',
-            'keywords': ['スーパーマリオ ファミコン 未開封', 'スーパーマリオ 64 未開封', 'マリオカート 64 未開封', 'スーパーマリオ ゲームボーイ 未開封', 'スーパーマリオ 実演用'],
+            'keywords': ['スーパーマリオ ファミコン 未開封', 'スーパーマリオ 64 未開封', 'マリオカート 64 未開封', 'スーパーマリオ ゲームボーイ 未開封', 'スーパーマリオ 実演用', 'スーパーマリオ ファミコン 未使用', 'スーパーマリオ 64 未使用', 'マリオカート 64 未使用', 'スーパーマリオ ゲームボーイ 未使用', 'スーパーマリオ vga', 'スーパーマリオ cgc'],
             'state_category': 'mercari_mario_famicom',
             'validators': [['スーパーマリオ', 'マリオ', 'mario'], _FC_MEDIUM, _FC_COND],
             'exclude': _FC_EXCLUDE_JP,
@@ -760,7 +775,7 @@ class Config:
         {
             'name': 'Mario Famicom/SFC/N64 VGA/CGC/Sealed (Yahoo)',
             'platform': 'yahoo',
-            'keywords': ['スーパーマリオ ファミコン 未開封', 'スーパーマリオ 64 未開封', 'マリオカート 64 未開封', 'スーパーマリオ ゲームボーイ 未開封', 'スーパーマリオ 実演用'],
+            'keywords': ['スーパーマリオ ファミコン 未開封', 'スーパーマリオ 64 未開封', 'マリオカート 64 未開封', 'スーパーマリオ ゲームボーイ 未開封', 'スーパーマリオ 実演用', 'スーパーマリオ ファミコン 未使用', 'スーパーマリオ 64 未使用', 'マリオカート 64 未使用', 'スーパーマリオ ゲームボーイ 未使用', 'スーパーマリオ vga', 'スーパーマリオ cgc'],
             'state_category': 'yahoo_mario_famicom',
             'validators': [['スーパーマリオ', 'マリオ', 'mario'], _FC_MEDIUM, _FC_COND],
             'exclude': _FC_EXCLUDE_JP,
@@ -777,7 +792,7 @@ class Config:
         {
             'name': 'Dragon Quest Famicom/SFC/N64 VGA/CGC/Sealed (Mercari)',
             'platform': 'mercari',
-            'keywords': ['ドラゴンクエスト ファミコン 未開封', 'ドラゴンクエスト 64 未開封', 'ドラゴンクエスト ゲームボーイ 未開封', 'ドラゴンクエスト 実演用'],
+            'keywords': ['ドラゴンクエスト ファミコン 未開封', 'ドラゴンクエスト 64 未開封', 'ドラゴンクエスト ゲームボーイ 未開封', 'ドラゴンクエスト 実演用', 'ドラゴンクエスト ファミコン 未使用', 'ドラゴンクエスト 64 未使用', 'ドラゴンクエスト ゲームボーイ 未使用', 'ドラゴンクエスト vga', 'ドラゴンクエスト cgc'],
             'state_category': 'mercari_dq_famicom',
             'validators': [['ドラゴンクエスト', 'ドラクエ', 'dragon quest'], _FC_MEDIUM, _FC_COND],
             'exclude': _FC_EXCLUDE_JP,
@@ -785,7 +800,7 @@ class Config:
         {
             'name': 'Dragon Quest Famicom/SFC/N64 VGA/CGC/Sealed (Yahoo)',
             'platform': 'yahoo',
-            'keywords': ['ドラゴンクエスト ファミコン 未開封', 'ドラゴンクエスト 64 未開封', 'ドラゴンクエスト ゲームボーイ 未開封', 'ドラゴンクエスト 実演用'],
+            'keywords': ['ドラゴンクエスト ファミコン 未開封', 'ドラゴンクエスト 64 未開封', 'ドラゴンクエスト ゲームボーイ 未開封', 'ドラゴンクエスト 実演用', 'ドラゴンクエスト ファミコン 未使用', 'ドラゴンクエスト 64 未使用', 'ドラゴンクエスト ゲームボーイ 未使用', 'ドラゴンクエスト vga', 'ドラゴンクエスト cgc'],
             'state_category': 'yahoo_dq_famicom',
             'validators': [['ドラゴンクエスト', 'ドラクエ', 'dragon quest'], _FC_MEDIUM, _FC_COND],
             'exclude': _FC_EXCLUDE_JP,
@@ -802,7 +817,7 @@ class Config:
         {
             'name': 'Final Fantasy Famicom/SFC/N64 VGA/CGC/Sealed (Mercari)',
             'platform': 'mercari',
-            'keywords': ['ファイナルファンタジー ファミコン 未開封', 'ファイナルファンタジー 64 未開封', 'ファイナルファンタジー ゲームボーイ 未開封', 'ファイナルファンタジー 実演用'],
+            'keywords': ['ファイナルファンタジー ファミコン 未開封', 'ファイナルファンタジー 64 未開封', 'ファイナルファンタジー ゲームボーイ 未開封', 'ファイナルファンタジー 実演用', 'ファイナルファンタジー ファミコン 未使用', 'ファイナルファンタジー 64 未使用', 'ファイナルファンタジー ゲームボーイ 未使用', 'ファイナルファンタジー vga', 'ファイナルファンタジー cgc'],
             'state_category': 'mercari_ff_famicom',
             'validators': [['ファイナルファンタジー', 'final fantasy'], _FC_MEDIUM, _FC_COND],
             'exclude': _FC_EXCLUDE_JP,
@@ -810,7 +825,7 @@ class Config:
         {
             'name': 'Final Fantasy Famicom/SFC/N64 VGA/CGC/Sealed (Yahoo)',
             'platform': 'yahoo',
-            'keywords': ['ファイナルファンタジー ファミコン 未開封', 'ファイナルファンタジー 64 未開封', 'ファイナルファンタジー ゲームボーイ 未開封', 'ファイナルファンタジー 実演用'],
+            'keywords': ['ファイナルファンタジー ファミコン 未開封', 'ファイナルファンタジー 64 未開封', 'ファイナルファンタジー ゲームボーイ 未開封', 'ファイナルファンタジー 実演用', 'ファイナルファンタジー ファミコン 未使用', 'ファイナルファンタジー 64 未使用', 'ファイナルファンタジー ゲームボーイ 未使用', 'ファイナルファンタジー vga', 'ファイナルファンタジー cgc'],
             'state_category': 'yahoo_ff_famicom',
             'validators': [['ファイナルファンタジー', 'final fantasy'], _FC_MEDIUM, _FC_COND],
             'exclude': _FC_EXCLUDE_JP,
@@ -877,7 +892,7 @@ class Config:
         {
             'name': 'Final Fantasy PS VII-X Sealed/Graded (Mercari)',
             'platform': 'mercari',
-            'keywords': ['ファイナルファンタジー プレイステーション 未開封', 'ファイナルファンタジー 実演用'],
+            'keywords': ['ファイナルファンタジー プレイステーション 未開封', 'ファイナルファンタジー 実演用', 'ファイナルファンタジー プレイステーション 未使用', 'ファイナルファンタジー vga', 'ファイナルファンタジー cgc'],
             'state_category': 'mercari_ff_ps',
             'validators': [_FF_PS_TITLES, _FF_PS_MEDIUM, _FC_COND],
             'exclude': _FF_PS_EXCLUDE,
@@ -885,7 +900,7 @@ class Config:
         {
             'name': 'Final Fantasy PS VII-X Sealed/Graded (Yahoo)',
             'platform': 'yahoo',
-            'keywords': ['ファイナルファンタジー プレイステーション 未開封', 'ファイナルファンタジー 実演用'],
+            'keywords': ['ファイナルファンタジー プレイステーション 未開封', 'ファイナルファンタジー 実演用', 'ファイナルファンタジー プレイステーション 未使用', 'ファイナルファンタジー vga', 'ファイナルファンタジー cgc'],
             'state_category': 'yahoo_ff_ps',
             'validators': [_FF_PS_TITLES, _FF_PS_MEDIUM, _FC_COND],
             'exclude': _FF_PS_EXCLUDE,
@@ -902,7 +917,7 @@ class Config:
         {
             'name': 'Castlevania Famicom Sealed/Graded (Mercari)',
             'platform': 'mercari',
-            'keywords': ['悪魔城ドラキュラ ファミコン 未開封', '悪魔城ドラキュラ ディスクシステム 未開封', '悪魔城ドラキュラ 実演用'],
+            'keywords': ['悪魔城ドラキュラ ファミコン 未開封', '悪魔城ドラキュラ ディスクシステム 未開封', '悪魔城ドラキュラ 実演用', '悪魔城ドラキュラ シュリンク'],
             'state_category': 'mercari_castlevania_famicom',
             'validators': [['悪魔城ドラキュラ', '悪魔城', 'castlevania', 'akumajo', 'akumajou'], _FCSFC_MEDIUM, _UNOPENED_ONLY],
             'exclude': _CASTLEVANIA_EXCLUDE,
@@ -910,7 +925,7 @@ class Config:
         {
             'name': 'Castlevania Famicom Sealed/Graded (Yahoo)',
             'platform': 'yahoo',
-            'keywords': ['悪魔城ドラキュラ ファミコン 未開封', '悪魔城ドラキュラ ディスクシステム 未開封', '悪魔城ドラキュラ 実演用'],
+            'keywords': ['悪魔城ドラキュラ ファミコン 未開封', '悪魔城ドラキュラ ディスクシステム 未開封', '悪魔城ドラキュラ 実演用', '悪魔城ドラキュラ シュリンク'],
             'state_category': 'yahoo_castlevania_famicom',
             'validators': [['悪魔城ドラキュラ', '悪魔城', 'castlevania', 'akumajo', 'akumajou'], _FCSFC_MEDIUM, _UNOPENED_ONLY],
             'exclude': _CASTLEVANIA_EXCLUDE,
@@ -919,7 +934,7 @@ class Config:
         {
             'name': 'Chrono Trigger SFC Sealed/Graded (Mercari)',
             'platform': 'mercari',
-            'keywords': ['クロノトリガー スーパーファミコン 未開封', 'クロノ・トリガー SFC 未開封', 'クロノトリガー 実演用'],
+            'keywords': ['クロノトリガー スーパーファミコン 未開封', 'クロノ・トリガー SFC 未開封', 'クロノトリガー 実演用', 'クロノトリガー シュリンク'],
             'state_category': 'mercari_chrono_trigger_sfc',
             'validators': [
                 ['クロノトリガー', 'クロノ・トリガー', 'クロノ トリガー', 'chrono trigger'],
@@ -931,7 +946,7 @@ class Config:
         {
             'name': 'Chrono Trigger SFC Sealed/Graded (Yahoo)',
             'platform': 'yahoo',
-            'keywords': ['クロノトリガー スーパーファミコン 未開封', 'クロノ・トリガー SFC 未開封', 'クロノトリガー 実演用'],
+            'keywords': ['クロノトリガー スーパーファミコン 未開封', 'クロノ・トリガー SFC 未開封', 'クロノトリガー 実演用', 'クロノトリガー シュリンク'],
             'state_category': 'yahoo_chrono_trigger_sfc',
             'validators': [
                 ['クロノトリガー', 'クロノ・トリガー', 'クロノ トリガー', 'chrono trigger'],
@@ -944,7 +959,7 @@ class Config:
         {
             'name': 'Kingdom Hearts 1 PS2 Sealed/Graded (Mercari)',
             'platform': 'mercari',
-            'keywords': ['キングダムハーツ PS2 未開封', 'キングダムハーツ1 未開封', 'キングダムハーツ ファイナルミックス 未開封', 'キングダムハーツ 実演用'],
+            'keywords': ['キングダムハーツ PS2 未開封', 'キングダムハーツ1 未開封', 'キングダムハーツ ファイナルミックス 未開封', 'キングダムハーツ 実演用', 'キングダムハーツ シュリンク'],
             'state_category': 'mercari_kh1_ps2',
             'validators': [_KH_TITLES, _KH_MEDIUM, _UNOPENED_ONLY],
             'exclude': _KH_EXCLUDE,
@@ -952,7 +967,7 @@ class Config:
         {
             'name': 'Kingdom Hearts 1 PS2 Sealed/Graded (Yahoo)',
             'platform': 'yahoo',
-            'keywords': ['キングダムハーツ PS2 未開封', 'キングダムハーツ1 未開封', 'キングダムハーツ ファイナルミックス 未開封', 'キングダムハーツ 実演用'],
+            'keywords': ['キングダムハーツ PS2 未開封', 'キングダムハーツ1 未開封', 'キングダムハーツ ファイナルミックス 未開封', 'キングダムハーツ 実演用', 'キングダムハーツ シュリンク'],
             'state_category': 'yahoo_kh1_ps2',
             'validators': [_KH_TITLES, _KH_MEDIUM, _UNOPENED_ONLY],
             'exclude': _KH_EXCLUDE,
@@ -961,7 +976,7 @@ class Config:
         {
             'name': 'Metroid Famicom Sealed/Graded (Mercari)',
             'platform': 'mercari',
-            'keywords': ['メトロイド ファミコン 未開封', 'メトロイド ディスクシステム 未開封', 'メトロイド 実演用'],
+            'keywords': ['メトロイド ファミコン 未開封', 'メトロイド ディスクシステム 未開封', 'メトロイド 実演用', 'メトロイド シュリンク'],
             'state_category': 'mercari_metroid_famicom',
             'validators': [['メトロイド', 'metroid'], _FCSFC_MEDIUM, _UNOPENED_ONLY],
             'exclude': _METROID_EXCLUDE,
@@ -969,7 +984,7 @@ class Config:
         {
             'name': 'Metroid Famicom Sealed/Graded (Yahoo)',
             'platform': 'yahoo',
-            'keywords': ['メトロイド ファミコン 未開封', 'メトロイド ディスクシステム 未開封', 'メトロイド 実演用'],
+            'keywords': ['メトロイド ファミコン 未開封', 'メトロイド ディスクシステム 未開封', 'メトロイド 実演用', 'メトロイド シュリンク'],
             'state_category': 'yahoo_metroid_famicom',
             'validators': [['メトロイド', 'metroid'], _FCSFC_MEDIUM, _UNOPENED_ONLY],
             'exclude': _METROID_EXCLUDE,
@@ -978,7 +993,7 @@ class Config:
         {
             'name': 'Metal Gear Famicom Sealed/Graded (Mercari)',
             'platform': 'mercari',
-            'keywords': ['メタルギア ファミコン 未開封', 'メタルギア 実演用'],
+            'keywords': ['メタルギア ファミコン 未開封', 'メタルギア 実演用', 'メタルギア シュリンク'],
             'state_category': 'mercari_metal_gear_famicom',
             'validators': [['メタルギア', 'metal gear'], _FCSFC_MEDIUM, _UNOPENED_ONLY],
             'exclude': _METAL_GEAR_EXCLUDE,
@@ -986,7 +1001,7 @@ class Config:
         {
             'name': 'Metal Gear Famicom Sealed/Graded (Yahoo)',
             'platform': 'yahoo',
-            'keywords': ['メタルギア ファミコン 未開封', 'メタルギア 実演用'],
+            'keywords': ['メタルギア ファミコン 未開封', 'メタルギア 実演用', 'メタルギア シュリンク'],
             'state_category': 'yahoo_metal_gear_famicom',
             'validators': [['メタルギア', 'metal gear'], _FCSFC_MEDIUM, _UNOPENED_ONLY],
             'exclude': _METAL_GEAR_EXCLUDE,
@@ -995,7 +1010,7 @@ class Config:
         {
             'name': 'Biohazard 1 PS Sealed/Graded (Mercari)',
             'platform': 'mercari',
-            'keywords': ['バイオハザード プレイステーション 未開封', 'バイオハザード PS 未開封', 'バイオハザード 実演用'],
+            'keywords': ['バイオハザード プレイステーション 未開封', 'バイオハザード PS 未開封', 'バイオハザード 実演用', 'バイオハザード シュリンク'],
             'state_category': 'mercari_biohazard1_ps',
             'validators': [_BIO1_TITLES, _BIO1_MEDIUM, _UNOPENED_ONLY],
             'exclude': _BIO1_EXCLUDE,
@@ -1003,7 +1018,7 @@ class Config:
         {
             'name': 'Biohazard 1 PS Sealed/Graded (Yahoo)',
             'platform': 'yahoo',
-            'keywords': ['バイオハザード プレイステーション 未開封', 'バイオハザード PS 未開封', 'バイオハザード 実演用'],
+            'keywords': ['バイオハザード プレイステーション 未開封', 'バイオハザード PS 未開封', 'バイオハザード 実演用', 'バイオハザード シュリンク'],
             'state_category': 'yahoo_biohazard1_ps',
             'validators': [_BIO1_TITLES, _BIO1_MEDIUM, _UNOPENED_ONLY],
             'exclude': _BIO1_EXCLUDE,
@@ -1012,7 +1027,7 @@ class Config:
         {
             'name': 'Castlevania Symphony of the Night Sealed/Graded (Mercari)',
             'platform': 'mercari',
-            'keywords': ['月下の夜想曲 未開封', '悪魔城ドラキュラX 月下の夜想曲 未開封', '月下の夜想曲 実演用'],
+            'keywords': ['月下の夜想曲 未開封', '悪魔城ドラキュラX 月下の夜想曲 未開封', '月下の夜想曲 実演用', '月下の夜想曲 シュリンク'],
             'state_category': 'mercari_sotn',
             'validators': [_SOTN_TITLES, _SOTN_MEDIUM, _UNOPENED_ONLY],
             'exclude': _SOTN_EXCLUDE,
@@ -1020,7 +1035,7 @@ class Config:
         {
             'name': 'Castlevania Symphony of the Night Sealed/Graded (Yahoo)',
             'platform': 'yahoo',
-            'keywords': ['月下の夜想曲 未開封', '悪魔城ドラキュラX 月下の夜想曲 未開封', '月下の夜想曲 実演用'],
+            'keywords': ['月下の夜想曲 未開封', '悪魔城ドラキュラX 月下の夜想曲 未開封', '月下の夜想曲 実演用', '月下の夜想曲 シュリンク'],
             'state_category': 'yahoo_sotn',
             'validators': [_SOTN_TITLES, _SOTN_MEDIUM, _UNOPENED_ONLY],
             'exclude': _SOTN_EXCLUDE,
@@ -1029,7 +1044,7 @@ class Config:
         {
             'name': 'Tekken 1 PS Sealed/Graded (Mercari)',
             'platform': 'mercari',
-            'keywords': ['鉄拳 プレイステーション 未開封', '鉄拳 PS1 未開封', '鉄拳 実演用'],
+            'keywords': ['鉄拳 プレイステーション 未開封', '鉄拳 PS1 未開封', '鉄拳 実演用', '鉄拳 シュリンク'],
             'state_category': 'mercari_tekken1_ps',
             'validators': [_TEKKEN1_TITLES, _BIO1_MEDIUM, _UNOPENED_ONLY],
             'exclude': _TEKKEN1_EXCLUDE,
@@ -1037,7 +1052,7 @@ class Config:
         {
             'name': 'Tekken 1 PS Sealed/Graded (Yahoo)',
             'platform': 'yahoo',
-            'keywords': ['鉄拳 プレイステーション 未開封', '鉄拳 PS1 未開封', '鉄拳 実演用'],
+            'keywords': ['鉄拳 プレイステーション 未開封', '鉄拳 PS1 未開封', '鉄拳 実演用', '鉄拳 シュリンク'],
             'state_category': 'yahoo_tekken1_ps',
             'validators': [_TEKKEN1_TITLES, _BIO1_MEDIUM, _UNOPENED_ONLY],
             'exclude': _TEKKEN1_EXCLUDE,
@@ -1046,7 +1061,7 @@ class Config:
         {
             'name': 'Silent Hill 1 PS Sealed/Graded (Mercari)',
             'platform': 'mercari',
-            'keywords': ['サイレントヒル 未開封', 'サイレントヒル プレイステーション 未開封', 'サイレントヒル 実演用'],
+            'keywords': ['サイレントヒル 未開封', 'サイレントヒル プレイステーション 未開封', 'サイレントヒル 実演用', 'サイレントヒル シュリンク'],
             'state_category': 'mercari_silenthill1_ps',
             'validators': [_SH1_TITLES, _BIO1_MEDIUM, _UNOPENED_ONLY],
             'exclude': _SH1_EXCLUDE,
@@ -1054,7 +1069,7 @@ class Config:
         {
             'name': 'Silent Hill 1 PS Sealed/Graded (Yahoo)',
             'platform': 'yahoo',
-            'keywords': ['サイレントヒル 未開封', 'サイレントヒル プレイステーション 未開封', 'サイレントヒル 実演用'],
+            'keywords': ['サイレントヒル 未開封', 'サイレントヒル プレイステーション 未開封', 'サイレントヒル 実演用', 'サイレントヒル シュリンク'],
             'state_category': 'yahoo_silenthill1_ps',
             'validators': [_SH1_TITLES, _BIO1_MEDIUM, _UNOPENED_ONLY],
             'exclude': _SH1_EXCLUDE,
