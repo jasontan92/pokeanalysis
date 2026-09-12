@@ -44,6 +44,24 @@ class Config:
         '再版', '重版', '復刻', '復刻版', '再刷', '複製',
     ]
 
+    # Budget re-release labels. These are the cheap later reprints, not the
+    # first print, so they are rejected on every PlayStation-era search.
+    # NOTE this deliberately drops things that are otherwise perfect matches —
+    # a sealed "PS one Books" or "PlayStation the Best" copy is still the wrong
+    # pressing.
+    _BUDGET_REISSUE: list[str] = [
+        # Sony's own budget lines
+        'the best', 'ザ・ベスト', 'ザベスト', 'ベスト版', 'best版',
+        'ベストセレクション', 'ps one books', 'psone books', 'one books',
+        # publisher budget lines
+        'アルティメットヒッツ', 'ultimate hits', '殿堂セレクション',
+        'カプコレ', 'capkore', 'スーパーライト', 'superlite',
+        'アトラスベスト', 'アトラス・ベスト', 'コエテクベスト',
+        'simple1500', 'simple 1500', 'simple2000', 'simple 2000',
+        # generic
+        '廉価版',
+    ]
+
     # eBay-only: keep JAPANESE-version listings. Mercari/Yahoo are inherently
     # Japanese so this is applied only to eBay results (see monitor.py).
     EBAY_JP_MARKERS: list[str] = [
@@ -238,7 +256,7 @@ class Config:
     # PlayStation console (bare 'ps' catches "PS", "PS1", "PS2"; later consoles
     # are stripped by the exclude below so only PS1/PS2 originals survive).
     _FF_PS_MEDIUM: list[str] = ['ps', 'プレイステーション', 'プレステ', 'playstation', 'psx']
-    _FF_PS_EXCLUDE: list[str] = [
+    _FF_PS_EXCLUDE: list[str] = _BUDGET_REISSUE + [
         # other FF numbers (roman + FFxx forms) -- kills FFX's substring overlap
         'xi', 'xii', 'xiii', 'xiv', 'xv', 'xvi', 'ⅺ', 'ⅻ',
         'ff11', 'ff12', 'ff13', 'ff14', 'ff15', 'ff16',
@@ -318,7 +336,7 @@ class Config:
     # false-reject legitimate KH1 titles).
     _KH_TITLES: list[str] = ['キングダムハーツ', 'キングダム ハーツ', 'kingdom hearts']
     _KH_MEDIUM: list[str] = ['ps2', 'ps 2', 'プレイステーション', 'プレステ', 'playstation']
-    _KH_EXCLUDE: list[str] = [
+    _KH_EXCLUDE: list[str] = _BUDGET_REISSUE + [
         # KH2 and beyond (anchored to the title word so "1" isn't needed)
         'ハーツ2', 'ハーツ２', 'ハーツⅡ', 'ハーツii', 'ハーツ ii', 'ハーツ 2',
         'hearts 2', 'hearts ii', 'kh2', 'kh 2',
@@ -359,7 +377,7 @@ class Config:
     ]
 
     # --- PlayStation 1 merch/media reject list, shared by the PS1 searches ---
-    _PS1_MERCH_EXCLUDE: list[str] = [
+    _PS1_MERCH_EXCLUDE: list[str] = _BUDGET_REISSUE + [
         '攻略本', 'ガイドブック', '設定資料', '資料集', 'カレンダー', '冊子',
         'コミック', '漫画', '小説', 'ノベル', '雑誌', 'カタログ', 'チラシ',
         # game magazines that merely name the title on the cover
@@ -464,7 +482,7 @@ class Config:
     # read "カード付き" / "カード同梱" and a カード exclusion would reject
     # exactly the ones worth alerting on. The two-part title gate keeps the
     # card game out on its own -- no 遊戯王 card lot is titled ブリード.
-    _YGO_MCBB_EXCLUDE: list[str] = [
+    _YGO_MCBB_EXCLUDE: list[str] = _BUDGET_REISSUE + [
         t for t in _PS1_MERCH_EXCLUDE
         if t not in ('カード', 'トレカ', 'trading card')
     ] + [
