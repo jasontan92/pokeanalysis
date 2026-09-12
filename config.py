@@ -517,6 +517,36 @@ class Config:
         'カセットのみ', 'ソフトのみ', '内箱のみ', '外箱のみ',
     ]
 
+    # --- Megami Ibunroku Persona (女神異聞録ペルソナ), PS1, sealed ---
+    # The title gate is 女神異聞録, NOT ペルソナ: 女神異聞録 is unique to the first
+    # game (Persona 2 is simply "ペルソナ2 罪/罰"), whereas ペルソナ alone pulls in
+    # the entire franchise — P3/P4/P5 on PS2/PS4/PS5/Vita dominate the results.
+    # A Persona 30th-anniversary merch campaign is also running, so Mercari is
+    # full of アクスタ/コースター/チャーム that name the game exactly.
+    _PERSONA1_TITLES: list[str] = ['女神異聞録', 'megami ibunroku', 'revelations persona']
+    _PERSONA1_EXCLUDE: list[str] = _PS1_MERCH_EXCLUDE + [
+        # sequels. Persona 2 罪/罰 is also a sealed PS1 release, so it is the one
+        # that most needs rejecting (seen live at ¥4,351).
+        'ペルソナ2', 'ペルソナ３', 'ペルソナ3', 'ペルソナ4', 'ペルソナ5', 'ペルソナ 2',
+        'persona 2', 'persona 3', 'persona 4', 'persona 5', 'persona2', 'persona3',
+        'persona4', 'persona5', '罪', '罰', 'innocent sin', 'eternal punishment',
+        'ペルソナq', 'persona q', 'ダンシング', 'dancing', 'アリーナ', 'arena',
+        'ストライカーズ', 'strikers', 'タクティカ', 'tactica', 'スクランブル',
+        'ロイヤル', 'royal', 'fes', 'メタファー', 'metaphor',
+        # 女神異聞録デビルサバイバー is a different (DS) game
+        'デビルサバイバー', 'devil survivor',
+        # wrong platforms — incl. the PSP remake and the Windows 95 edition
+        'ps2', 'ps3', 'ps4', 'ps5', 'playstation 2', 'playstation 3',
+        'playstation 4', 'playstation 5', 'プレイステーション2',
+        'プレイステーション3', 'プレイステーション4', 'プレイステーション5',
+        'psp', 'vita', 'switch', 'スイッチ', 'xbox', 'steam', 'ニンテンドーds',
+        '3ds', 'windows', 'win95', 'pc版', 'アーカイブス', 'archives',
+        'リメイク', 'remake', 'リマスター', 'remaster',
+        # 30th-anniversary merch wave
+        '30th', '30周年', 'アクスタ', 'アクリルスタンド', 'チャーム', 'コースター',
+        'ピアス', 'めじるし', 'ぶくぶ', 'ラバスト', '色紙', '原宿', 'くじ',
+    ]
+
     # --- Punch-Out!! GOLD CARTRIDGE (パンチアウト!! ゴールドカートリッジ, HVC-PT-S) ---
     # Famicom prize cartridge, not a retail release — a grail, so this search is
     # gated on IDENTITY (Punch-Out + a gold marker) rather than on condition:
@@ -1135,6 +1165,23 @@ class Config:
             'state_category': 'yahoo_smb_no_barcode',
             'validators': [_SMB_TITLES, _SMB_NO_BARCODE],
             'exclude': _SMB_EXCLUDE,
+        },
+        # --- Megami Ibunroku Persona (PS1), sealed ---
+        {
+            'name': 'Megami Ibunroku Persona PS Sealed (Mercari)',
+            'platform': 'mercari',
+            'keywords': ['女神異聞録ペルソナ 未開封', '女神異聞録ペルソナ プレイステーション 未開封', '女神異聞録ペルソナ 実演用'],
+            'state_category': 'mercari_persona1_ps',
+            'validators': [_PERSONA1_TITLES, _BIO1_MEDIUM, _UNOPENED_ONLY],
+            'exclude': _PERSONA1_EXCLUDE,
+        },
+        {
+            'name': 'Megami Ibunroku Persona PS Sealed (Yahoo)',
+            'platform': 'yahoo',
+            'keywords': ['女神異聞録ペルソナ 未開封', '女神異聞録ペルソナ 実演用'],
+            'state_category': 'yahoo_persona1_ps',
+            'validators': [_PERSONA1_TITLES, _BIO1_MEDIUM, _UNOPENED_ONLY],
+            'exclude': _PERSONA1_EXCLUDE,
         },
     ]
 
