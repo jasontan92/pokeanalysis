@@ -52,6 +52,7 @@ class YahooAuctionsScraper:
             'Accept-Language': 'ja-JP,ja;q=0.9',
         })
         self._http_failures = 0
+        self._warmed_up = False
         if not PLAYWRIGHT_AVAILABLE:
             logger.warning("Playwright not installed. Yahoo browser fallback disabled.")
 
@@ -68,6 +69,7 @@ class YahooAuctionsScraper:
             max_pages: Maximum pages to fetch
         """
         if BS4_AVAILABLE and self._http_failures < self.HTTP_GIVE_UP_AFTER:
+            self._warm_up()
             listings = self._search_http(keyword)
             if listings is not None:
                 self._http_failures = 0
@@ -79,6 +81,24 @@ class YahooAuctionsScraper:
             if self._http_failures >= self.HTTP_GIVE_UP_AFTER:
                 logger.warning("Yahoo HTTP disabled for the rest of this run; browser only.")
         return self._search_browser(keyword)
+
+    def _warm_up(self):
+        """Make one throwaway search so Yahoo sets its cookies.
+
+        Without cookies Yahoo treats the request as a first visit and can
+        return a broadened "related items" page instead of the exact matches:
+        for "ポケットモンスター ゲームボーイ VGA" that was 100 unrelated listings
+        rather than the one real VGA-graded copy. The old scraper opened a
+        fresh browser for every keyword, so every Yahoo search was a first
+        visit. The session keeps the cookies after this, so it runs once.
+        """
+        if self._warmed_up:
+            return
+        self._warmed_up = True
+        try:
+            self.http.get(self._search_url('a'), timeout=20)
+        except requests.RequestException as e:
+            logger.warning(f"Yahoo warm-up request failed: {e}")
 
     def _search_http(self, keyword: str) -> Optional[list[dict]]:
         """Fetch the results page without a browser.

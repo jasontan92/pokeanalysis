@@ -2,9 +2,13 @@ name: Listing Monitor
 
 on:
   schedule:
-    - cron: '*/30 * * * *'  # Every 30 minutes. A full pass over all 49
-                            # searches takes ~33 min, so a tighter cron only
-                            # piles up pending runs that GitHub then cancels.
+    - cron: '*/10 * * * *'  # Every 10 minutes. A full pass now takes ~10 min
+                            # (was ~41 min before the scrapers were made
+                            # parallel and Yahoo stopped using a browser), so
+                            # runs go roughly back-to-back. GitHub keeps only
+                            # one pending run per concurrency group, so an
+                            # overlapping trigger shows up as "cancelled" -
+                            # that is expected, not a failure.
   workflow_dispatch:
 
 # Queue runs back-to-back instead of overlapping. Prior to this, the cron
@@ -21,8 +25,9 @@ permissions:
 jobs:
   pokemon:
     runs-on: ubuntu-latest
-    # A full pass takes ~33 min; at 30 the job was killed every time, ~4 of
-    # every 60 runs finished, and the last 4 searches were never reached.
+    # A full pass takes ~10 min. monitor.py stops starting new scrapes after
+    # 38 min (SCRAPE_BUDGET_S), so even a very slow run processes its results
+    # and saves state before this limit kills the job.
     timeout-minutes: 50
     steps:
       - uses: actions/checkout@v4
