@@ -6,8 +6,11 @@ Note: Requires xvfb on Linux (headless=False needed to bypass bot detection).
 
 import logging
 import re
+import time
+from contextlib import contextmanager
 from datetime import datetime
 from typing import Optional
+from urllib.parse import quote
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +19,143 @@ try:
     PLAYWRIGHT_AVAILABLE = True
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
+
+
+ITEM_SELECTOR = 'a[href*="/item/"]'
+# Mercari's empty-results message.
+EMPTY_TEXT = '出品された商品がありません'
+
+
+class MercariSession:
+    """One browser kept open across many searches.
+
+    Launching Chromium per keyword cost ~2-3s each, and the old fixed
+    5s + 3s sleep ran even when results had already rendered. A session
+    reuses the browser and waits only as long as the page actually needs.
+    Must be created and used on a single thread (Playwright sync API).
+    """
+
+    # Upper bound on waiting for results OR the empty message. Deliberately
+    # longer than the ~8s the old fixed sleep allowed, so a slow render is
+    # waited out rather than silently read as "no results".
+    RESULTS_TIMEOUT_S = 15
+    # After the first tile appears, wait until the tile count stops changing.
+    SETTLE_QUIET_S = 1.5
+    SETTLE_MAX_S = 5
+    # Then wait until every tile shows its text (title + price).
+    RENDER_MAX_S = 4
+    POLL_S = 0.25
+
+    def __init__(self, playwright):
+        self.browser = playwright.chromium.launch(
+            headless=False,
+            args=[
+                '--disable-blink-features=AutomationControlled',
+                '--no-sandbox',
+                '--disable-dev-shm-usage',
+                # Keep timers/rendering at full speed even when the window
+                # is hidden behind others (matters when run on a desktop).
+                '--disable-background-timer-throttling',
+                '--disable-backgrounding-occluded-windows',
+                '--disable-renderer-backgrounding',
+            ]
+        )
+        context = self.browser.new_context(
+            user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            viewport={'width': 1920, 'height': 1080},
+            locale='ja-JP',
+        )
+        # Stealth scripts
+        context.add_init_script("""
+            Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+            Object.defineProperty(navigator, 'plugins', {get: () => [1,2,3,4,5]});
+            window.chrome = {runtime: {}};
+        """)
+        self.page = context.new_page()
+
+    def close(self):
+        try:
+            self.browser.close()
+        except Exception:
+            pass
+
+    def search(self, keyword: Optional[str] = None, url: Optional[str] = None,
+               attempts: int = 2) -> list[dict]:
+        """Run one search and return its listings.
+
+        A page that shows neither tiles nor the empty message within
+        RESULTS_TIMEOUT_S is retried once — on CI Mercari occasionally
+        renders nothing (slow render or soft bot gating).
+        """
+        search_url = url or (f"{MercariScraper.BASE_URL}/search?keyword={quote(keyword)}"
+                             f"&order=desc&sort=created_time&status=on_sale")
+        label = f' ({keyword})' if keyword else ''
+        for attempt in range(1, attempts + 1):
+            logger.info(f"Fetching Mercari Japan{label}...")
+            state = self._load(search_url)
+            if state == 'items':
+                listings = MercariScraper._extract_listings(self.page)
+                logger.info(f"Found {len(listings)} Mercari Japan listings")
+                return listings
+            if state == 'empty':
+                logger.info("No Mercari Japan listings found")
+                return []
+            logger.warning(f"Mercari showed no results or empty message{label} "
+                           f"(attempt {attempt}/{attempts})")
+            if attempt < attempts:
+                time.sleep(3)
+        return []
+
+    def _load(self, url: str) -> str:
+        """Navigate and wait. Returns 'items', 'empty' or 'unknown'."""
+        page = self.page
+        try:
+            page.goto(url, timeout=30000, wait_until='domcontentloaded')
+        except PlaywrightTimeout:
+            logger.warning("Timeout loading Mercari Japan")
+            return 'unknown'
+
+        state = 'unknown'
+        deadline = time.monotonic() + self.RESULTS_TIMEOUT_S
+        while time.monotonic() < deadline:
+            title = (page.title() or '').lower()
+            if 'just a moment' in title or 'checking' in title:
+                # Bot challenge: give it the time it needs.
+                deadline = max(deadline, time.monotonic() + 5)
+            elif page.query_selector(ITEM_SELECTOR):
+                state = 'items'
+                break
+            elif page.get_by_text(EMPTY_TEXT).count():
+                state = 'empty'
+                break
+            time.sleep(self.POLL_S)
+
+        if state != 'items':
+            return state
+
+        # Tiles can arrive in batches: wait for the count to stop changing.
+        count, stable_since = -1, time.monotonic()
+        settle_deadline = time.monotonic() + self.SETTLE_MAX_S
+        while time.monotonic() < settle_deadline:
+            n = len(page.query_selector_all(ITEM_SELECTOR))
+            if n != count:
+                count, stable_since = n, time.monotonic()
+            elif time.monotonic() - stable_since >= self.SETTLE_QUIET_S:
+                break
+            time.sleep(self.POLL_S)
+
+        # And for each tile's text (title + price) to render. Tiles that are
+        # still blank after this are skipped by _extract_listings.
+        render_deadline = time.monotonic() + self.RENDER_MAX_S
+        while time.monotonic() < render_deadline:
+            if page.evaluate(
+                """(sel) => [...document.querySelectorAll(sel)]
+                     .every(a => /[¥￥$]/.test(a.innerText))""",
+                ITEM_SELECTOR,
+            ):
+                break
+            time.sleep(self.POLL_S)
+        return 'items'
 
 
 class MercariScraper:
@@ -29,8 +169,18 @@ class MercariScraper:
         if not PLAYWRIGHT_AVAILABLE:
             logger.warning("Playwright not installed. Mercari scraping disabled.")
 
+    @contextmanager
+    def session(self):
+        """Yield a MercariSession that reuses one browser for many searches."""
+        with sync_playwright() as p:
+            s = MercariSession(p)
+            try:
+                yield s
+            finally:
+                s.close()
+
     def search_listings(self, max_pages: int = 1, keyword: str = None) -> list[dict]:
-        """Search for Pokemon cards on Mercari Japan.
+        """Search for Pokemon cards on Mercari Japan (one-off, own browser).
 
         Args:
             max_pages: Maximum pages to fetch
@@ -39,89 +189,22 @@ class MercariScraper:
         if not PLAYWRIGHT_AVAILABLE:
             logger.warning("Playwright not available. Skipping Mercari.")
             return []
-
-        all_listings = []
-
-        # Build the search URL
-        if keyword:
-            from urllib.parse import quote
-            encoded = quote(keyword)
-            search_url = f"{self.BASE_URL}/search?keyword={encoded}&order=desc&sort=created_time&status=on_sale"
-        else:
-            search_url = self.SEARCH_URL
-
         try:
-            with sync_playwright() as p:
-                # Use headless=False - Mercari detects headless browsers
-                # Requires xvfb on Linux for GitHub Actions
-                browser = p.chromium.launch(
-                    headless=False,
-                    args=[
-                        '--disable-blink-features=AutomationControlled',
-                        '--no-sandbox',
-                        '--disable-dev-shm-usage',
-                    ]
-                )
-                context = browser.new_context(
-                    user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-                    viewport={'width': 1920, 'height': 1080},
-                    locale='ja-JP',
-                )
-
-                # Stealth scripts
-                context.add_init_script("""
-                    Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
-                    Object.defineProperty(navigator, 'plugins', {get: () => [1,2,3,4,5]});
-                    window.chrome = {runtime: {}};
-                """)
-
-                page = context.new_page()
-
-                logger.info(f"Fetching Mercari Japan{f' ({keyword})' if keyword else ''}...")
-
-                try:
-                    # Go directly to search URL
-                    page.goto(search_url, timeout=60000)
-
-                    # Wait for any challenge to complete
-                    for _ in range(6):
-                        page.wait_for_timeout(5000)
-                        title = page.title().lower()
-                        if 'just a moment' not in title and 'checking' not in title:
-                            break
-
-                    page.wait_for_timeout(3000)
-
-                    # Extract listings
-                    listings = self._extract_listings(page)
-                    if listings:
-                        all_listings.extend(listings)
-                        logger.info(f"Found {len(listings)} Mercari Japan listings")
-                    else:
-                        print("No Mercari Japan listings found")
-
-                except PlaywrightTimeout:
-                    print("Timeout loading Mercari Japan")
-                except Exception as e:
-                    # Handle encoding errors in exception messages
-                    error_msg = str(e).encode('ascii', 'replace').decode('ascii')
-                    print(f"Error loading Mercari Japan: {error_msg}")
-
-                browser.close()
-
+            with self.session() as s:
+                return s.search(keyword=keyword, url=None if keyword else self.SEARCH_URL)
         except Exception as e:
             print(f"Mercari scraper error: {e}")
+            return []
 
-        return all_listings
-
-    def _extract_listings(self, page) -> list[dict]:
+    @staticmethod
+    def _extract_listings(page) -> list[dict]:
         """Extract listings from Mercari Japan search results page."""
         listings = []
         seen_ids = set()
 
         try:
             # Find all item links
-            links = page.query_selector_all('a[href*="/item/"]')
+            links = page.query_selector_all(ITEM_SELECTOR)
 
             for link in links:
                 try:
@@ -136,13 +219,21 @@ class MercariScraper:
                     item_id = f'mercari-{item_match.group(1)}'
                     if item_id in seen_ids:
                         continue
-                    seen_ids.add(item_id)
 
                     # Parse text content - handle encoding issues
                     try:
                         text = link.inner_text().strip()
                     except:
                         text = ""
+
+                    # A tile that hasn't rendered yet has no text. Skip it
+                    # rather than return it untitled: the monitor marks
+                    # listings that fail validation as seen, so an untitled
+                    # tile would never be alerted on. Skipped, it's retried
+                    # on the next run.
+                    if not text:
+                        continue
+                    seen_ids.add(item_id)
 
                     lines = [l.strip() for l in text.split('\n') if l.strip()]
 
@@ -158,7 +249,9 @@ class MercariScraper:
                         and not l.startswith('現在')
                         and not re.match(r'^[\d,\.]+$', l.replace(',', ''))
                     ]
-                    title = ' '.join(title_lines)[:100] if title_lines else item_id
+                    if not title_lines:
+                        continue
+                    title = ' '.join(title_lines)[:100]
 
                     # Find price and detect currency from page text
                     price = None
@@ -183,7 +276,7 @@ class MercariScraper:
                                     pass
                                 break
 
-                    full_link = href if href.startswith('http') else f"{self.BASE_URL}{href}"
+                    full_link = href if href.startswith('http') else f"{MercariScraper.BASE_URL}{href}"
 
                     listings.append({
                         'listing_id': item_id,

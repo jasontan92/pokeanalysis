@@ -7,13 +7,14 @@ Sends alerts to the main Telegram bot.
 import json
 import logging
 import sys
-from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeout
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
 from config import Config
-from mercari_scraper import MercariScraper
+from mercari_scraper import MercariScraper, PLAYWRIGHT_AVAILABLE as MERCARI_PLAYWRIGHT
 from yahoo_auctions_scraper import YahooAuctionsScraper
 from scraper import EbayScraper
 from notifier import TelegramNotifier
@@ -99,6 +100,11 @@ class ListingMonitor:
     """Main monitoring orchestrator."""
 
     FIRST_RUN_ALERT_LIMIT = 20
+    # Stop starting new scrapes after this long, so results are always
+    # processed and state is saved before the workflow's 50-minute kill.
+    SCRAPE_BUDGET_S = 38 * 60
+    # A crashing browser is relaunched, but not forever.
+    MERCARI_MAX_RELAUNCHES = 5
 
     def __init__(self):
         self.state = StateManager()
@@ -141,6 +147,101 @@ class ListingMonitor:
             for alternatives in validators
         )
 
+    def _scrape_all(self) -> dict:
+        """Scrape every (platform, keyword) once, the platforms in parallel.
+
+        Returns {(platform, keyword): listings}. A keyword that failed or ran
+        past the time budget is absent from the result (not an empty list),
+        so it can't be mistaken for "no listings".
+        """
+        jobs: dict[str, list[str]] = {}
+        for search in Config.MONITORED_SEARCHES:
+            if not search.get('enabled', True):
+                continue
+            kws = jobs.setdefault(search['platform'], [])
+            for kw in search.get('keywords') or [search['keyword']]:
+                if kw not in kws:
+                    kws.append(kw)
+
+        deadline = time.monotonic() + self.SCRAPE_BUDGET_S
+        workers = {
+            'mercari': lambda kws: self._scrape_mercari(kws, deadline),
+            'yahoo': lambda kws: self._scrape_each(
+                'yahoo', kws, deadline,
+                lambda kw: self.yahoo_scraper.search_listings(keyword=kw)),
+            'ebay': lambda kws: self._scrape_each(
+                'ebay', kws, deadline,
+                lambda kw: self.ebay_scraper.scrape_active_listings(search_term=kw, max_pages=1)),
+        }
+        for platform in jobs:
+            if platform not in workers:
+                logger.warning(f"Unknown platform '{platform}' - its searches are skipped")
+
+        results = {}
+        with ThreadPoolExecutor(max_workers=len(workers)) as executor:
+            futures = {
+                executor.submit(self._timed, platform, fn, jobs[platform]): platform
+                for platform, fn in workers.items() if jobs.get(platform)
+            }
+            for future in as_completed(futures):
+                try:
+                    results.update(future.result())
+                except Exception as e:
+                    logger.error(f"{futures[future]} scraping failed: {e}")
+        return results
+
+    @staticmethod
+    def _timed(platform, fn, keywords) -> dict:
+        start = time.monotonic()
+        out = fn(keywords)
+        logger.info(f"[{platform}] scraped {len(out)}/{len(keywords)} keywords "
+                    f"in {(time.monotonic() - start) / 60:.1f} min")
+        return out
+
+    @staticmethod
+    def _scrape_each(platform, keywords, deadline, fetch) -> dict:
+        """Scrape keywords one at a time with a stateless fetch function."""
+        out = {}
+        for i, kw in enumerate(keywords):
+            if time.monotonic() >= deadline:
+                logger.warning(f"[{platform}] time budget reached - "
+                               f"{len(keywords) - i} keywords not scraped")
+                break
+            try:
+                out[(platform, kw)] = fetch(kw)
+            except Exception as e:
+                logger.warning(f"[{platform}] search failed: {e}")
+        return out
+
+    def _scrape_mercari(self, keywords, deadline) -> dict:
+        """Scrape all Mercari keywords in one browser, relaunching on a crash."""
+        if not MERCARI_PLAYWRIGHT:
+            logger.warning("[mercari] Playwright not installed - Mercari skipped")
+            return {}
+        out = {}
+        pending = list(keywords)
+        relaunches = 0
+        while pending and time.monotonic() < deadline:
+            try:
+                with self.mercari_scraper.session() as session:
+                    while pending and time.monotonic() < deadline:
+                        out[('mercari', pending[0])] = session.search(keyword=pending[0])
+                        pending.pop(0)
+            except Exception as e:
+                # Drop the keyword that was in flight so a page that reliably
+                # breaks the browser can't stall the rest. (Nothing is in
+                # flight if the error came from closing the browser at the end.)
+                if pending:
+                    pending.pop(0)
+                relaunches += 1
+                logger.warning(f"[mercari] browser failed ({e}); "
+                               f"relaunch {relaunches}/{self.MERCARI_MAX_RELAUNCHES}")
+                if relaunches >= self.MERCARI_MAX_RELAUNCHES:
+                    break
+        if pending:
+            logger.warning(f"[mercari] {len(pending)} keywords not scraped")
+        return out
+
     def run(self):
         """Run the full monitoring cycle."""
         logger.info("=" * 50)
@@ -164,6 +265,13 @@ class ListingMonitor:
         all_new = []
 
         try:
+            # Scrape everything first (platforms in parallel), then validate
+            # and alert in search order on this thread — the state and the
+            # notifier are only ever touched here.
+            scrape_start = time.monotonic()
+            scraped = self._scrape_all()
+            logger.info(f"Scraping finished in {(time.monotonic() - scrape_start) / 60:.1f} min")
+
             for search in Config.MONITORED_SEARCHES:
                 name = search['name']
                 platform = search['platform']
@@ -181,27 +289,15 @@ class ListingMonitor:
 
                 logger.info(f"Checking: {safe_name} ({platform})...")
 
-                # Scrape each keyword (hard 2-min timeout each), combine + dedup.
+                # Combine this search's keyword results + dedup.
                 listings = []
                 seen_scrape = set()
+                scraped_keywords = 0
                 for kw in keywords:
-                    try:
-                        with ThreadPoolExecutor(max_workers=1) as executor:
-                            if platform == 'mercari':
-                                future = executor.submit(self.mercari_scraper.search_listings, keyword=kw)
-                            elif platform == 'yahoo':
-                                future = executor.submit(self.yahoo_scraper.search_listings, keyword=kw)
-                            elif platform == 'ebay':
-                                future = executor.submit(self.ebay_scraper.scrape_active_listings, search_term=kw, max_pages=1)
-                            else:
-                                break
-                            batch = future.result(timeout=120)
-                    except FuturesTimeout:
-                        logger.warning(f"  Timeout after 2min for {safe_name} (kw), skipping keyword")
+                    batch = scraped.get((platform, kw))
+                    if batch is None:
                         continue
-                    except Exception as e:
-                        logger.warning(f"  Search failed for {safe_name}: {e}")
-                        continue
+                    scraped_keywords += 1
                     for l in batch:
                         lid = l.get('item_id') or l.get('listing_id')
                         if lid and lid in seen_scrape:
@@ -210,7 +306,11 @@ class ListingMonitor:
                             seen_scrape.add(lid)
                         listings.append(l)
 
-                logger.info(f"  Found {len(listings)} raw listings")
+                if not scraped_keywords:
+                    logger.warning(f"  Not scraped this run (error or time budget): {safe_name}")
+                    continue
+                logger.info(f"  Found {len(listings)} raw listings"
+                            f" ({scraped_keywords}/{len(keywords)} keywords)")
 
                 # Process: validate, dedup, alert
                 alerts_sent = 0
