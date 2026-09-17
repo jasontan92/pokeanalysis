@@ -31,9 +31,26 @@ class Config:
     # unopened marker. 未使用 ("unused"), a grading label and 実演用 (store
     # display) all permit an OPENED disc, so none of them satisfy it — which is
     # why this cannot live in the normal condition validator.
-    CONDITIONAL_REQUIRE: list[tuple[list[str], list[str]]] = [
+    #
+    # A box without its game is only wanted UNFOLDED — a flat, never-assembled
+    # store display box. 未組立 is the collector term (usually 新品未組立); it
+    # is far more common in real listings than ディスプレイ用.
+    _UNFOLDED: list[str] = ['未組立', '未組み立て', '組立前', '組み立て前']
+    CONDITIONAL_REQUIRE: list[tuple] = [
         (
             ['体験版', 'デモ版', 'demo disc', 'trial version', 'sample version'],
+            ['未開封', 'sealed', 'unopened', 'シュリンク'],
+        ),
+        # 空箱 ("empty box") is never a sealed game, so no exemption.
+        (['空箱'], _UNFOLDED),
+        # 箱のみ is ambiguous: "外箱のみ" = box only, but "未開封 外箱のみ傷あり"
+        # = a SEALED game where only the box is damaged. So the rule switches
+        # off whenever the title also claims to be sealed. Without this rule an
+        # assembled empty box passed the sealed searches (Mercari Pokemon has
+        # no condition gate at all).
+        (
+            ['箱のみ', '見本箱', 'ディスプレイ用外箱', 'ディスプレイ外箱', '展示用外箱'],
+            _UNFOLDED,
             ['未開封', 'sealed', 'unopened', 'シュリンク'],
         ),
     ]
@@ -563,6 +580,53 @@ class Config:
         # 30th-anniversary merch wave
         '30th', '30周年', 'アクスタ', 'アクリルスタンド', 'チャーム', 'コースター',
         'ピアス', 'めじるし', 'ぶくぶ', 'ラバスト', '色紙', '原宿', 'くじ',
+    ]
+
+    # --- UNFOLDED store display boxes (Game Boy / Famicom / Super Famicom) ---
+    # One dedicated search instead of a keyword on every per-game search: real
+    # listings come as whole seller catalogues ("GBPM037 <貴重> ゲームボーイ
+    # ドッジボーイ 外箱のみ 新品未組立"), so a few category-wide keywords find
+    # them and the title gate narrows to the tracked franchises. Per-game
+    # 未組立 keywords were tested and mostly returned plastic model kits.
+    # Cartridge era only: PlayStation used jewel cases, not display boxes.
+    _TRACKED_CART_TITLES: list[str] = [
+        'ポケモン', 'ポケットモンスター', 'pocket monster', 'pokemon',
+        'ゼルダ', 'zelda', 'マリオ', 'mario',
+        'ドラゴンクエスト', 'ドラクエ', 'dragon quest',
+        'ファイナルファンタジー', 'final fantasy',
+        '悪魔城', 'ドラキュラ', 'castlevania',
+        'クロノトリガー', 'クロノ・トリガー', 'chrono trigger',
+        'メトロイド', 'metroid', 'メタルギア', 'metal gear',
+    ]
+    # GBC is allowed (Pokemon Gold/Silver/Crystal). "ゲームボーイ" also matches
+    # "ゲームボーイアドバンス", so GBA is rejected in the exclude list below.
+    _CART_MEDIUM: list[str] = [
+        'ゲームボーイ', 'gameboy', 'game boy', 'gb', 'dmg',
+        'ファミコン', 'ファミリーコンピュータ', 'fc', 'famicom', 'hvc',
+        'スーパーファミコン', 'スーファミ', 'sfc', 'shvc', 'ディスクシステム',
+    ]
+    _UNFOLDED_BOX_EXCLUDE: list[str] = [
+        # later / other hardware
+        'ゲームボーイアドバンス', 'アドバンス', 'advance', 'gba', 'ゲームボーイミクロ',
+        'ニンテンドーds', 'nintendo ds', 'dsi', '3ds', 'nds',
+        'ゲームキューブ', 'gamecube', 'wii', 'switch', 'スイッチ',
+        'ニンテンドー64', 'ニンテンドウ64', 'nintendo 64', 'n64',
+        'プレイステーション', 'playstation', 'ps1', 'ps2', 'psp',
+        'バーチャルボーイ', 'virtual boy', 'ミニ',
+        # GBA/DS-era Pokemon titles that may not name the console
+        'ハートゴールド', 'ソウルシルバー', 'ファイアレッド', 'リーフグリーン',
+        'ルビー', 'サファイア', 'エメラルド', 'ダイヤモンド', 'パール',
+        # 未組立 is THE term for unbuilt model kits, seen live as Tokyo Marui
+        # "スーパーマリオブラザーズ ... 未組立プラモデル / 模型キット"
+        'プラモ', '模型', 'キット', 'ゼンマイ', 'ペーパークラフト', 'ガンプラ',
+        'フィギュア', 'ソフビ', 'ぬいぐるみ', 'レゴ', 'lego', 'ナノブロック',
+        # hardware parts ("交換用ディスプレイガラス" is a replacement screen)
+        '交換用', 'ガラス', 'レンズ', 'スクリーン', '本体', 'コントローラ',
+        'ケーブル', 'アダプタ',
+        # cards / paper / merch
+        'カード', 'ポケカ', 'トレカ', 'シール', 'ステッカー', 'けしゴム',
+        '消しゴム', 'ケシゴム', 'キーホルダー', 'グッズ', '缶バッジ', 'ポスター',
+        '攻略本', 'ガイドブック', '雑誌', '冊子',
     ]
 
     # --- Punch-Out!! GOLD CARTRIDGE (パンチアウト!! ゴールドカートリッジ, HVC-PT-S) ---
@@ -1200,6 +1264,23 @@ class Config:
             'state_category': 'yahoo_persona1_ps',
             'validators': [_PERSONA1_TITLES, _BIO1_MEDIUM, _UNOPENED_ONLY],
             'exclude': _PERSONA1_EXCLUDE,
+        },
+        # --- UNFOLDED store display boxes, tracked franchises, GB/FC/SFC ---
+        {
+            'name': 'Unfolded Display Box GB/Famicom (Mercari)',
+            'platform': 'mercari',
+            'keywords': ['ゲームボーイ 未組立', 'ファミコン 未組立', 'スーパーファミコン 未組立'],
+            'state_category': 'mercari_unfolded_display_box',
+            'validators': [_TRACKED_CART_TITLES, _CART_MEDIUM, _UNFOLDED],
+            'exclude': _UNFOLDED_BOX_EXCLUDE,
+        },
+        {
+            'name': 'Unfolded Display Box GB/Famicom (Yahoo)',
+            'platform': 'yahoo',
+            'keywords': ['ゲームボーイ 未組立', 'ファミコン 未組立', 'スーパーファミコン 未組立'],
+            'state_category': 'yahoo_unfolded_display_box',
+            'validators': [_TRACKED_CART_TITLES, _CART_MEDIUM, _UNFOLDED],
+            'exclude': _UNFOLDED_BOX_EXCLUDE,
         },
     ]
 
