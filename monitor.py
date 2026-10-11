@@ -166,9 +166,7 @@ class ListingMonitor:
         deadline = time.monotonic() + self.SCRAPE_BUDGET_S
         workers = {
             'mercari': lambda kws: self._scrape_mercari(kws, deadline),
-            'yahoo': lambda kws: self._scrape_each(
-                'yahoo', kws, deadline,
-                lambda kw: self.yahoo_scraper.search_listings(keyword=kw)),
+            'yahoo': lambda kws: self._scrape_yahoo(kws, deadline),
             'ebay': lambda kws: self._scrape_each(
                 'ebay', kws, deadline,
                 lambda kw: self.ebay_scraper.scrape_active_listings(search_term=kw, max_pages=1)),
@@ -212,6 +210,17 @@ class ListingMonitor:
             except Exception as e:
                 logger.warning(f"[{platform}] search failed: {e}")
         return out
+
+    def _scrape_yahoo(self, keywords, deadline) -> dict:
+        """Scrape Yahoo keywords, sharing one browser for any fallbacks.
+
+        The browser is only launched if an HTTP reply is unusable, which is
+        how a blocked runner IP degrades: slower, but not to missed listings.
+        """
+        with self.yahoo_scraper.browser_session():
+            return self._scrape_each(
+                'yahoo', keywords, deadline,
+                lambda kw: self.yahoo_scraper.search_listings(keyword=kw))
 
     def _scrape_mercari(self, keywords, deadline) -> dict:
         """Scrape all Mercari keywords in one browser, relaunching on a crash."""
