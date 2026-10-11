@@ -629,6 +629,46 @@ class Config:
         '攻略本', 'ガイドブック', '雑誌', '冊子',
     ]
 
+    # --- Smash Bros Melee (大乱闘スマッシュブラザーズDX), GameCube, sealed ---
+    # Covers every GameCube variant: the retail game and the ゲーム大会入賞記念
+    # prize disc (a 特製スマブラDX ムービーディスク handed out to tournament
+    # winners, not a playable game).
+    #
+    # GameCube is excluded everywhere else in this config, so this is the only
+    # search that admits it.
+    _SMASH_GC_TITLES: list[str] = [
+        'スマッシュブラザーズ', 'スマブラ', 'smash bros', 'smash brothers',
+    ]
+    # 'DX' counts as a platform marker: it is unique to the GameCube entry
+    # (Switch is SPECIAL, Wii is X, Wii U/3DS is "for"). It is needed because
+    # real 入賞記念 listings name no console at all, e.g.
+    # "【非売品】大乱闘スマッシュブラザーズDX 大会入賞記念ムービー、ゲームディスク".
+    _SMASH_GC_MEDIUM: list[str] = [
+        'ゲームキューブ', 'game cube', 'gamecube', 'ngc', 'dol-', 'dx', 'ｄｘ',
+    ]
+    _SMASH_GC_EXCLUDE: list[str] = [
+        # other entries in the series / later platforms
+        'special', 'スペシャル', 'アルティメット', 'ultimate', 'for wii u',
+        'wii', 'switch', 'スイッチ', '3ds', 'ニンテンドー64', 'ニンテンドウ64',
+        'nintendo 64', 'n64', 'スマブラ64', 'スマッシュブラザーズx', 'スマブラx',
+        'プレイステーション', 'ps4', 'ps5',
+        # bundles, lots and hardware (NOTE: bare 'まとめ' is avoided - sellers
+        # write "おまとめ歓迎" on ordinary single-item listings)
+        'まとめ売り', 'まとめて', 'セット売り', '本セット', '点セット', '本まとめ',
+        '本体', 'ジャンク', 'junk', 'コントローラ', 'メモリーカード',
+        'マリオカート', 'どうぶつの森', 'エアライド', 'ピクミン', '風のタクト',
+        # merch. ムービーディスク is deliberately NOT excluded - the 入賞記念
+        # prize disc is one of the variants being searched for.
+        'ポストカード', 'せんす', '扇子', 'オーケストラ', 'サントラ',
+        'サウンドトラック', 'cd', 'dvd', 'blu-ray', 'フィギュア', 'amiibo',
+        'アミーボ', 'ぬいぐるみ', 'カード', 'トレカ', 'キーホルダー', 'ストラップ',
+        'ステッカー', 'シール', 'アクリル', 'グッズ', 'タオル', 'tシャツ',
+        '攻略本', 'ガイドブック', '設定資料', 'ポスター', 'クリアファイル',
+        '空ケース', 'ケースのみ', '箱のみ', '説明書のみ', 'ディスクのみ',
+        # budget reissue (GameCube had 任天堂オールスター / お買い得版 reprints)
+        'お買い得版', '任天堂オールスター',
+    ]
+
     # --- Punch-Out!! GOLD CARTRIDGE (パンチアウト!! ゴールドカートリッジ, HVC-PT-S) ---
     # Famicom prize cartridge, not a retail release — a grail, so this search is
     # gated on IDENTITY (Punch-Out + a gold marker) rather than on condition:
@@ -1281,6 +1321,27 @@ class Config:
             'state_category': 'yahoo_unfolded_display_box',
             'validators': [_TRACKED_CART_TITLES, _CART_MEDIUM, _UNFOLDED],
             'exclude': _UNFOLDED_BOX_EXCLUDE,
+        },
+        # --- Smash Bros Melee (GameCube), all variants, sealed ---
+        {
+            'name': 'Smash Bros Melee GC Sealed (Mercari)',
+            'platform': 'mercari',
+            'keywords': ['大乱闘スマッシュブラザーズDX 未開封',
+                         '大乱闘スマッシュブラザーズDX ゲーム大会入賞記念',
+                         '大乱闘スマッシュブラザーズDX 実演用'],
+            'state_category': 'mercari_smash_gc',
+            'validators': [_SMASH_GC_TITLES, _SMASH_GC_MEDIUM, _UNOPENED_ONLY],
+            'exclude': _SMASH_GC_EXCLUDE,
+        },
+        {
+            'name': 'Smash Bros Melee GC Sealed (Yahoo)',
+            'platform': 'yahoo',
+            'keywords': ['大乱闘スマッシュブラザーズDX 未開封',
+                         '大乱闘スマッシュブラザーズDX ゲーム大会入賞記念',
+                         '大乱闘スマッシュブラザーズDX 実演用'],
+            'state_category': 'yahoo_smash_gc',
+            'validators': [_SMASH_GC_TITLES, _SMASH_GC_MEDIUM, _UNOPENED_ONLY],
+            'exclude': _SMASH_GC_EXCLUDE,
         },
     ]
 
