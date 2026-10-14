@@ -1,6 +1,6 @@
 """
 Configuration for the Manga Scanner.
-Monitors WSJ first appearance issues, Vol 1 first editions, and other collectible manga on Japanese sites.
+Monitors WSJ first appearance issues and other collectible manga magazines on Japanese sites.
 Uses separate Telegram bot/chat from the Pokemon (no-rarity) scanner.
 """
 
@@ -83,7 +83,6 @@ class WSJConfig:
                 'card game', 'figure', 'figurine', 'dvd', 'blu-ray',
                 'フィギュア', 'カードゲーム', 'トレーディングカード',
             ],
-            # Yu-Gi-Oh Vol 1 初版 is handled by SIMPLE_SEARCHES below
         },
 
         'romance_dawn': {
@@ -177,6 +176,28 @@ class WSJConfig:
             ],
         },
 
+        # Not tied to one series, but kept here rather than in SIMPLE_SEARCHES:
+        # is_relevant_listing's combined-issue regex rejects 21・22 / 36・37 /
+        # "11/21"-style false positives that substring validators let through.
+        # The key differs from the old simple_wsj_1989_1_2 category so it gets
+        # a fresh 48h settling window instead of alerting on the whole backlog.
+        'wsj_1989_1_2': {
+            'name': '週刊少年ジャンプ 1989年 1・2合併号',
+            'wsj_issue': 'WSJ 1989 #1-2',
+            'wsj_year': '1989',
+            'wsj_number': '1・2',
+            'mercari_queries': [
+                '少年ジャンプ 1989年 1-2号',
+            ],
+            'yahoo_queries': [
+                '少年ジャンプ 1989年 1-2号',
+            ],
+            'exclude_keywords': [
+                'trading card', 'tcg', 'card game', 'figure', 'figurine',
+                'dvd', 'blu-ray', 'フィギュア', 'カードゲーム',
+            ],
+        },
+
         'dragonball': {
             'name': 'DRAGON BALL',
             'author': '鳥山明',
@@ -226,7 +247,7 @@ class WSJConfig:
     }
 
     # -----------------------------------------------------------------------
-    # SIMPLE SEARCHES — Vol 1 first editions, CoroCoro, Comic News, etc.
+    # SIMPLE SEARCHES — CoroCoro, V Jump, other magazines, flyers, etc.
     # These use basic AND/OR validator matching (not WSJ issue regex).
     # -----------------------------------------------------------------------
 
@@ -291,16 +312,6 @@ class WSJConfig:
             'yahoo_keyword': '電撃 RPG\'96',
             'state_category': 'simple_dengeki_rpg_96',
             'validators': [['電撃'], ['rpg', 'RPG'], ['96']],
-        },
-        {
-            'name': 'Anakubo Pokemon Manga (穴久保ポケットモンスター)',
-            'mercari_keyword': '穴久保 ポケットモンスター',
-            'yahoo_keyword': '穴久保 ポケットモンスター',
-            'state_category': 'simple_anakubo',
-            'validators': [
-                ['穴久保'],
-            ],
-            'exclude': ['XY', 'DVD'],
         },
         {
             'name': 'Pokemon Red/Green Flyer (チラシ)',
